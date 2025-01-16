@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* เพิ่ม font-family default */
+*, .font-regular {
+    font-family: 'K2D-Regular';
+  }
+  
+  .font-bold {
+    font-family: 'K2D-Bold';
+  }
+  
+  .font-medium {
+    font-family: 'K2D-Medium';
+  }
