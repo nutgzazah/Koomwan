@@ -9,7 +9,7 @@ export default function OnboardingScreen() {
     <View>
       <Text>OnboardingScreen</Text>
 
-      <Text className=" font-medium font-sans">back</Text>
+      <Text className=" font-medium ">back</Text>
     </View>
   );
 }

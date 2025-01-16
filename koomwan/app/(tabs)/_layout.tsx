@@ -17,20 +17,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="tracking"
-        options={{
-          title: "Tracking",
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
-        name="forum"
-        options={{
-          title: "Forum",
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
         name="suggestion"
         options={{
           title: "Suggest",
@@ -38,9 +24,23 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="tracking"
         options={{
-          title: "Profile",
+          title: "Tracking",
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="resource"
+        options={{
+          title: "Resource",
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="forum"
+        options={{
+          title: "Forum",
           headerShown: false,
         }}
       />
