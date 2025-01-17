@@ -1,6 +1,7 @@
 import { View, Text, SafeAreaView, Image } from "react-native";
 import React from "react";
-import Card, { BreakLine } from "../../global/components/Card";
+import Card from "../../global/components/Card";
+import BreakLine from "../../global/components/BreakLine";
 
 const exampleIcon = require("../../assets/BeginnerSetup/cake.png") // ลบทิ้งตอนทำจริง
 

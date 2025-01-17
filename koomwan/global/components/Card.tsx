@@ -5,14 +5,6 @@ type Props = {
     children?: React.ReactNode
 };
 
-
-// เมื่อเรียกใช้ จะมีเส้นแนวนอนกั้นระหว่าง elements  
-export function BreakLine() {
-    return (
-        <View className="h-[1px] w-full border-[1px] border-gray mx-3 my-4" />
-    )
-}
-
 // เรียกใช้ในรูปแบบ
 // <Card>
 //  <{สิ่งที่ต้องการใช้จะใส่}>
