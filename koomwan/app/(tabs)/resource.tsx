@@ -1,12 +1,22 @@
-import { View, Text, SafeAreaView } from "react-native";
+import { View, Text, SafeAreaView, Image } from "react-native";
 import React from "react";
+import Card from "../../global/components/Card";
+import BreakLine from "../../global/components/BreakLine";
 
+const exampleIcon = require("../../assets/BeginnerSetup/cake.png") // ลบทิ้งตอนทำจริง
+
+// ฉบับสาธิตการ์ด
 export default function ResourceScreen() {
   return (
     <SafeAreaView className="flex-1">
-      <View className="flex-1 justify-center items-center p-4">
-        <Text className="text-2xl font-sans mb-8">Resource</Text>
-      </View>
+      <Card>
+        <Text className="text-2xl font-sans">Resource</Text>
+        <BreakLine />
+        <Image source={exampleIcon} className="h-20 w-20"/>
+        <Text className="text-display font-sans">An Example Icon</Text>
+        <Text className="text-2xl font-sans">More Content</Text>
+        <Text className="text-2xl font-sans">Coming Soon</Text>
+      </Card>
     </SafeAreaView>
   );
 }
