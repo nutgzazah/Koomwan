@@ -1,6 +1,9 @@
 / @type {import('tailwindcss').Config} */;
 module.exports = {
-  content: ["./app/**/*.{js,jsx,ts,tsx}", "./global/components/**/*.{js,jsx,ts,tsx}"],
+  content: [
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./global/components/**/*.{js,jsx,ts,tsx}",
+  ],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
@@ -13,6 +16,7 @@ module.exports = {
         warning: "#FFD444",
         abnormal: "#FE5757", // For Unsuccess Status And Risk Status
         unread: "#D6E3FF",
+        gray: "#CBCBCB",
       },
       fontFamily: {
         sans: ["K2D-Regular", "K2D-Medium", "K2D-Bold"],
