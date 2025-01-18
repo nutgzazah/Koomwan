@@ -1,47 +1,94 @@
 import { View, Text } from "react-native";
 import React from "react";
 import { Tabs } from "expo-router";
+import { NavTabIcon, NavBigIcon } from "../../global/components/NavBarBottom";
 
 export default function TabsLayout() {
+  // โค๊ดส่วนนี้ Import รูปภาพจาก Assets สำหรับ Navbar
+  const homeIcon = require("../../assets/Navbar/home.png");
+  const homeBoldIcon = require("../../assets/Navbar/home-bold.png");
+  const suggestionIcon = require("../../assets/Navbar/weight.png");
+  const suggestionBoldIcon = require("../../assets/Navbar/weight-bold.png");
+  const trackingIcon = require("../../assets/Navbar/Pen-transparent.png");
+  const resourceIcon = require("../../assets/Navbar/book.png");
+  const resourceBoldIcon = require("../../assets/Navbar/book-bold.png");
+  const forumIcon = require("../../assets/Navbar/messages.png");
+  const forumBoldIcon = require("../../assets/Navbar/messages-bold.png");
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          position: "absolute",
+          justifyContent: "center",
+          alignItems: "center",
+          borderTopLeftRadius: 30, // Curved Container
+          borderTopRightRadius: 30,
+          borderTopWidth: 1,
+          height: 75,
+        }
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <NavTabIcon
+              focused={focused}
+              label="หน้าหลัก"
+              iconNormal={homeIcon}
+              iconBold={homeBoldIcon}
+            />
+          )
         }}
       />
       <Tabs.Screen
         name="suggestion"
         options={{
-          title: "Suggest",
-          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <NavTabIcon
+              focused={focused}
+              label="ประเมิน"
+              iconNormal={suggestionIcon}
+              iconBold={suggestionBoldIcon}
+            />
+          )
         }}
       />
       <Tabs.Screen
         name="tracking"
         options={{
-          title: "Tracking",
-          headerShown: false,
+          tabBarIcon: ({}) => (
+            <NavBigIcon icon={trackingIcon}/>
+          )
         }}
       />
       <Tabs.Screen
         name="resource"
         options={{
-          title: "Resource",
-          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <NavTabIcon
+              focused={focused}
+              label="เรียนรู้"
+              iconNormal={resourceIcon}
+              iconBold={resourceBoldIcon}
+            />
+          )
         }}
       />
       <Tabs.Screen
         name="forum"
         options={{
-          title: "Forum",
-          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <NavTabIcon 
+              focused={focused}
+              label="ฟอรัม"
+              iconNormal={forumIcon}
+              iconBold={forumBoldIcon}
+            />
+          )
         }}
       />
     </Tabs>
