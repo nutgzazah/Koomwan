@@ -1,4 +1,8 @@
-import { Stack, useRouter } from "expo-router";
+import {
+  Stack,
+  useRouter,
+  RelativePathString
+}from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import "../global.css";
 import { useFonts } from "expo-font";
@@ -6,8 +10,6 @@ import { useEffect } from "react";
 import React from "react";
 import { TouchableOpacity, Image, View, Text } from "react-native";
 import { ImageSourcePropType } from 'react-native';
-import { RelativePathString } from "expo-router";
-
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
