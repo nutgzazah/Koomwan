@@ -35,12 +35,12 @@ export default function RootLayout() {
   const config: navTopConfig = {
     targetRoute: "(tabs)",
     profileIconPath: require("../assets/Navbar/mock-profile.png"),
+    role: "ทั่วไป",
     profileRoute: "../(tabs)/forum", // แก้ไขตอนทำหน้าจริง
     logoIconPath: require("../assets/Navbar/Logo.png"),
     homeRoute: "../(tabs)",
     notificationsIconPath: require("../assets/Navbar/notification.png"),
     notificationsRoute: "../(tabs)/resource", // แก้ไขตอนทำหน้าจริง
-    role: "ทั่วไป",
   }
 
   useEffect(() => {
