@@ -10,6 +10,7 @@ type FormData = {
   password: string;
   confirmPassword: string;
   phoneNumber: string;
+  role: "user" | "doctor";
 };
 
 export default function UserSignInScreen() {
@@ -18,6 +19,7 @@ export default function UserSignInScreen() {
     password: "",
     confirmPassword: "",
     phoneNumber: "",
+    role: "user",
   });
 
   const router = useRouter();
