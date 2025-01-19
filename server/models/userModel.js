@@ -25,12 +25,11 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Please Add Phone Number'],
         unique: true,
         trim: true,
-        match: [/^\+?[1-9]\d{1,14}$/, 'Please use a valid phone number']
+        match: /^[0-9]{10}$/, // เบอร์โทรศัพท์ 10 หลัก
     },
     healthinfo: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'HealthInfo', // อ้างอิงไปยังโมเดล HealthInfo
-        required: true
+        type: String,
+        required: false,
     },
     role: {
         type: String,
