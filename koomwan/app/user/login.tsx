@@ -54,7 +54,7 @@ export default function UserLoginScreen() {
           </View>
 
           {/* Divider Line */}
-          <View className="h-[1px] bg-gray-300 mb-8" />
+          <View className="h-[1px] bg-gray mb-8" />
 
           {/* Form Fields */}
           <View className="space-y-6">
@@ -67,7 +67,7 @@ export default function UserLoginScreen() {
               />
               <TextInput
                 className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
-                  hasError && !username ? "border-abnormal" : "border-gray-300"
+                  hasError && !username ? "border-abnormal" : "border-gray"
                 } bg-background`}
                 placeholder="ชื่อผู้ใช้งานหรือเบอร์โทรศัพท์"
                 value={username}
@@ -85,7 +85,7 @@ export default function UserLoginScreen() {
               />
               <TextInput
                 className={`w-full h-[50px] pl-12 pr-12 border rounded-[5px] text-description font-bold ${
-                  hasError && !password ? "border-abnormal" : "border-gray-300"
+                  hasError && !password ? "border-abnormal" : "border-gray"
                 } bg-background`}
                 placeholder="รหัสผ่าน"
                 secureTextEntry={!showPassword}
