@@ -116,7 +116,10 @@ export default function UserLoginScreen() {
                   โปรดกรอกชื่อผู้ใช้และรหัสผ่าน
                 </Text>
               )}
-              <TouchableOpacity className="ml-auto" onPress={() => {}}>
+              <TouchableOpacity
+                className="ml-auto"
+                onPress={() => router.push("/user/forgotpass")}
+              >
                 <Text className="text-primary text-button font-bold">
                   ลืมรหัสผ่าน?
                 </Text>
