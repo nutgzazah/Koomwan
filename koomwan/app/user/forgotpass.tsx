@@ -8,19 +8,27 @@ type StatusType = "none" | "success" | "error";
 function ForgotPasswordScreen() {
   const router = useRouter();
 
+  // State for inputs
   const [username, setUsername] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Screen state
   const [otpSent, setOtpSent] = useState(false);
-  const [isSettingPassword, setIsSettingPassword] = useState(false); // Controls password setting screen
-  const [status, setStatus] = useState<StatusType>("none"); // Controls success/error screen
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
+  const [status, setStatus] = useState<StatusType>("none");
 
   // OTP resend functionality
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(30);
+
+  // Input validation
+  const isUsernameValid = username.trim().length > 0;
+  const isOtpValid = otp.length === 6;
+  const isPasswordValid =
+    newPassword.length > 0 && newPassword === confirmPassword;
 
   {
     /* OTP countdown timer  */
@@ -45,7 +53,7 @@ function ForgotPasswordScreen() {
   }, [resendDisabled, countdown]);
 
   const handleRequestOTP = () => {
-    if (username) {
+    if (isUsernameValid) {
       setOtpSent(true);
       setResendDisabled(true);
     }
@@ -58,14 +66,14 @@ function ForgotPasswordScreen() {
   };
 
   const handleVerifyOTP = () => {
-    if (otp.length === 6) {
+    if (isOtpValid) {
       setOtpSent(false);
       setIsSettingPassword(true);
     }
   };
 
   const handleSetNewPassword = () => {
-    if (newPassword && newPassword === confirmPassword) {
+    if (isPasswordValid) {
       setStatus("success");
     } else {
       setStatus("error");
@@ -192,8 +200,11 @@ function ForgotPasswordScreen() {
         </View>
 
         <TouchableOpacity
-          className="w-full bg-primary py-4 rounded-[5px] mb-5"
+          className={`w-full py-4 rounded-[5px] mb-5 ${
+            isPasswordValid ? "bg-primary" : "bg-gray"
+          }`}
           onPress={handleSetNewPassword}
+          disabled={!isPasswordValid}
         >
           <Text className="text-card text-center font-bold text-button">
             เปลี่ยนรหัสผ่าน
@@ -255,8 +266,11 @@ function ForgotPasswordScreen() {
         </View>
 
         <TouchableOpacity
-          className="w-full bg-primary py-4 rounded-[5px] mb-5"
+          className={`w-full py-4 rounded-[5px] mb-5 ${
+            isOtpValid ? "bg-primary" : "bg-gray"
+          }`}
           onPress={handleVerifyOTP}
+          disabled={!isOtpValid}
         >
           <Text className="text-card text-center font-bold text-button">
             ยืนยัน OTP
@@ -292,14 +306,14 @@ function ForgotPasswordScreen() {
       <View className="h-[1px] w-full bg-gray mb-8" />
 
       <View className="space-y-4">
-        <View className="relative mb-5">
+        <View className="relative mb-8">
           <Image
             source={require("../../assets/Login/user.png")}
             className="w-6 h-6 absolute left-4 top-4 z-10"
             resizeMode="contain"
           />
           <TextInput
-            className="w-full pl-12 h-[50px] px-4 border border-gray rounded-[5px] text-description font-bold bg-background mb-5"
+            className="w-full pl-12 h-[50px] px-4 border border-gray rounded-[5px] text-description font-bold bg-background"
             placeholder="ชื่อผู้ใช้งานหรือเบอร์โทรศัพท์"
             value={username}
             onChangeText={setUsername}
@@ -307,8 +321,11 @@ function ForgotPasswordScreen() {
         </View>
 
         <TouchableOpacity
-          className="w-full bg-primary py-4 rounded-[5px] mb-5"
+          className={`w-full py-4 rounded-[5px] mb-5 ${
+            isUsernameValid ? "bg-primary" : "bg-gray"
+          }`}
           onPress={handleRequestOTP}
+          disabled={!isUsernameValid}
         >
           <Text className="text-card text-center font-bold text-button">
             ส่งรหัส OTP
