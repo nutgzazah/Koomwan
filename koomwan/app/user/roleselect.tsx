@@ -39,7 +39,10 @@ export default function RoleSelectionScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => {}} className="mb-8">
+        <TouchableOpacity
+          onPress={() => router.push("/doctor/login")}
+          className="mb-8"
+        >
           <View className="bg-background rounded-xl p-6 border border-gray">
             <View className="items-center">
               <Image
@@ -57,7 +60,7 @@ export default function RoleSelectionScreen() {
           <Text className="text-description text-gray font-regular">
             มีบัญชีผู้ใช้แล้วใช่ไหม?{"  "}
           </Text>
-          <TouchableOpacity onPress={() => router.push("/auth/login")}>
+          <TouchableOpacity onPress={() => router.push("/user/login")}>
             <Text className="text-button font-bold text-primary font-regular">
               เข้าสู่ระบบ
             </Text>
