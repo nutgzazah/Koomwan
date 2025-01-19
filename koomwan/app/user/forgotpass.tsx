@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
 import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { useRouter } from "expo-router";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
+import { OTPScreen } from "../../components/login_signin/OTPScreen";
 
 type StatusType = "none" | "success" | "error";
 
@@ -197,66 +198,18 @@ function ForgotPasswordScreen() {
     /* OTP verification screen component */
   }
   const renderOTPScreen = () => (
-    <AuthLayout
+    <OTPScreen
       backgroundImage={require("../../assets/Login/images/forgotpass.png")}
-    >
-      <View className="items-center mb-8">
-        <Text className="text-display font-bold text-secondary mb-5">
-          ยืนยัน OTP
-        </Text>
-        <Text className="text-description text-secondary text-center font-regular">
-          กรอกรหัส OTP เลข 6 หลักที่ส่งไปยัง{"\n"}เบอร์โทรศัพท์ของคุณ
-        </Text>
-      </View>
-
-      <View className="h-[1px] w-full bg-gray mb-8" />
-
-      <View className="space-y-4">
-        <TextInput
-          className="w-full h-[50px] px-4 border border-gray rounded-[5px] text-description font-bold bg-background mb-5"
-          placeholder="กรอกรหัส OTP"
-          value={otp}
-          onChangeText={setOtp}
-          keyboardType="number-pad"
-          maxLength={6}
-        />
-
-        <View className="flex-row justify-between items-center mb-5">
-          <Text className="text-description text-secondary font-regular">
-            ยังไม่ได้รับรหัส OTP?
-          </Text>
-          <TouchableOpacity onPress={handleResendOTP} disabled={resendDisabled}>
-            <Text
-              className={`text-description font-bold ${
-                resendDisabled ? "text-gray" : "text-primary"
-              }`}
-            >
-              {resendDisabled
-                ? `ส่งรหัสอีกครั้ง (${countdown}s)`
-                : "ส่งรหัสอีกครั้ง"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          className={`w-full py-4 rounded-[5px] mb-5 ${
-            isOtpValid ? "bg-primary" : "bg-gray"
-          }`}
-          onPress={handleVerifyOTP}
-          disabled={!isOtpValid}
-        >
-          <Text className="text-card text-center font-bold text-button">
-            ยืนยัน OTP
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text className="text-primary text-center font-bold text-button">
-            กลับไปหน้าเข้าสู่ระบบ
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </AuthLayout>
+      otp={otp}
+      onOtpChange={setOtp}
+      onVerifyOTP={handleVerifyOTP}
+      onResendOTP={handleResendOTP}
+      onBack={() => router.back()}
+      isOtpValid={isOtpValid}
+      resendDisabled={resendDisabled}
+      countdown={countdown}
+      backType="login"
+    />
   );
 
   {
