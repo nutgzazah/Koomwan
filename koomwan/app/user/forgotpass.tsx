@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
 import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { useRouter } from "expo-router";
+import { StatusScreen } from "../../components/login_signin/StatusScreen";
 
 type StatusType = "none" | "success" | "error";
 
@@ -83,56 +84,28 @@ function ForgotPasswordScreen() {
   {
     /* Success/Error status screen component */
   }
-  const renderStatusScreen = () => (
-    <AuthLayout
-      backgroundImage={require("../../assets/Login/images/forgotpass.png")}
-    >
-      <View className="items-center pt-8">
-        {status === "success" ? (
-          <>
-            <View className="p-4 mb-4">
-              <Image
-                source={require("../../assets/Login/tick-circle.png")}
-                className="w-20 h-20"
-                resizeMode="contain"
-              />
-            </View>
-            <Text className="text-display font-bold text-secondary mb-2">
-              เปลี่ยนรหัสผ่านสำเร็จ
-            </Text>
-            <Text className="text-description text-secondary mb-8 font-regular">
-              พร้อมสำหรับการดูแลสุขภาพของคุณหรือยัง!
-            </Text>
-          </>
-        ) : (
-          <>
-            <View className="p-4 mb-4">
-              <Image
-                source={require("../../assets/Login/close-circle.png")}
-                className="w-20 h-20"
-                resizeMode="contain"
-              />
-            </View>
-            <Text className="text-display font-bold text-secondary mb-2">
-              เปลี่ยนรหัสผ่านไม่สำเร็จ
-            </Text>
-            <Text className="text-description text-secondary mb-8 font-regular">
-              โปรดลองใหม่อีกครั้งในภายหลัง
-            </Text>
-          </>
-        )}
-        <View className="h-[1px] w-full bg-gray mb-8" />
-        <TouchableOpacity
-          className="w-full bg-primary py-4 rounded-[5px]"
-          onPress={() => router.replace("/user/login")}
-        >
-          <Text className="text-card text-center font-bold text-button">
-            {status === "success" ? "เข้าสู่ระบบ" : "กลับไปที่หน้าเข้าสู่ระบบ"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </AuthLayout>
-  );
+  if (status !== "none") {
+    return (
+      <StatusScreen
+        status={status === "success" ? "success" : "error"}
+        title={
+          status === "success"
+            ? "เปลี่ยนรหัสผ่านสำเร็จ"
+            : "เปลี่ยนรหัสผ่านไม่สำเร็จ"
+        }
+        description={
+          status === "success"
+            ? "พร้อมสำหรับการดูแลสุขภาพของคุณหรือยัง!"
+            : "โปรดลองใหม่อีกครั้งในภายหลัง"
+        }
+        buttonText={
+          status === "success" ? "เข้าสู่ระบบ" : "กลับไปที่หน้าเข้าสู่ระบบ"
+        }
+        onButtonPress={() => router.replace("/user/login")}
+        backgroundImage={require("../../assets/Login/images/forgotpass.png")}
+      />
+    );
+  }
 
   {
     /* Set new password screen component */
@@ -344,7 +317,7 @@ function ForgotPasswordScreen() {
   {
     /* Render screen based on current state*/
   }
-  if (status !== "none") return renderStatusScreen();
+
   if (isSettingPassword) return renderSetPasswordScreen();
   if (otpSent) return renderOTPScreen();
   return renderInitialScreen();
