@@ -162,7 +162,7 @@ export default function UserLoginScreen() {
               <Text className="text-description font-regular text-secondary">
                 หากคุณยังไม่เคยลงทะเบียนมาก่อน{" "}
               </Text>
-              <TouchableOpacity onPress={() => router.push("/user/signin")}>
+              <TouchableOpacity onPress={() => router.push("/user/roleselect")}>
                 <Text className="text-primary text-button font-bold">
                   ลงทะเบียน
                 </Text>
