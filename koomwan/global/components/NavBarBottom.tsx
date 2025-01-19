@@ -22,10 +22,10 @@ export function NavTabIcon({
     iconBold
 }: NavTabIconProps) {
     return (
-        <View className="items-center w-20 mt-3 ml-3">
+        <View className="items-center mt-5 w-20 ml-3">
             <Image
                 source={focused ? iconBold : iconNormal}
-                className="h-6 w-6"
+                className="h-6 w-6 mt-3"
             />
             <Text className={`font-sans text-sub-button text-center ${focused ? "color-primary" : "color-secondary"}`}>
                 {label}
