@@ -1,4 +1,3 @@
-// components/common/StatusScreen.tsx
 import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { AuthLayout } from "./AuthLayout";
