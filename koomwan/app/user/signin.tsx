@@ -53,6 +53,18 @@ export default function UserSignInScreen() {
     };
   }, [resendDisabled, countdown]);
 
+  const validatePhoneNumber = (phoneNumber: string): boolean => {
+    // Remove any spaces or dashes
+    const cleanPhone = phoneNumber.replace(/[ -]/g, "");
+
+    // Must start with 0
+    // Second digit must be 6, 8, or 9 (for mobile numbers)
+    // Must be exactly 10 digits
+    const thaiMobileRegex = /^0[689]\d{8}$/;
+
+    return thaiMobileRegex.test(cleanPhone);
+  };
+
   const validateForm = () => {
     const newErrors: Partial<FormData> = {};
 
@@ -74,6 +86,9 @@ export default function UserSignInScreen() {
 
     if (!formData.phoneNumber) {
       newErrors.phoneNumber = "กรุณากรอกเบอร์โทรศัพท์";
+    } else if (!validatePhoneNumber(formData.phoneNumber)) {
+      newErrors.phoneNumber =
+        "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (เช่น 08X-XXX-XXXX)";
     }
 
     setErrors(newErrors);
