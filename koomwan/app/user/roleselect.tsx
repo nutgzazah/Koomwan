@@ -40,7 +40,7 @@ export default function RoleSelectionScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/doctor/login")}
+          onPress={() => router.push("/doctor/signin")}
           className="mb-8"
         >
           <View className="bg-background rounded-xl p-6 border border-gray">
