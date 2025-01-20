@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
-import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { useRouter } from "expo-router";
+
+import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
 import { OTPScreen } from "../../components/login_signin/OTPScreen";
 
