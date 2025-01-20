@@ -133,7 +133,7 @@ export default function DoctorSignInScreen() {
     if (showOTP) {
       return (
         <OTPScreen
-          backgroundImage={require("../../assets/Login/images/doctor_login.png")}
+          backgroundImage={require("../../assets/Login/images/doctor-login.png")}
           otp={otp}
           onOtpChange={handleOtpChange}
           onVerifyOTP={handleVerifyOTP}
@@ -168,14 +168,14 @@ export default function DoctorSignInScreen() {
               setOtp("");
             }
           }}
-          backgroundImage={require("../../assets/Login/images/doctor_login.png")}
+          backgroundImage={require("../../assets/Login/images/doctor-login.png")}
         />
       );
     }
 
     return (
       <AuthLayout
-        backgroundImage={require("../../assets/Login/images/doctor_login.png")}
+        backgroundImage={require("../../assets/Login/images/doctor-login.png")}
       >
         <View className="flex-1">
           <TouchableOpacity
