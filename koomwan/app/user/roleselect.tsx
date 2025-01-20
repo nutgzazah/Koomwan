@@ -60,7 +60,7 @@ export default function RoleSelectionScreen() {
           <Text className="text-description text-gray font-regular">
             มีบัญชีผู้ใช้แล้วใช่ไหม?{"  "}
           </Text>
-          <TouchableOpacity onPress={() => router.push("/user/login")}>
+          <TouchableOpacity onPress={() => router.back()}>
             <Text className="text-button font-bold text-primary font-regular">
               เข้าสู่ระบบ
             </Text>
