@@ -9,7 +9,7 @@ type FormData = {
   username: string;
   password: string;
   confirmPassword: string;
-  phoneNumber: string;
+  phone: string;
   role: "user" | "doctor";
 };
 
@@ -18,7 +18,7 @@ export default function DoctorSignInScreen() {
     username: "",
     password: "",
     confirmPassword: "",
-    phoneNumber: "",
+    phone: "",
     role: "doctor",
   });
 
@@ -86,11 +86,10 @@ export default function DoctorSignInScreen() {
       newErrors.confirmPassword = "รหัสผ่านไม่ตรงกัน";
     }
 
-    if (!formData.phoneNumber) {
-      newErrors.phoneNumber = "กรุณากรอกเบอร์โทรศัพท์";
-    } else if (!validatePhoneNumber(formData.phoneNumber)) {
-      newErrors.phoneNumber =
-        "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (เช่น 08X-XXX-XXXX)";
+    if (!formData.phone) {
+      newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
+    } else if (!validatePhoneNumber(formData.phone)) {
+      newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (เช่น 08X-XXX-XXXX)";
     }
 
     setErrors(newErrors);
@@ -279,18 +278,18 @@ export default function DoctorSignInScreen() {
               />
               <TextInput
                 className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
-                  errors.phoneNumber ? "border-abnormal" : "border-gray"
+                  errors.phone ? "border-abnormal" : "border-gray"
                 }`}
                 placeholder="โทรศัพท์"
                 keyboardType="phone-pad"
-                value={formData.phoneNumber}
+                value={formData.phone}
                 onChangeText={(text) =>
-                  setFormData({ ...formData, phoneNumber: text })
+                  setFormData({ ...formData, phone: text })
                 }
               />
-              {errors.phoneNumber && (
+              {errors.phone && (
                 <Text className="text-abnormal text-tag font-regular mt-1">
-                  {errors.phoneNumber}
+                  {errors.phone}
                 </Text>
               )}
             </View>
