@@ -23,6 +23,7 @@ export default function UserLoginScreen() {
       setHasError(true);
     } else {
       setHasError(false);
+      router.replace("/(tabs)");
       // Handle login logic
     }
   };
