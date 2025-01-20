@@ -1,6 +1,8 @@
-const { hashPassword } = require('../helpers/authHelper');
+const JWT = require('jsonwebtoken')
+const { hashPassword, comparePassword } = require('../helpers/authHelper');
 const userModel = require('../models/userModel')
 
+//register
 const registerController = async (req, res) => {
     try {
         const { username, email, password, phone } = req.body;
@@ -81,4 +83,64 @@ const registerController = async (req, res) => {
     }
 }
 
-module.exports = { registerController };
+//login
+const loginController = async (req,res) => {
+    try{
+        const {username, password} = req.body
+        //validation
+        if(!username){
+            return res.status(500).send({
+                success:false,
+                message:'Please provide username'
+            }
+            )
+        }
+        if(!password){
+            return res.status(500).send({
+                success:false,
+                message:'Please provide password'
+            }
+            )
+        }
+        //find user
+        const user = await userModel.findOne({username})
+        if(!user){
+            return res.status(500).send({
+                success:false,
+                message:'Username not found'
+            })
+        }
+        //match password
+        const match = await comparePassword(password, user.password)
+        if(!match){
+            return res.status(500).send({
+                success:false,
+                message:'Invalid username or password'
+            })
+        }
+        //TOKEN JWT
+        const token = await JWT.sign({ _id: user._id }, process.env.JWT_SECRET,{
+            expiresIn:'7d'
+        })
+
+        //แสดงข้อมูลหลัง Login สำเร็จแต่ไม่ต้องแสดง password ที่บันทึกไว้จริง
+        user.password = undefined
+
+        res.status(200).send({
+            success:true,
+            message:'Login successfully',
+            token,
+            user,
+        })
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({
+            success:false,
+            message:'Error in login API',
+            error
+        })
+    }
+}
+
+module.exports = { registerController, loginController };
