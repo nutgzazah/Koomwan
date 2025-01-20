@@ -31,7 +31,7 @@ function ForgotPasswordScreen() {
   const isUsernameValid = username.trim().length > 0;
   const isOtpValid = otp.length === 6;
   const isPasswordValid =
-    newPassword.length > 0 && newPassword === confirmPassword;
+    newPassword.length > 6 && newPassword === confirmPassword;
 
   {
     /* OTP countdown timer  */
