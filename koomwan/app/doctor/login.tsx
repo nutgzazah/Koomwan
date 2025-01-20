@@ -33,7 +33,7 @@ export default function DoctorLoginScreen() {
         {/* Background Image Container */}
         <View className="relative h-80">
           <Image
-            source={require("../../assets/Login/images/doctor_login.png")}
+            source={require("../../assets/Login/images/doctor-login.png")}
             className="w-full h-full"
             resizeMode="cover"
           />
