@@ -36,11 +36,11 @@ export const StatusScreen = ({
           />
         </View>
 
-        <Text className="text-display font-bold text-secondary mb-2">
+        <Text className="text-display font-bold text-secondary mb-2 text-center">
           {title}
         </Text>
 
-        <Text className="text-description text-secondary mb-8 font-regular">
+        <Text className="text-description text-secondary mb-8 font-regular text-center">
           {description}
         </Text>
 
