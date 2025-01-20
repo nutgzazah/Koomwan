@@ -151,11 +151,7 @@ export default function DoctorSignInScreen() {
       return (
         <StatusScreen
           status={showStatus === "success" ? "success" : "error"}
-          title={
-            showStatus === "success"
-              ? "ยืนยันเบอร์โทรศัพท์สำเร็จ"
-              : "ยืนยันเบอร์โทรศัพท์ไม่สำเร็จ"
-          }
+          title={showStatus === "success" ? "ยืนยันสำเร็จ" : "ยืนยันไม่สำเร็จ"}
           description={
             showStatus === "success"
               ? "กรอกข้อมูลประวัติของท่านกันเลย!"
