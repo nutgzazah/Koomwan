@@ -40,7 +40,7 @@ type InputFieldProps = {
   value: string;
   onChangeText: (text: string) => void;
   placeholder: string;
-  leftIcon: any;
+  leftIcon?: any;
   rightIcon?: any;
   onRightIconPress?: () => void;
   secureTextEntry?: boolean;
