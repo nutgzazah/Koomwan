@@ -2,13 +2,13 @@ import {
   Image,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
 } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
+import InputField from "../../global/components/InputField";
 
 export default function UserLoginScreen() {
   const [username, setUsername] = useState("");
@@ -23,7 +23,6 @@ export default function UserLoginScreen() {
       setHasError(true);
     } else {
       setHasError(false);
-      router.replace("/(tabs)");
       // Handle login logic
     }
   };
@@ -60,67 +59,42 @@ export default function UserLoginScreen() {
           {/* Form Fields */}
           <View className="space-y-6">
             {/* Username Field */}
-            <View className="relative mb-3">
-              <Image
-                source={require("../../assets/Login/user.png")}
-                className="w-6 h-6 absolute left-4 top-4 z-10"
-                resizeMode="contain"
-              />
-              <TextInput
-                className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
-                  hasError && !username ? "border-abnormal" : "border-gray"
-                } bg-background`}
-                placeholder="ชื่อผู้ใช้งานหรือเบอร์โทรศัพท์"
-                value={username}
-                onChangeText={setUsername}
-                placeholderTextColor="#C6C6C6"
-              />
-            </View>
+            <InputField
+              value={username}
+              onChangeText={setUsername}
+              placeholder="ชื่อผู้ใช้งานหรือเบอร์โทรศัพท์"
+              leftIcon={require("../../assets/Login/user.png")}
+              hasError={hasError && !username}
+            />
 
             {/* Password Field */}
-            <View className="relative">
-              <Image
-                source={require("../../assets/Login/lock.png")}
-                className="w-6 h-6 absolute left-4 top-4 z-10"
-                resizeMode="contain"
-              />
-              <TextInput
-                className={`w-full h-[50px] pl-12 pr-12 border rounded-[5px] text-description font-bold ${
-                  hasError && !password ? "border-abnormal" : "border-gray"
-                } bg-background`}
-                placeholder="รหัสผ่าน"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                placeholderTextColor="#C6C6C6"
-              />
-              <TouchableOpacity
-                className="absolute right-4 top-4 z-10"
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Image
-                  source={
-                    showPassword
-                      ? require("../../assets/Login/eye.png")
-                      : require("../../assets/Login/eye-slash.png")
-                  }
-                  className="w-6 h-6"
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            </View>
+            <InputField
+              value={password}
+              onChangeText={setPassword}
+              placeholder="รหัสผ่าน"
+              leftIcon={require("../../assets/Login/lock.png")}
+              rightIcon={
+                showPassword
+                  ? require("../../assets/Login/eye.png")
+                  : require("../../assets/Login/eye-slash.png")
+              }
+              onRightIconPress={() => setShowPassword(!showPassword)}
+              secureTextEntry={!showPassword}
+              hasError={hasError && !password}
+            />
 
             {/* Error Message and Forgot Password Row */}
-            <View className="flex-row justify-between items-center mt-5 mb-5">
-              {hasError && !username && !password && (
-                <Text className="text-abnormal text-description font-regular">
-                  โปรดกรอกชื่อผู้ใช้และรหัสผ่าน
-                </Text>
-              )}
-              <TouchableOpacity
-                className="ml-auto"
-                onPress={() => router.push("/user/forgotpass")}
+            <View className="flex-row justify-between items-center mb-5">
+              {/* Error Message */}
+              <Text
+                className={`text-button font-regular ${
+                  hasError ? "text-abnormal" : "text-transparent"
+                }`}
               >
+                โปรดกรอกชื่อผู้ใช้และรหัสผ่าน
+              </Text>
+              {/* Forgot Password Link */}
+              <TouchableOpacity onPress={() => {}}>
                 <Text className="text-primary text-button font-bold">
                   ลืมรหัสผ่าน?
                 </Text>
@@ -129,7 +103,7 @@ export default function UserLoginScreen() {
 
             {/* Login Button */}
             <TouchableOpacity
-              className="w-full bg-primary py-4 rounded-[5px]"
+              className="w-full bg-primary py-4 rounded-[5px] mt-3"
               onPress={handleLogin}
             >
               <Text className="text-card text-center font-bold text-button">
