@@ -24,6 +24,7 @@ export default function UserLoginScreen() {
     } else {
       setHasError(false);
       // Handle login logic
+      router.replace("/user/beginner");
     }
   };
 
