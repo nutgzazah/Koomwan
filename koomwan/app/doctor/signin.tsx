@@ -152,25 +152,27 @@ export default function DoctorSignInScreen() {
         <StatusScreen
           status={showStatus === "success" ? "success" : "error"}
           title={
-            showStatus === "success" ? "ลงทะเบียนสำเร็จ" : "ลงทะเบียนไม่สำเร็จ"
+            showStatus === "success"
+              ? "ยืนยันเบอร์โทรศัพท์สำเร็จ"
+              : "ยืนยันเบอร์โทรศัพท์ไม่สำเร็จ"
           }
           description={
             showStatus === "success"
-              ? "พร้อมสำหรับการดูแลสุขภาพของคุณหรือยัง!"
+              ? "กรอกข้อมูลประวัติของท่านกันเลย!"
               : "กรุณาลองใหม่อีกครั้ง"
           }
           buttonText={
-            showStatus === "success" ? "เข้าสู่ระบบ" : "กลับไปหน้าเข้าสู่ระบบ"
+            showStatus === "success" ? "กรอกข้อมูล" : "กลับไปหน้าเข้าสู่ระบบ"
           }
           onButtonPress={() => {
             if (showStatus === "success") {
-              router.replace("/doctor/login");
+              router.replace("/doctor/signupinfo");
             } else {
               setShowStatus("none");
               setOtp("");
             }
           }}
-          backgroundImage={require("../../assets/Signup/images/signup1.png")}
+          backgroundImage={require("../../assets/Login/images/doctor_login.png")}
         />
       );
     }
