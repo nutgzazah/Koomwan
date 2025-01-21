@@ -1,13 +1,14 @@
 import {
   View,
-  Text,
   SafeAreaView,
   Image,
-  ScrollView
+  ScrollView,
+  TextInput,
+  TouchableOpacity
 } from "react-native";
-import React from "react";
-import Card from "../../../global/components/Card";
+import React, { useState } from "react";
 import ArticleBox, { articleBoxProps } from "./components/ArticleBox";
+import SearchBox from "../../../global/components/SearchBox";
 
 const mockData: Array<articleBoxProps> = [
   {
@@ -30,13 +31,26 @@ const mockData: Array<articleBoxProps> = [
   },
 ]
 
-
-// ฉบับสาธิตการ์ด
 export default function ResourceScreen() {
+  const [searchQuery, setSearchQuery] = useState("");
+
   return (
     <SafeAreaView className="flex-1">
       <ScrollView>
-        <View>
+        <View className="flex flex-row ml-10 my-4 items-center">
+          <TouchableOpacity className="mr-4">
+            <Image 
+              source={require('../../../assets/Resource/filter-search.png')}
+              className="w-6 h-6"
+            />
+          </TouchableOpacity>
+
+          <SearchBox 
+            value={searchQuery}
+            size="big"
+            placeholder={"ค้นหา..."}
+            onChangeText={setSearchQuery}
+          />
         </View>
         {
           mockData.map((item, index) => (
