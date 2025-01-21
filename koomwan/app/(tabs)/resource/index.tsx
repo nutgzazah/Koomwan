@@ -47,7 +47,7 @@ export default function ResourceScreen() {
 
           <SearchBox 
             value={searchQuery}
-            size="big"
+            fullSize={false}
             placeholder={"ค้นหา..."}
             onChangeText={setSearchQuery}
           />
