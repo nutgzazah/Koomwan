@@ -40,7 +40,7 @@ const recordSchema = new mongoose.Schema({
     },
     medicineaddition: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'MedicineAddition',
+        ref: 'AdditionPill',
     },
 }, { timestamps: true });
 

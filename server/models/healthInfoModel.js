@@ -27,9 +27,9 @@ const healthInfoSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    medicinecollection: {
+    regularpill: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'MedicineCollection',
+        ref: 'RegularPill',
         required: true,
     },
 }, { timestamps: true });
