@@ -5,21 +5,24 @@ import { useRouter } from "expo-router";
 import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { OTPScreen } from "../../components/login_signin/OTPScreen";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
+import axios from "axios";
 
 type FormData = {
   username: string;
+  email: string;
   password: string;
   confirmPassword: string;
-  phoneNumber: string;
+  phone: string;
   role: "user" | "doctor";
 };
 
 export default function UserSignInScreen() {
   const [formData, setFormData] = useState<FormData>({
     username: "",
+    email: "",
     password: "",
     confirmPassword: "",
-    phoneNumber: "",
+    phone: "",
     role: "user",
   });
 
@@ -56,9 +59,15 @@ export default function UserSignInScreen() {
     };
   }, [resendDisabled, countdown]);
 
-  const validatePhoneNumber = (phoneNumber: string): boolean => {
+  const validateEmail = (email: string): boolean => {
+    // Simple regex to check if the email format is valid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string): boolean => {
     // Remove any spaces or dashes
-    const cleanPhone = phoneNumber.replace(/[ -]/g, "");
+    const cleanPhone = phone.replace(/[ -]/g, "");
 
     // Must start with 0
     // Second digit must be 6, 8, or 9 (for mobile numbers)
@@ -70,39 +79,61 @@ export default function UserSignInScreen() {
 
   const validateForm = () => {
     const newErrors: Partial<FormData> = {};
-
+  
     if (!formData.username) {
       newErrors.username = "กรุณากรอกชื่อผู้ใช้";
     }
-
+  
+    if (!formData.email) {
+      newErrors.email = "กรุณากรอกอีเมล";
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
+    }
+  
     if (!formData.password) {
       newErrors.password = "กรุณากรอกรหัสผ่าน";
     } else if (formData.password.length < 6) {
       newErrors.password = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
     }
-
+  
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "กรุณายืนยันรหัสผ่าน";
     } else if (formData.confirmPassword !== formData.password) {
       newErrors.confirmPassword = "รหัสผ่านไม่ตรงกัน";
     }
-
-    if (!formData.phoneNumber) {
-      newErrors.phoneNumber = "กรุณากรอกเบอร์โทรศัพท์";
-    } else if (!validatePhoneNumber(formData.phoneNumber)) {
-      newErrors.phoneNumber =
+  
+    if (!formData.phone) {
+      newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
+    } else if (!validatePhone(formData.phone)) {
+      newErrors.phone =
         "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (เช่น 08X-XXX-XXXX)";
     }
-
+  
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      console.log("Form submitted:", formData);
-      setShowOTP(true);
-      setResendDisabled(true);
+      try {
+        const url = "http://192.168.0.100:8080/api/v1/auth/register";
+        const response = await axios.post(url, formData);
+        console.log(formData)
+        if (response.status === 201) {
+          setShowOTP(true);
+          setResendDisabled(true);
+        } else {
+          console.error("Registration failed:", response.data);
+        }
+      } catch (error) {
+        // ตรวจสอบว่าคือ AxiosError หรือไม่
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data.message || "Unknown error occurred");
+      } else {
+        alert("An unexpected error occurred");
+      }
+      console.error("Error submitting form:", error);
+      }
     }
   };
 
@@ -226,6 +257,31 @@ export default function UserSignInScreen() {
               )}
             </View>
 
+
+            <View className="relative mb-3">
+              <Image
+                source={require("../../assets/Signup/user.png")}
+                className="w-6 h-6 absolute left-4 top-4 z-10"
+                resizeMode="contain"
+              />
+              <TextInput
+                className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
+                  errors.email ? "border-abnormal" : "border-gray"
+                }`}
+                placeholder="อีเมล"
+                value={formData.email}
+                
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
+                keyboardType="email-address"
+              />
+              {errors.email && (
+                <Text className="text-abnormal text-tag font-regular mt-1">
+                  {errors.email}
+                </Text>
+              )}
+            </View>
+
+
             <View className="relative mb-3">
               <Image
                 source={require("../../assets/Signup/lock.png")}
@@ -282,18 +338,18 @@ export default function UserSignInScreen() {
               />
               <TextInput
                 className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
-                  errors.phoneNumber ? "border-abnormal" : "border-gray"
+                  errors.phone ? "border-abnormal" : "border-gray"
                 }`}
                 placeholder="โทรศัพท์"
                 keyboardType="phone-pad"
-                value={formData.phoneNumber}
+                value={formData.phone}
                 onChangeText={(text) =>
-                  setFormData({ ...formData, phoneNumber: text })
+                  setFormData({ ...formData, phone: text })
                 }
               />
-              {errors.phoneNumber && (
+              {errors.phone && (
                 <Text className="text-abnormal text-tag font-regular mt-1">
-                  {errors.phoneNumber}
+                  {errors.phone}
                 </Text>
               )}
             </View>
