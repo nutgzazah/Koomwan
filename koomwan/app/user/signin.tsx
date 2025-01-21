@@ -5,7 +5,9 @@ import { useRouter } from "expo-router";
 import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { OTPScreen } from "../../components/login_signin/OTPScreen";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
+import Toast from 'react-native-toast-message';
 import axios from "axios";
+
 
 type FormData = {
   username: string;
@@ -25,6 +27,8 @@ export default function UserSignInScreen() {
     phone: "",
     role: "user",
   });
+
+  
 
   const router = useRouter();
   const [errors, setErrors] = useState<Partial<FormData>>({});
@@ -128,9 +132,17 @@ export default function UserSignInScreen() {
       } catch (error) {
         // ตรวจสอบว่าคือ AxiosError หรือไม่
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data.message || "Unknown error occurred");
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.response?.data.message || "Unknown error occurred",
+        });
       } else {
-        alert("An unexpected error occurred");
+        Toast.show({
+          type: 'error',
+          text1: 'Unexpected Error',
+          text2: 'An unexpected error occurred',
+        });
       }
       console.error("Error submitting form:", error);
       }
@@ -379,5 +391,10 @@ export default function UserSignInScreen() {
     );
   };
 
-  return renderContent();
+  return (
+    <>
+      {renderContent()}
+      <Toast />
+    </>
+  );
 }
