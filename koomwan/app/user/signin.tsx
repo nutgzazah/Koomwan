@@ -5,6 +5,10 @@ import { useRouter } from "expo-router";
 import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { OTPScreen } from "../../components/login_signin/OTPScreen";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
+
+//firebase SMS OTP
+import auth from "@react-native-firebase/auth"
+
 import Toast from 'react-native-toast-message';
 import axios from "axios";
 
@@ -148,6 +152,16 @@ export default function UserSignInScreen() {
       }
     }
   };
+
+  // const otpSignUp = async () => {
+  //   try {
+  //     const confirmation = await auth().signInWithPhoneNumber(formData.phone)
+  //     setOtpConfirm(confirmation)
+  //   } catch (error) {
+  //     console.log("Error sending code: ",error)
+  //   }
+  // }
+  
 
   const handleOtpChange = (text: string) => {
     setOtp(text);
