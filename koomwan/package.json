@@ -11,6 +11,8 @@
   "dependencies": {
     "@expo/metro-runtime": "^4.0.1",
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-firebase/app": "^21.7.1",
+    "@react-native-firebase/auth": "^21.7.1",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.2.0",
     "axios": "^1.7.9",
@@ -35,7 +37,8 @@
     "react-native-toast-message": "^2.2.1",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.19.13",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "expo-dev-client": "~5.0.10"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
