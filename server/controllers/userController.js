@@ -2,11 +2,12 @@ const JWT = require('jsonwebtoken')
 const { hashPassword, comparePassword } = require('../helpers/authHelper');
 const userModel = require('../models/userModel')
 
+
 //register
 const registerController = async (req, res) => {
     try {
         const { username, email, password, phone } = req.body;
-
+        
         // Validation
         if (!username) {
             return res.status(400).send({
@@ -49,7 +50,7 @@ const registerController = async (req, res) => {
                 message: 'Email is already registered'
             });
         }
-
+        
         const existingPhone = await userModel.findOne({ phone });
         if (existingPhone) {
             return res.status(400).send({
@@ -59,7 +60,7 @@ const registerController = async (req, res) => {
         }
         //hashed password
         const hashedPassword = await hashPassword(password)
-
+        
         // save User
         const user = await userModel({
             username, 
@@ -67,10 +68,52 @@ const registerController = async (req, res) => {
             password:hashedPassword, 
             phone
         }).save()
-
+        
         return res.status(201).send({
             success: true,
             message: 'Registration successful, please login'
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success: false,
+            message: 'Error in register API',
+            error,
+        });
+    }
+}
+
+//check Duplicate
+const checkDuplicateController = async (req, res) => {
+    try {
+        const { username, email, phone } = req.body;
+        // Check if username, email, or phone already exists
+        const existingUsername = await userModel.findOne({ username });
+        if (existingUsername) {
+            return res.status(400).send({
+                success: false,
+                message: 'Username is already taken'
+            });
+        }
+
+        const existingEmail = await userModel.findOne({ email });
+        if (existingEmail) {
+            return res.status(400).send({
+                success: false,
+                message: 'Email is already registered'
+            });
+        }
+
+        const existingPhone = await userModel.findOne({ phone });
+        if (existingPhone) {
+            return res.status(400).send({
+                success: false,
+                message: 'Phone number is already registered'
+            });
+        }
+        return res.status(201).send({
+            success: true,
         });
 
     } catch (error) {
@@ -143,4 +186,4 @@ const loginController = async (req,res) => {
     }
 }
 
-module.exports = { registerController, loginController };
+module.exports = { registerController, loginController, checkDuplicateController };
