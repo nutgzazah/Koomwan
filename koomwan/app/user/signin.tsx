@@ -7,7 +7,7 @@ import { OTPScreen } from "../../components/login_signin/OTPScreen";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
 
 //firebase SMS OTP
-import auth from "@react-native-firebase/auth"
+// import auth from "@react-native-firebase/auth"
 
 import Toast from 'react-native-toast-message';
 import axios from "axios";
@@ -126,21 +126,12 @@ export default function UserSignInScreen() {
   const handleSubmit = async () => {
     if (validateForm()) {
       try {
-        // เรียกใช้ Firebase เพื่อส่ง OTP
+        // เช็คว่ามีข้อมูลไรซ้ำไหม
         const response = await axios.post("http://192.168.0.100:8080/api/v1/auth/checkDuplicate", formData);
         console.log(formData)
         if (response.status === 201) {
-          try {
-            const formattedPhone = `+66${formData.phone.slice(1)}`; // แปลงเบอร์โทรเป็น +66
-            const confirmationResult = await auth().signInWithPhoneNumber(formattedPhone);
-            setConfirmation(confirmationResult);
-            console.log(formattedPhone)
-            setShowOTP(true);
-            Toast.show({ type: "success", text1: "OTP Sent", text2: "OTP ส่งไปยังเบอร์โทรศัพท์แล้ว" });
-          } catch (error) {
-            Toast.show({ type: "error", text1: "Error", text2: "ส่ง OTP ไม่สำเร็จ" });
-            console.error("Error sending OTP:", error);
-          }
+          setShowOTP(true);
+          setResendDisabled(true);
         } else {
           console.error("Registration failed:", response.data);
         }
@@ -164,15 +155,6 @@ export default function UserSignInScreen() {
     }
   };
 
-  // const otpSignUp = async () => {
-  //   try {
-  //     const confirmation = await auth().signInWithPhoneNumber(formData.phone)
-  //     setOtpConfirm(confirmation)
-  //   } catch (error) {
-  //     console.log("Error sending code: ",error)
-  //   }
-  // }
-  
 
   const handleOtpChange = (text: string) => {
     setOtp(text);
@@ -181,7 +163,7 @@ export default function UserSignInScreen() {
   const handleVerifyOTP = async () => {
     console.log("Verifying OTP:", otp);
   
-    if (otp === "123456") { // Replace this with your actual OTP verification logic
+    if (otp === "123456") { 
       try {
         // ส่งข้อมูลไปยัง backend หลังจาก OTP ยืนยันสำเร็จ
         const response = await axios.post("http://192.168.0.100:8080/api/v1/auth/register", formData);
