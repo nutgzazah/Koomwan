@@ -2,7 +2,7 @@ import {
     View,
     Text,
     Image,
-    TouchableOpacity
+    Pressable
 } from "react-native";
 import React from "react";
 import { useState } from "react";
@@ -21,7 +21,7 @@ export default function DropdownChoice({
 
     return (
         <View className="flex flex-row items-center w-[19.25rem] h-8 mb-3">
-            <TouchableOpacity
+            <Pressable
                 className="w-7 h-6 mr-[1.125rem]"
                 onPress={(() => setIsSelected(!isSelected))}
             >
@@ -29,7 +29,7 @@ export default function DropdownChoice({
                     className="w-6 h-full"
                     source={isSelected ? checkedIcon : unCheckedIcon}
                 />
-            </TouchableOpacity>
+            </Pressable>
 
             <Text className="font-sans text-body text-secondary">{choice}</Text>
         </View>

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 
 interface twoChoiceFilterBoxProps {
     first_choice: string,
@@ -18,7 +18,7 @@ export default function TwoChoiceFilterBox({
 }: twoChoiceFilterBoxProps) {
     return (
         <View className="flex flex-row items-center w-full h-8 bg-card rounded-md">
-            <TouchableOpacity 
+            <Pressable 
                 className={`w-[50%] h-full rounded-md`}
                 onPress={first_onPress}
             >
@@ -28,8 +28,8 @@ export default function TwoChoiceFilterBox({
                 }>
                     {first_choice}
                 </Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
+            </Pressable>
+            <Pressable 
                 className={`w-[50%] h-full rounded-md`}
                 onPress={second_onPress}
             >
@@ -39,7 +39,7 @@ export default function TwoChoiceFilterBox({
                 }>
                     {second_choice}
                 </Text>
-            </TouchableOpacity>
+            </Pressable>
         </View>
     )
 }

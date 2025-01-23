@@ -3,7 +3,7 @@ import {
   SafeAreaView,
   Image,
   ScrollView,
-  TouchableOpacity
+  Pressable
 } from "react-native";
 import React, { useState } from "react";
 import ArticleBox, { articleBoxProps } from "./components/ArticleBox";
@@ -29,7 +29,7 @@ const mockData: Array<articleBoxProps> = [
     author: "นายแพทย์สมใจ หมายดี",
     categories: ["ผู้ป่วยเบาหวาน", "การดูแลสุขภาพ", "โภชนาการ"]
   },
-]
+];
 
 export default function ResourceScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,16 +46,19 @@ export default function ResourceScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      <ScrollView>
+      <ScrollView 
+        className="mb-24"
+        showsVerticalScrollIndicator={false}
+      >
         <PopupScreen
-          header="Test"
+          header="หมวดหมู่"
           modalVisible={modalVisible}
           setModalVisible={(() => setModalVisible(!setModalVisible))}
           choices={mockChoices}
           modalClosePlaceholder="ปิด"
         />
         <View className="flex flex-row ml-10 my-4 items-center">
-          <TouchableOpacity 
+          <Pressable 
             className="mr-4"
             onPress={() => setModalVisible(true)}
           >
@@ -63,7 +66,7 @@ export default function ResourceScreen() {
               source={require('../../../assets/Resource/filter-search.png')}
               className="w-6 h-6"
             />
-          </TouchableOpacity>
+          </Pressable>
 
           <SearchBox
             value={searchQuery}
