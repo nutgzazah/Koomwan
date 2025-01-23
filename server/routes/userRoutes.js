@@ -1,5 +1,5 @@
 const express = require('express')
-const { registerController, loginController, checkDuplicateController } = require('../controllers/userController')
+const { registerController, loginController, checkDuplicateController, resetPasswordController, checkUserResetPasswordController } = require('../controllers/userController')
 
 //router object
 const router = express.Router()
@@ -10,6 +10,10 @@ router.post('/register', registerController)
 router.post('/checkDuplicate', checkDuplicateController)
 // LOGIN || POST
 router.post('/login', loginController)
+
+// FORGET PASSWORD 
+router.post('/checkUserResetPassword', checkUserResetPasswordController)
+router.put('/resetPassword', resetPasswordController)
 
 //export
 module.exports = router
