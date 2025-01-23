@@ -102,24 +102,6 @@ function ForgotPasswordScreen() {
       }
       console.error("Error submitting form:", error);
     }
-
-
-    if (isUsernameValid) {
-      // ตรวจสอบว่า username คือเบอร์โทรศัพท์มีไหม
-      let checkuserData = {};
-
-      if (validatePhone(username)) {
-        // ถ้าเป็นเบอร์โทรศัพท์ไทย
-        checkuserData = { username};
-      } else {
-        // ถ้าเป็น username ธรรมดา
-        checkuserData = { username};
-      }
-
-      const result = await axios.post(`${BASE_URL}/api/v1/auth/checkUserResetPassword`, checkuserData);
-      setOtpSent(true);
-      setResendDisabled(true);
-    }
   };
 
   const handleResendOTP = () => {
@@ -147,13 +129,43 @@ function ForgotPasswordScreen() {
     return thaiMobileRegex.test(cleanPhone);
   };
 
-  const handleSetNewPassword = () => {
+  const handleSetNewPassword = async () => {
     if (isPasswordValid) {
-      setStatus("success");
+      try {
+        const response = await axios.put(`${BASE_URL}/api/v1/auth/resetPassword`, {
+          username, // Use the username from the state
+          newPassword, // The new password entered by the user
+        });
+  
+        if (response.status === 201) {
+          setStatus("success");
+        } else {
+          setStatus("error");
+        }
+      } catch (error) {
+        // Handle the error properly
+        if (axios.isAxiosError(error)) {
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: error.response?.data.message || "Unknown error occurred",
+          });
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Unexpected Error',
+            text2: 'An unexpected error occurred',
+          });
+        }
+        console.error("Error resetting password:", error);
+        setStatus("error");
+      }
     } else {
       setStatus("error");
     }
   };
+  
+  
 
   {
     /* Success/Error status screen component */
