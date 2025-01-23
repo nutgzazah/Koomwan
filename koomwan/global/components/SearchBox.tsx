@@ -26,6 +26,7 @@ export default function SearchBox({
             <TextInput
                 className={`font-sans text-sub-button text-secondary overflow-x-scroll w-52 pt-[0.125rem] pb-[0.125rem]`}
                 numberOfLines={1}
+                value={value}
                 placeholder={placeholder}
                 placeholderTextColor={"#CBCBCB"}
                 secureTextEntry={false}

@@ -3,7 +3,7 @@ import {
     Text,
     Image,
     ImageSourcePropType,
-    TouchableOpacity,
+    Pressable,
 } from "react-native";
 import React from "react";
 import CategoryBox from "./CategoryBox";
@@ -17,13 +17,15 @@ export interface articleBoxProps {
     categories: Array<string>
 }
 
-export default function ArticleBox(
-    { title, imageSource, author, categories }: articleBoxProps
-) {
-    const router = useRouter()
+export default function ArticleBox({ title,
+    imageSource,
+    author,
+    categories
+}: articleBoxProps) {
+    const router = useRouter();
 
     return (
-        <TouchableOpacity onPress={(() => router.push("/resource/context/1", { relativeToDirectory: true }))}>
+        <Pressable onPress={(() => router.push("/resource/context/1", { relativeToDirectory: true }))}>
             <Card>
                 <View className="mx-3 w-full h-36">
                     <Image
@@ -32,7 +34,11 @@ export default function ArticleBox(
                     />
                 </View>
                 <View className="mx-3 justify-start flex w-full">
-                    <Text className="font-sans text-body text-secondary">
+                    <Text
+                        className="font-sans text-body text-secondary"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                    >
                         {title}
                     </Text>
                     <Text className="font-sans text-tag text-secondary">
@@ -47,6 +53,6 @@ export default function ArticleBox(
                     }
                 </View>
             </Card>
-        </TouchableOpacity>
+        </Pressable>
     )
 }

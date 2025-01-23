@@ -1,4 +1,4 @@
-import { Text, Image, TouchableOpacity } from "react-native";
+import { Text, Image, Pressable } from "react-native";
 import React from "react";
 import { useRouter } from "expo-router";
 
@@ -10,7 +10,7 @@ export default function BackButton({ title }: backButtonProps) {
     const router = useRouter();
 
     return (
-        <TouchableOpacity
+        <Pressable
             className="flex flex-row ml-6 mt-6 mb-3 items-center"
             onPress={() => router.back()}
         >
@@ -21,6 +21,6 @@ export default function BackButton({ title }: backButtonProps) {
             <Text className="font-sans text-body text-secondary">
                 {title}
             </Text>
-        </TouchableOpacity>
+        </Pressable>
     )
 }

@@ -27,7 +27,7 @@ export default function PopupScreen({
 }: modalScreenProps) {
     return (
         <Modal
-            animationType="fade"
+            animationType="slide"
             transparent={true}
             visible={modalVisible}
             onRequestClose={() => {
