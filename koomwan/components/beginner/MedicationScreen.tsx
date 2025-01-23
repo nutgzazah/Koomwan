@@ -31,7 +31,7 @@ export default function MedicationScreen() {
 
   const getMessage = () => {
     return "เพิ่มยาที่คุณใช้ประจำเพื่อช่วยเตือนการทานยา\nและวิเคราะห์สุขภาพที่แม่นยำยิ่งขึ้น";
-  };
+  }; // Not use using in beginner.tsx instead
 
   return (
     <KeyboardAvoidingView
@@ -94,7 +94,7 @@ export default function MedicationScreen() {
               <NavigationDots
                 currentStep={currentStep}
                 totalSteps={totalSteps}
-                message={getMessage()}
+                message={getMessage()} // Using in beginner.tsx instead
               />
             </Card>
           </View>
