@@ -56,7 +56,7 @@ export default function UserLoginScreen() {
   //temp function to check local storage data
   const getLocalStorageData = async () =>{
     let data = await AsyncStorage.getItem('@auth')
-    console.log('Local Storage => ',data)
+    // console.log('Local Storage => ',data)
   }
   getLocalStorageData()
 
