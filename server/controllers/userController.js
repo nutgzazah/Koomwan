@@ -141,31 +141,46 @@ const checkDuplicateController = async (req, res) => {
 
 //login
 const loginController = async (req,res) => {
-    try{
-        const {username, password} = req.body
-        //validation
-        if(!username){
-            return res.status(500).send({
-                success:false,
-                message:'Please provide username'
+    try {
+        const { username, password } = req.body;
+    
+        // validation
+        if (!username) {
+          return res.status(500).send({
+            success: false,
+            message: 'Please provide username or phone number',
+          });
+        }
+        if (!password) {
+          return res.status(500).send({
+            success: false,
+            message: 'Please provide password',
+          });
+        }
+    
+        // Determine if username is a phone number or regular username
+        let user;
+        if (/^0[689]\d{8}$/.test(username)) {
+            // If it's a Thai phone number
+            user = await userModel.findOne({ phone: username });
+            if (!user) {
+                user = await doctorModel.findOne({ phone: username }); // Check in doctorModel if not found in userModel
             }
-            )
-        }
-        if(!password){
-            return res.status(500).send({
-                success:false,
-                message:'Please provide password'
+        } else {
+            // If it's a regular username
+            user = await userModel.findOne({ username });
+            if (!user) {
+                user = await doctorModel.findOne({ username }); // Check in doctorModel if not found in userModel
             }
-            )
         }
-        //find user
-        const user = await userModel.findOne({username})
-        if(!user){
-            return res.status(500).send({
-                success:false,
-                message:'Username not found'
-            })
+    
+        if (!user) {
+          return res.status(500).send({
+            success: false,
+            message: 'Username or phone number not found',
+          });
         }
+
         //match password
         const match = await comparePassword(password, user.password)
         if(!match){
@@ -199,4 +214,111 @@ const loginController = async (req,res) => {
     }
 }
 
-module.exports = { registerController, loginController, checkDuplicateController };
+// check Username or phone number before reset password
+const checkUserResetPasswordController = async (req, res) => {
+    try {
+        const { username } = req.body;
+
+        // Validation
+        if (!username) {
+            return res.status(400).send({
+                success: false,
+                message: 'Username or phone number is required',
+            });
+        }
+
+        // Determine if username is a phone number or regular username
+        let user;
+        if (/^0[689]\d{8}$/.test(username)) {
+            // If it's a Thai phone number
+            user = await userModel.findOne({ phone: username });
+            if (!user) {
+                user = await doctorModel.findOne({ phone: username }); // Check in doctorModel if not found in userModel
+            }
+        } else {
+            // If it's a regular username
+            user = await userModel.findOne({ username });
+            if (!user) {
+                user = await doctorModel.findOne({ username }); // Check in doctorModel if not found in userModel
+            }
+        }
+    
+        if (!user) {
+          return res.status(404).send({
+            success: false,
+            message: 'Username or phone number not found',
+          });
+        }
+        return res.status(200).send({
+            success: true,
+            message: 'Able to change password',
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success: false,
+            message: 'Error in resetting password',
+            error,
+        });
+    }
+};
+
+// Reset password by Username or phone number
+const resetPasswordController = async (req, res) => {
+    try {
+        const { username, newPassword } = req.body;
+
+        // Validation
+        if (!username) {
+            return res.status(400).send({
+                success: false,
+                message: 'Username or phone number is required',
+            });
+        }
+
+        // Determine if username is a phone number or regular username
+        let user;
+        if (/^0[689]\d{8}$/.test(username)) {
+            // If it's a Thai phone number
+            user = await userModel.findOne({ phone: username });
+            if (!user) {
+                user = await doctorModel.findOne({ phone: username }); // Check in doctorModel if not found in userModel
+            }
+        } else {
+            // If it's a regular username
+            user = await userModel.findOne({ username });
+            if (!user) {
+                user = await doctorModel.findOne({ username }); // Check in doctorModel if not found in userModel
+            }
+        }
+    
+        if (!user) {
+          return res.status(500).send({
+            success: false,
+            message: 'Username or phone number not found',
+          });
+        }
+
+        // Hash the new password
+        const hashedPassword = await hashPassword(newPassword);
+
+        // Update the password
+        user.password = hashedPassword;
+        await user.save();
+
+
+        return res.status(200).send({
+            success: true,
+            message: 'Password updated successfully',
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success: false,
+            message: 'Error in resetting password',
+            error,
+        });
+    }
+};
+
+module.exports = { registerController, loginController, checkDuplicateController, resetPasswordController, checkUserResetPasswordController };
