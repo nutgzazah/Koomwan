@@ -3,29 +3,29 @@ import {
   SafeAreaView,
   Image,
   ScrollView,
-  TextInput,
   TouchableOpacity
 } from "react-native";
 import React, { useState } from "react";
 import ArticleBox, { articleBoxProps } from "./components/ArticleBox";
 import SearchBox from "../../../global/components/SearchBox";
+import PopupScreen from "../../../global/components/PopupScreen";
 
 const mockData: Array<articleBoxProps> = [
   {
     title: "นอกจากระดับน้ำตาล นี่สิ่งที่คุณต้องระวัง...",
-    imageSource: require("../../../assets/BeginnerSetup/cake.png"),
+    imageSource: require("../../../assets/Resource/resource-image.png"),
     author: "นายแพทย์สมใจ หมายดี",
     categories: ["การดูแลสุขภาพ", "ความรู้"]
   },
   {
     title: "เบาหวาน... ยังมีอะไรที่คุณต้องรู้",
-    imageSource: require("../../../assets/BeginnerSetup/cake.png"),
+    imageSource: require("../../../assets/Resource/resource-image-1.png"),
     author: "นายแพทย์สมใจ หมายดี",
     categories: ["โภชนาการ", "การดูแลสุขภาพ", "ความรู้"]
   },
   {
     title: "เป็นเบาหวาน ควรพึงดูแลตัวเอง ห่างโรค...",
-    imageSource: require("../../../assets/BeginnerSetup/cake.png"),
+    imageSource: require("../../../assets/Resource/resource-image-2.png"),
     author: "นายแพทย์สมใจ หมายดี",
     categories: ["ผู้ป่วยเบาหวาน", "การดูแลสุขภาพ", "โภชนาการ"]
   },
@@ -33,19 +33,39 @@ const mockData: Array<articleBoxProps> = [
 
 export default function ResourceScreen() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
+  const mockChoices: string[] = [
+    "การดูแลสุขภาพ",
+    "ความรู้",
+    "โภชนาการ",
+    "การดูแลสุขภาพ",
+    "การออกกำลังกาย",
+    "โรค",
+    "ผู้ป่วยเบาหวาน",
+  ]
 
   return (
     <SafeAreaView className="flex-1">
       <ScrollView>
+        <PopupScreen
+          header="Test"
+          modalVisible={modalVisible}
+          setModalVisible={(() => setModalVisible(!setModalVisible))}
+          choices={mockChoices}
+          modalClosePlaceholder="ปิด"
+        />
         <View className="flex flex-row ml-10 my-4 items-center">
-          <TouchableOpacity className="mr-4">
-            <Image 
+          <TouchableOpacity 
+            className="mr-4"
+            onPress={() => setModalVisible(true)}
+          >
+            <Image
               source={require('../../../assets/Resource/filter-search.png')}
               className="w-6 h-6"
             />
           </TouchableOpacity>
 
-          <SearchBox 
+          <SearchBox
             value={searchQuery}
             fullSize={false}
             placeholder={"ค้นหา..."}
