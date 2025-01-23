@@ -297,7 +297,7 @@ export default function UserSignInScreen() {
 
             <View className="relative mb-3">
               <Image
-                source={require("../../assets/Signup/user.png")}
+                source={require("../../assets/Login/email.png")}
                 className="w-6 h-6 absolute left-4 top-4 z-10"
                 resizeMode="contain"
               />
