@@ -59,8 +59,7 @@ export default function UserLoginScreen() {
 
         const response = await axios.post(`${BASE_URL}/api/v1/auth/login`, loginData);
         await AsyncStorage.setItem('@auth',JSON.stringify(response));
-        alert(response.data.message)
-        // router.replace("/user/beginner");
+        router.replace("/user/beginner");
       }
     } catch (error) {
        // ตรวจสอบว่าคือ AxiosError หรือไม่
