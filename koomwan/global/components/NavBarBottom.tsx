@@ -27,7 +27,7 @@ export function NavTabIcon({
                 source={focused ? iconBold : iconNormal}
                 className="h-6 w-6 mt-3"
             />
-            <Text className={`font-sans text-sub-button text-center ${focused ? "color-primary" : "color-secondary"}`}>
+            <Text className={`font-sans  text-center ${focused ? "color-primary" : "color-secondary"}`}>
                 {label}
             </Text>
         </View>
