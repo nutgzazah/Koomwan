@@ -39,13 +39,6 @@ module.exports = {
             fontWeight: "500",
           },
         ],
-        body: [
-          "18px",
-          {
-            lineHeight: "27px", // 18 * 1.5
-            fontWeight: "400",
-          }
-        ],
         description: [
           "14px",
           {
