@@ -8,8 +8,12 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
+import axios from "axios";
 
 import InputField from "../../global/components/InputField";
+import Toast from 'react-native-toast-message';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function UserLoginScreen() {
   const [username, setUsername] = useState("");
@@ -19,17 +23,46 @@ export default function UserLoginScreen() {
 
   const router = useRouter();
 
-  const handleLogin = () => {
-    if (!username || !password) {
-      setHasError(true);
-    } else {
-      setHasError(false);
-      // Handle login logic
-      router.replace("/user/beginner");
+  const handleLogin = async () => {
+    try {
+      if (!username || !password) {
+        setHasError(true);
+      } else {
+        setHasError(false);
+        const response = await axios.post("http://192.168.0.100:8080/api/v1/auth/login", {username, password});
+        await AsyncStorage.setItem('@auth',JSON.stringify(response));
+        alert(response.data.message)
+        // router.replace("/user/beginner");
+      }
+    } catch (error) {
+       // ตรวจสอบว่าคือ AxiosError หรือไม่
+       if (axios.isAxiosError(error)) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.response?.data.message || "Unknown error occurred",
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Unexpected Error',
+          text2: 'An unexpected error occurred',
+        });
+      }
+      console.error("Error to login:", error);
     }
   };
 
+  //temp function to check local storage data
+  const getLocalStorageData = async () =>{
+    let data = await AsyncStorage.getItem('@auth')
+    console.log('Local Storage => ',data)
+  }
+  getLocalStorageData()
+
+
   return (
+    <>
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Background Image Container */}
@@ -149,5 +182,7 @@ export default function UserLoginScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+    <Toast />
+    </>
   );
 }
