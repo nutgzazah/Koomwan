@@ -373,7 +373,7 @@ export default function DoctorSignInScreen() {
               <Text className="text-description text-gray font-regular">
                 เคยลงทะเบียนแล้ว?{"  "}
               </Text>
-              <TouchableOpacity onPress={() => router.push("/doctor/login")}>
+              <TouchableOpacity onPress={() => router.push("user/login")}>
                 <Text className="text-button font-bold text-primary font-regular">
                   เข้าสู่ระบบ
                 </Text>
