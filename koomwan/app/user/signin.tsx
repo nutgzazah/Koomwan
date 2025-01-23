@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { OTPScreen } from "../../components/login_signin/OTPScreen";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
+import BASE_URL from "../../config"
 
 //firebase SMS OTP
 // import auth from "@react-native-firebase/auth"
@@ -127,7 +128,7 @@ export default function UserSignInScreen() {
     if (validateForm()) {
       try {
         // เช็คว่ามีข้อมูลไรซ้ำไหม
-        const response = await axios.post("http://192.168.0.100:8080/api/v1/auth/checkDuplicate", formData);
+        const response = await axios.post(`${BASE_URL}/api/v1/auth/checkDuplicate`, formData);
         console.log(formData)
         if (response.status === 201) {
           setShowOTP(true);
@@ -166,7 +167,7 @@ export default function UserSignInScreen() {
     if (otp === "123456") { 
       try {
         // ส่งข้อมูลไปยัง backend หลังจาก OTP ยืนยันสำเร็จ
-        const response = await axios.post("http://192.168.0.100:8080/api/v1/auth/register", formData);
+        const response = await axios.post(`${BASE_URL}/api/v1/auth/register`, formData);
   
         if (response.status === 201) {
           setShowOTP(false);

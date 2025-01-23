@@ -9,6 +9,7 @@ import {
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import axios from "axios";
+import BASE_URL from "../../config"
 
 import InputField from "../../global/components/InputField";
 import Toast from 'react-native-toast-message';
@@ -29,7 +30,7 @@ export default function UserLoginScreen() {
         setHasError(true);
       } else {
         setHasError(false);
-        const response = await axios.post("http://192.168.0.100:8080/api/v1/auth/login", {username, password});
+        const response = await axios.post(`${BASE_URL}/api/v1/auth/login`, {username, password});
         await AsyncStorage.setItem('@auth',JSON.stringify(response));
         alert(response.data.message)
         // router.replace("/user/beginner");
@@ -56,7 +57,7 @@ export default function UserLoginScreen() {
   //temp function to check local storage data
   const getLocalStorageData = async () =>{
     let data = await AsyncStorage.getItem('@auth')
-    // console.log('Local Storage => ',data)
+    // console.log('Local Storage => ',data.data)
   }
   getLocalStorageData()
 

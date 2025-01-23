@@ -1,7 +1,7 @@
 const JWT = require('jsonwebtoken')
 const { hashPassword, comparePassword } = require('../helpers/authHelper');
 const userModel = require('../models/userModel')
-
+const doctorModel = require('../models/doctorModel')
 
 //register
 const registerController = async (req, res) => {
@@ -34,45 +34,51 @@ const registerController = async (req, res) => {
             });
         }
 
-        // Check if username, email, or phone already exists
-        const existingUsername = await userModel.findOne({ username });
-        if (existingUsername) {
-            return res.status(400).send({
-                success: false,
-                message: 'Username is already taken'
-            });
-        }
-
-        const existingEmail = await userModel.findOne({ email });
-        if (existingEmail) {
-            return res.status(400).send({
-                success: false,
-                message: 'Email is already registered'
-            });
-        }
-        
-        const existingPhone = await userModel.findOne({ phone });
-        if (existingPhone) {
-            return res.status(400).send({
-                success: false,
-                message: 'Phone number is already registered'
-            });
-        }
-        //hashed password
-        const hashedPassword = await hashPassword(password)
-        
-        // save User
-        const user = await userModel({
-            username, 
-            email, 
-            password:hashedPassword, 
-            phone
-        }).save()
-        
-        return res.status(201).send({
-            success: true,
-            message: 'Registration successful, please login'
-        });
+         // Check if username already exists in userModel or doctorModel
+         const existingUsernameInUser = await userModel.findOne({ username });
+         const existingUsernameInDoctor = await doctorModel.findOne({ username });
+         if (existingUsernameInUser || existingUsernameInDoctor) {
+             return res.status(400).send({
+                 success: false,
+                 message: 'Username is already taken',
+             });
+         }
+ 
+         // Check if email already exists in userModel or doctorModel
+         const existingEmailInUser = await userModel.findOne({ email });
+         const existingEmailInDoctor = await doctorModel.findOne({ email });
+         if (existingEmailInUser || existingEmailInDoctor) {
+             return res.status(400).send({
+                 success: false,
+                 message: 'Email is already registered',
+             });
+         }
+ 
+         // Check if phone already exists in userModel or doctorModel
+         const existingPhoneInUser = await userModel.findOne({ phone });
+         const existingPhoneInDoctor = await doctorModel.findOne({ phone });
+         if (existingPhoneInUser || existingPhoneInDoctor) {
+             return res.status(400).send({
+                 success: false,
+                 message: 'Phone number is already registered',
+             });
+         }
+ 
+         // Hash password
+         const hashedPassword = await hashPassword(password);
+ 
+         // Save user
+         const user = await userModel({
+             username,
+             email,
+             password: hashedPassword,
+             phone,
+         }).save();
+ 
+         return res.status(201).send({
+             success: true,
+             message: 'Registration successful, please login',
+         });
 
     } catch (error) {
         console.log(error);
@@ -84,34 +90,39 @@ const registerController = async (req, res) => {
     }
 }
 
-//check Duplicate
+//User check Duplicate
 const checkDuplicateController = async (req, res) => {
     try {
         const { username, email, phone } = req.body;
         // Check if username, email, or phone already exists
-        const existingUsername = await userModel.findOne({ username });
-        if (existingUsername) {
+        const existingUsernameUser = await userModel.findOne({ username });
+        const existingUsernameDoctor = await doctorModel.findOne({ username });
+        if (existingUsernameUser || existingUsernameDoctor) {
             return res.status(400).send({
                 success: false,
                 message: 'Username is already taken'
             });
         }
 
-        const existingEmail = await userModel.findOne({ email });
-        if (existingEmail) {
+        const existingEmailInUser = await userModel.findOne({ email });
+        const existingEmailInDoctor = await doctorModel.findOne({ email });
+        if (existingEmailInUser || existingEmailInDoctor) {
             return res.status(400).send({
                 success: false,
-                message: 'Email is already registered'
+                message: 'Email is already registered',
             });
         }
 
-        const existingPhone = await userModel.findOne({ phone });
-        if (existingPhone) {
+        const existingPhoneInUser = await userModel.findOne({ phone });
+        const existingPhoneInDoctor = await doctorModel.findOne({ phone });
+        if (existingPhoneInUser || existingPhoneInDoctor) {
             return res.status(400).send({
                 success: false,
-                message: 'Phone number is already registered'
+                message: 'Phone number is already registered',
             });
         }
+
+        // If no duplicates, return success
         return res.status(201).send({
             success: true,
         });
@@ -125,6 +136,8 @@ const checkDuplicateController = async (req, res) => {
         });
     }
 }
+
+
 
 //login
 const loginController = async (req,res) => {
