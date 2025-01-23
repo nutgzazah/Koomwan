@@ -5,9 +5,14 @@ import { useRouter } from "expo-router";
 import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { OTPScreen } from "../../components/login_signin/OTPScreen";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
+import BASE_URL from "../../config"
+
+import Toast from 'react-native-toast-message';
+import axios from "axios";
 
 type FormData = {
   username: string;
+  email: string;
   password: string;
   confirmPassword: string;
   phone: string;
@@ -17,6 +22,7 @@ type FormData = {
 export default function DoctorSignInScreen() {
   const [formData, setFormData] = useState<FormData>({
     username: "",
+    email: "",
     password: "",
     confirmPassword: "",
     phone: "",
@@ -56,6 +62,12 @@ export default function DoctorSignInScreen() {
     };
   }, [resendDisabled, countdown]);
 
+  const validateEmail = (email: string): boolean => {
+    // Simple regex to check if the email format is valid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const validatePhoneNumber = (phoneNumber: string): boolean => {
     // Remove any spaces or dashes
     const cleanPhone = phoneNumber.replace(/[ -]/g, "");
@@ -73,6 +85,12 @@ export default function DoctorSignInScreen() {
 
     if (!formData.username) {
       newErrors.username = "กรุณากรอกชื่อผู้ใช้";
+    }
+
+    if (!formData.email) {
+      newErrors.email = "กรุณากรอกอีเมล";
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
     }
 
     if (!formData.password) {
@@ -97,11 +115,35 @@ export default function DoctorSignInScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      console.log("Form submitted:", formData);
-      setShowOTP(true);
-      setResendDisabled(true);
+      try {
+        // เช็คว่ามีข้อมูลไรซ้ำไหม
+        const response = await axios.post(`${BASE_URL}/api/v1/auth/checkDuplicate`, formData);
+        console.log(formData)
+        if (response.status === 201) {
+          setShowOTP(true);
+          setResendDisabled(true);
+        } else {
+          console.error("Registration failed:", response.data);
+        }
+      } catch (error) {
+        // ตรวจสอบว่าคือ AxiosError หรือไม่
+      if (axios.isAxiosError(error)) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.response?.data.message || "Unknown error occurred",
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Unexpected Error',
+          text2: 'An unexpected error occurred',
+        });
+      }
+      console.error("Error submitting form:", error);
+      }
     }
   };
 
@@ -225,6 +267,29 @@ export default function DoctorSignInScreen() {
 
             <View className="relative mb-3">
               <Image
+                source={require("../../assets/Signup/user.png")}
+                className="w-6 h-6 absolute left-4 top-4 z-10"
+                resizeMode="contain"
+              />
+              <TextInput
+                className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
+                  errors.email ? "border-abnormal" : "border-gray"
+                  }`}
+                placeholder="อีเมล"
+                value={formData.email}
+                            
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
+                keyboardType="email-address"
+              />
+              {errors.email && (
+                <Text className="text-abnormal text-tag font-regular mt-1">
+                {errors.email}
+                </Text>
+              )}
+            </View>
+
+            <View className="relative mb-3">
+              <Image
                 source={require("../../assets/Signup/lock.png")}
                 className="w-6 h-6 absolute left-4 top-4 z-10"
                 resizeMode="contain"
@@ -320,5 +385,10 @@ export default function DoctorSignInScreen() {
     );
   };
 
-  return renderContent();
+  return (
+      <>
+        {renderContent()}
+        <Toast />
+      </>
+    );
 }
