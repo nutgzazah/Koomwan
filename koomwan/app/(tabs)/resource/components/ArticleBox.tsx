@@ -23,7 +23,7 @@ export default function ArticleBox(
     const router = useRouter()
 
     return (
-        <TouchableOpacity onPress={(() => router.push("/resource/context", { relativeToDirectory: true }))}>
+        <TouchableOpacity onPress={(() => router.push("/resource/context/1", { relativeToDirectory: true }))}>
             <Card>
                 <View className="mx-3 w-full h-36">
                     <Image
