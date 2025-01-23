@@ -103,6 +103,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="suggestion"
         options={{
+          title: "suggestion",
           tabBarIcon: ({ focused }) => (
             <NavTabIcon
               focused={focused}
@@ -116,6 +117,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="tracking"
         options={{
+          title: "tracking",
           tabBarIcon: ({ }) => (
             <NavBigIcon icon={trackingIcon} />
           )
