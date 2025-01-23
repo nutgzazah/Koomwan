@@ -24,13 +24,40 @@ export default function UserLoginScreen() {
 
   const router = useRouter();
 
+  const validatePhone = (phone: string): boolean => {
+    // Remove any spaces or dashes
+    const cleanPhone = phone.replace(/[ -]/g, "");
+  
+    // Must start with 0
+    // Second digit must be 6, 8, or 9 (for mobile numbers)
+    // Must be exactly 10 digits
+    const thaiMobileRegex = /^0[689]\d{8}$/;
+  
+    return thaiMobileRegex.test(cleanPhone);
+  };
+  
+
   const handleLogin = async () => {
     try {
       if (!username || !password) {
         setHasError(true);
       } else {
         setHasError(false);
-        const response = await axios.post(`${BASE_URL}/api/v1/auth/login`, {username, password});
+        
+        // ตรวจสอบว่า username คือเบอร์โทรศัพท์ที่ถูกต้องหรือไม่
+        let loginData = {};
+
+        if (validatePhone(username)) {
+          // ถ้าเป็นเบอร์โทรศัพท์ไทย
+          loginData = { username, password };
+        } else {
+          // ถ้าเป็น username ธรรมดา
+          loginData = { username, password };
+        }
+
+
+
+        const response = await axios.post(`${BASE_URL}/api/v1/auth/login`, loginData);
         await AsyncStorage.setItem('@auth',JSON.stringify(response));
         alert(response.data.message)
         // router.replace("/user/beginner");

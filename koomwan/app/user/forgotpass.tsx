@@ -5,6 +5,9 @@ import { useRouter } from "expo-router";
 import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
 import { OTPScreen } from "../../components/login_signin/OTPScreen";
+import BASE_URL from "../../config"
+import axios from "axios";
+import Toast from 'react-native-toast-message';
 
 type StatusType = "none" | "success" | "error";
 
@@ -31,7 +34,7 @@ function ForgotPasswordScreen() {
   const isUsernameValid = username.trim().length > 0;
   const isOtpValid = otp.length === 6;
   const isPasswordValid =
-    newPassword.length > 6 && newPassword === confirmPassword;
+    newPassword.length > 5 && newPassword === confirmPassword;
 
   {
     /* OTP countdown timer  */
@@ -55,8 +58,65 @@ function ForgotPasswordScreen() {
     };
   }, [resendDisabled, countdown]);
 
-  const handleRequestOTP = () => {
+  const handleRequestOTP = async () => {
+    
+    try {
+      // เช็คว่ามี username หรือ phone ไหม
+      if (isUsernameValid) {
+        // ตรวจสอบว่า username คือเบอร์โทรศัพท์มีไหม
+        let checkuserData = {};
+  
+        if (validatePhone(username)) {
+          // ถ้าเป็นเบอร์โทรศัพท์ไทย
+          checkuserData = { username};
+        } else {
+          // ถ้าเป็น username ธรรมดา
+          checkuserData = { username};
+        }
+  
+        const response = await axios.post(`${BASE_URL}/api/v1/auth/checkUserResetPassword`, checkuserData);
+        if (response.status === 200) {
+          setOtpSent(true);
+          setResendDisabled(true);
+        } else {
+          console.error("checking failed:");
+        }
+      }
+      else {
+        console.error("Username Invalid: ",username);
+      }
+    } catch (error) {
+      // ตรวจสอบว่าคือ AxiosError หรือไม่
+      if (axios.isAxiosError(error)) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.response?.data.message || "Unknown error occurred",
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Unexpected Error',
+          text2: 'An unexpected error occurred',
+        });
+      }
+      console.error("Error submitting form:", error);
+    }
+
+
     if (isUsernameValid) {
+      // ตรวจสอบว่า username คือเบอร์โทรศัพท์มีไหม
+      let checkuserData = {};
+
+      if (validatePhone(username)) {
+        // ถ้าเป็นเบอร์โทรศัพท์ไทย
+        checkuserData = { username};
+      } else {
+        // ถ้าเป็น username ธรรมดา
+        checkuserData = { username};
+      }
+
+      const result = await axios.post(`${BASE_URL}/api/v1/auth/checkUserResetPassword`, checkuserData);
       setOtpSent(true);
       setResendDisabled(true);
     }
@@ -73,6 +133,18 @@ function ForgotPasswordScreen() {
       setOtpSent(false);
       setIsSettingPassword(true);
     }
+  };
+  
+  const validatePhone = (phone: string): boolean => {
+    // Remove any spaces or dashes
+    const cleanPhone = phone.replace(/[ -]/g, "");
+  
+    // Must start with 0
+    // Second digit must be 6, 8, or 9 (for mobile numbers)
+    // Must be exactly 10 digits
+    const thaiMobileRegex = /^0[689]\d{8}$/;
+  
+    return thaiMobileRegex.test(cleanPhone);
   };
 
   const handleSetNewPassword = () => {
@@ -273,8 +345,13 @@ function ForgotPasswordScreen() {
   }
 
   if (isSettingPassword) return renderSetPasswordScreen();
-  if (otpSent) return renderOTPScreen();
-  return renderInitialScreen();
+  if (otpSent) return renderOTPScreen()
+  return (
+    <>
+    {renderInitialScreen()}
+    <Toast />
+    </>
+  )
 }
 
 export default ForgotPasswordScreen;
