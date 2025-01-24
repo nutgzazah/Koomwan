@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { Redirect, useRouter } from "expo-router";
 
 export default function Index() {
-  const isLoggedIn = false; //Test if logged in or not
+  const isLoggedIn = true; //Test if logged in or not True False
   const router = useRouter();
 
   return isLoggedIn ? (

@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import { LongButton } from "./components/LongButton";
+import { MoodSelecter } from "./components/MoodSelecter";
 
 //เริ่มด้วยหน้าให้บันทึกข้อมูล
 // Main Page of Tracking Feature
@@ -24,7 +25,7 @@ export default function TrackingScreen() {
         <Text className="text-2xl font-sans color-secondary text-center mt-2">ข้อมูลสุขภาพ</Text>
         <BreakLine />
           <Text className="text-l font-sans color-secondary text-center mt-2">คุณได้บันทึกข้อมูลพื้นฐานเรียบร้อยแล้ว! พร้อมเริ่มต้นการวิเคราะห์สุขภาพของคุณได้เลย 🎉</Text>
-      
+         
       </Card>
 
       <Card>

@@ -3,7 +3,7 @@ import { SafeAreaView, Text, View, Image } from "react-native";
 import { useRouter } from "expo-router";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
-import ProgressBar from "./components/ProgressBar";
+import ProgressBar from "./(components)/ProgressBar";
 import { ShortButton } from "../tracking/components/ShortButton";
 
 export default function SuggestionScreen() {
