@@ -14,17 +14,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "googleServicesFile": "./GoogleService-Info.plist",
-      "supportsTablet": true,
-      "bundleIdentifier": "com.koomwan.koomwan"
+      "supportsTablet": true
     },
     "android": {
-      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.koomwan.koomwan"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -32,8 +28,6 @@
     },
     "plugins": [
       "expo-router",
-      "@react-native-firebase/app",
-      "@react-native-firebase/auth",
       [
         "expo-font",
         {
@@ -44,11 +38,6 @@
           ]
         }
       ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "5b458421-c7e7-4656-b1c9-04dfbfcdcd98"
-      }
-    }
+    ]
   }
 }
