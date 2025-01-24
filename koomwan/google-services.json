@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "777195374246",
+    "project_id": "koomwan-74f40",
+    "storage_bucket": "koomwan-74f40.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:777195374246:android:0745ed2d2e432a3aa51667",
+        "android_client_info": {
+          "package_name": "com.koomwan.koomwan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVYSVtqGFO0IFG9yklF1J0CbFWluinTMo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
