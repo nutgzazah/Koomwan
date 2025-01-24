@@ -4,9 +4,9 @@ import { useRouter } from "expo-router";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import { ShortButton } from "../tracking/components/ShortButton";
-import SlideCardImg from "../suggestion/components/SlideCardImg";
-import ArticleCard from "../suggestion/components/ArticleCard"; 
-import FullCardView from "../suggestion/components/FullCardView"; 
+import SlideCardImg from "./(components)/SlideCardImg";
+import ArticleCard from "./(components)/ArticleCard"; 
+import FullCardView from "./(components)/FullCardView"; 
 
 export default function SuggestionResult() {
   const router = useRouter();
