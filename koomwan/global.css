@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* เพิ่ม font-family default */
-*, .font-regular {
+  .font-regular {
     font-family: 'K2D-Regular';
   }
   
