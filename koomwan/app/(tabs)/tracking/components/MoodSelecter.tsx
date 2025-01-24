@@ -1,16 +1,22 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 
-interface Props {
+
+//Fix The Eror Change Prop To Set Name
+interface MoodSelecterProps {
   selectedMood: string | null;
-  onSelect: (mood: 'happy' | 'normal' | 'sad') => void;
+  onSelect: (mood: 'lol' | 'happy' | 'normal' | 'moody' | 'sick' | 'cry' | 'angry') => void;
 }
 
-export const MoodSelector: React.FC<Props> = ({ selectedMood, onSelect }) => {
+export const MoodSelecter: React.FC<MoodSelecterProps> = ({ selectedMood, onSelect }) => {
   const moods = [
-    { id: 'happy', emoji: '😊', label: 'ความสุข' },
-    { id: 'normal', emoji: '😐', label: 'ปกติ' },
-    { id: 'sad', emoji: '😢', label: 'เศร้า' }
+    { id: 'lol', emoji: '😊', label: 'หัวเราะ' },
+    { id: 'happy', emoji: '😐', label: 'ความสุข' },
+    { id: 'normal', emoji: '😢', label: 'เฉยๆ' },
+    { id: 'moody', emoji: '😊', label: 'หงุดหงิด' },
+    { id: 'sick', emoji: '😐', label: 'ป่วย' },
+    { id: 'cry', emoji: '😢', label: 'เศร้า' },
+    { id: 'angry', emoji: '😢', label: 'โกรธ' },
   ] as const;
 
   return (
@@ -18,9 +24,9 @@ export const MoodSelector: React.FC<Props> = ({ selectedMood, onSelect }) => {
       {moods.map((mood) => (
         <TouchableOpacity
           key={mood.id}
-          onPress={() => onSelect(mood.id as 'happy' | 'normal' | 'sad')}
+          onPress={() => onSelect(mood.id as 'lol' | 'happy' | 'normal' | 'moody' | 'sick' | 'cry' | 'angry')}
           className={`items-center p-4 rounded-lg ${
-            selectedMood === mood.id ? 'bg-blue-100' : ''
+            selectedMood === mood.id ? 'bg-primary' : ''
           }`}
         >
           <Text className="text-3xl mb-2">{mood.emoji}</Text>
