@@ -125,7 +125,7 @@ const DoctorID: React.FC = () => {
               {doctor.approval === "disapprove" && doctor.reason && (
                 <tr>
                   <td className="font-bold py-2">เหตุผล:</td>
-                  <td className="py-2 text-red-500">{doctor.reason}</td>
+                  <td className="py-2 text-abnormal">{doctor.reason}</td>
                 </tr>
               )}
               <tr>
@@ -186,7 +186,6 @@ const DoctorID: React.FC = () => {
         <ApprovePopup
           doctorName={doctor.name}
           onClose={() => setIsApprovePopupOpen(false)}
-          onConfirm={handleApproveConfirm}
         />
       )}
     </div>
