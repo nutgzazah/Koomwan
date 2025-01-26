@@ -4,8 +4,8 @@ import React from "react";
 interface BlogCardProps {
     title: string;
     author: string;
-    image: string; // URL of the image
-    categories: string[]; // Categories as an array
+    image: string; 
+    categories: string[];
 }
 
 export default function BlogCard({ title, author, image, categories }: BlogCardProps) {

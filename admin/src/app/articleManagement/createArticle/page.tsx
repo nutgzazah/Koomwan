@@ -37,7 +37,6 @@ const CreateArticle: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    // Submit logic goes here
     console.log("Blog submitted: ", blog);
   };
 
