@@ -3,12 +3,11 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import { BlogInterface } from '@/interfaces/blogInterface';
-
+import Link from 'next/link';
 import blogs from '../../../data/blog.json';
 
 const ArticleId: React.FC = () => {
   const { articleId } = useParams();
-
   const blogList = blogs as BlogInterface[];
   const blog = blogList.find((b) => b.blog_id === articleId);
 
@@ -24,12 +23,11 @@ const ArticleId: React.FC = () => {
     <div className="w-full p-4 relative">
       {/* Edit Button */}
       <div className="absolute top-4 right-4">
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          onClick={() => alert('Edit feature coming soon!')}
-        >
-          แก้ไข
-        </button>
+        <Link href={`/articleManagement/${articleId}/editArticle`}>
+          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            แก้ไข
+          </button>
+        </Link>
       </div>
 
       {/* Header Section */}
