@@ -26,6 +26,9 @@ export default function HomeScreen() {
         <TouchableOpacity onPress={() => router.push("profile")}>
           <Text className="font-bold">Profile</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/user/beginner")}>
+          <Text className="font-bold">Beginner</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
