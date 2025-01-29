@@ -64,7 +64,7 @@ export default function MedicationFormScreen() {
             className="w-6 h-6"
             resizeMode="contain"
           />
-          <Text className="text-description text-secondary font-regular ml-2">
+          <Text className="text-body text-secondary font-regular ml-2">
             ย้อนกลับ
           </Text>
         </TouchableOpacity>
@@ -125,7 +125,7 @@ export default function MedicationFormScreen() {
                   onPress={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="w-full bg-background border border-gray rounded p-3 flex-row justify-between items-center"
                 >
-                  <Text className="text-description font-regular">
+                  <Text className="text-description font-regular text-gray">
                     {pill_type || "เลือกประเภทยา"}
                   </Text>
                   <Image
