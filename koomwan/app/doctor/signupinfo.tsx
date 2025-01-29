@@ -10,6 +10,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import Toast from "react-native-toast-message";
 import StatusModal from "../../components/login_signin/StatusModal";
 
@@ -41,6 +42,11 @@ const DoctorSignUpInfoScreen = () => {
   const [selectedImage, setSelectedImage] = useState<string | undefined>(
     undefined
   );
+  const [document, setDocument] = useState<{
+    name: string;
+    uri: string;
+    size: number;
+  } | null>(null);
   const [showExpertDropdown, setShowExpertDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,6 +87,38 @@ const DoctorSignUpInfoScreen = () => {
     }
   };
 
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        multiple: false,
+        copyToCacheDirectory: true,
+      });
+
+      if (result.assets && result.assets[0]) {
+        const selectedDoc = result.assets[0];
+
+        // ตรวจสอบขนาดไฟล์ (จำกัดที่ 10MB)
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+        if (selectedDoc.size && selectedDoc.size > MAX_FILE_SIZE) {
+          showToast("error", "ขนาดไฟล์ต้องไม่เกิน 10MB");
+          return;
+        }
+
+        setDocument({
+          name: selectedDoc.name,
+          uri: selectedDoc.uri,
+          size: selectedDoc.size ?? 0,
+        });
+        setErrors((prev) => ({ ...prev, document: false }));
+        showToast("success", "อัพโหลดเอกสารสำเร็จ");
+      }
+    } catch (error) {
+      console.error("Error picking document:", error);
+      showToast("error", "เกิดข้อผิดพลาดในการอัพโหลดเอกสาร");
+    }
+  };
+
   // Validation states
   const [errors, setErrors] = useState({
     first_name: false,
@@ -88,6 +126,8 @@ const DoctorSignUpInfoScreen = () => {
     occupation: false,
     expert: false,
     hospital: false,
+    document: false,
+    selectedImage: false,
   });
 
   // Validation function
@@ -98,6 +138,8 @@ const DoctorSignUpInfoScreen = () => {
       occupation: !occupation.trim(),
       expert: !expert,
       hospital: !hospital,
+      document: !document,
+      selectedImage: !selectedImage,
     };
 
     setErrors(newErrors);
@@ -126,7 +168,7 @@ const DoctorSignUpInfoScreen = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    // Navigate to next screen or home
+
     router.push("/user/login");
   };
 
@@ -141,6 +183,9 @@ const DoctorSignUpInfoScreen = () => {
           </Text>
 
           {/* Profile Image */}
+          <Text className="text-description text-secondary text-center font-regular mb-2">
+            รูปโปรไฟล์
+          </Text>
           <TouchableOpacity
             onPress={pickImageAsync}
             className="items-center mb-6"
@@ -326,16 +371,36 @@ const DoctorSignUpInfoScreen = () => {
                 เอกสารประกอบทางการแพทย์
               </Text>
               <TouchableOpacity
-                onPress={() => {}}
-                className="w-full h-[50px] px-4 border border-gray rounded bg-background flex-row items-center mb-3 justify-between"
+                onPress={pickDocument}
+                className={`w-full h-[50px] px-4 border rounded bg-background flex-row items-center mb-3 justify-between ${
+                  errors.document ? "border-abnormal" : "border-gray"
+                }`}
               >
-                <Text className="text-description text-gray font-regular">
-                  เอกสารประกอบทางการแพทย์
+                <Text
+                  className={`text-description ${
+                    document ? "text-secondary" : "text-gray"
+                  } font-regular`}
+                  numberOfLines={1}
+                  ellipsizeMode="middle"
+                >
+                  {document ? document.name : "เอกสารประกอบทางการแพทย์"}
                 </Text>
-                <View className="w-12 h-6 bg-primary rounded-full items-center justify-center">
-                  <Text className="text-card text-tag">PDF</Text>
+                <View className="flex-row items-center">
+                  {document && (
+                    <Text className="text-description text-gray mr-2">
+                      {(document.size / (1024 * 1024)).toFixed(1)}MB
+                    </Text>
+                  )}
+                  <View className="w-12 h-6 bg-primary rounded-full items-center justify-center">
+                    <Text className="text-card text-tag">PDF</Text>
+                  </View>
                 </View>
               </TouchableOpacity>
+              {errors.document && (
+                <Text className="text-abnormal text-description font-regular">
+                  กรุณาอัพโหลดเอกสารประกอบทางการแพทย์
+                </Text>
+              )}
             </View>
 
             {/* Error Message */}
