@@ -5,10 +5,10 @@ type Props = {
     children?: React.ReactNode
 };
 
-// เรียกใช้ในรูปแบบ
-// <Card>
-//  <{สิ่งที่ต้องการใช้จะใส่}>
-// <Card/>
+// Call in this form
+// <DoctorDisplayCard>
+//  <{child elements}>
+// <DoctorDisplayCard/>
 export default function DoctorDisplayCard({ children }: Props) {
     return (
         // Card for Doctor View (Notification)
