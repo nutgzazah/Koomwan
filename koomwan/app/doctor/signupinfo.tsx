@@ -13,6 +13,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import Toast from "react-native-toast-message";
 import StatusModal from "../../components/login_signin/StatusModal";
+import PDFViewer from "../../components/beginner/PDFViewer";
 
 // Mock data for dropdowns
 const experts = [
@@ -51,6 +52,7 @@ const DoctorSignUpInfoScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showHospitalDropdown, setShowHospitalDropdown] = useState(false);
+  const [isPDFVisible, setIsPDFVisible] = useState(false);
 
   const showToast = (type: "success" | "error", message: string) => {
     Toast.show({
@@ -370,36 +372,62 @@ const DoctorSignUpInfoScreen = () => {
               <Text className="text-description text-secondary font-regular mb-2">
                 เอกสารประกอบทางการแพทย์
               </Text>
-              <TouchableOpacity
-                onPress={pickDocument}
-                className={`w-full h-[50px] px-4 border rounded bg-background flex-row items-center mb-3 justify-between ${
-                  errors.document ? "border-abnormal" : "border-gray"
-                }`}
-              >
-                <Text
-                  className={`text-description ${
-                    document ? "text-secondary" : "text-gray"
-                  } font-regular`}
-                  numberOfLines={1}
-                  ellipsizeMode="middle"
+              <View className="flex-row items-center">
+                <TouchableOpacity
+                  onPress={pickDocument}
+                  className={`flex-1 h-[50px] px-4 border rounded bg-background flex-row items-center mb-3 justify-between ${
+                    errors.document ? "border-abnormal" : "border-gray"
+                  }`}
                 >
-                  {document ? document.name : "เอกสารประกอบทางการแพทย์"}
-                </Text>
-                <View className="flex-row items-center">
-                  {document && (
-                    <Text className="text-description text-gray mr-2">
-                      {(document.size / (1024 * 1024)).toFixed(1)}MB
+                  <View className="flex-1 flex-row items-center">
+                    <Text
+                      className={`text-description ${
+                        document ? "text-secondary" : "text-gray"
+                      } font-regular flex-1`}
+                      numberOfLines={1}
+                      ellipsizeMode="middle"
+                    >
+                      {document ? document.name : "เอกสารประกอบทางการแพทย์"}
                     </Text>
-                  )}
-                  <View className="w-12 h-6 bg-primary rounded-full items-center justify-center">
-                    <Text className="text-card text-tag">PDF</Text>
                   </View>
-                </View>
-              </TouchableOpacity>
+                  <View className="flex-row items-center ml-2">
+                    {document && (
+                      <Text className="text-description text-gray mr-2">
+                        {(document.size / (1024 * 1024)).toFixed(1)}MB
+                      </Text>
+                    )}
+                    <View className="w-12 h-6 bg-primary rounded-full items-center justify-center">
+                      <Text className="text-card text-tag">PDF</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+
+                {document && (
+                  <TouchableOpacity
+                    onPress={() => setIsPDFVisible(true)}
+                    className="ml-2 p-2"
+                  >
+                    <Image
+                      source={require("../../assets/Login/eye.png")}
+                      className="w-6 h-6"
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
               {errors.document && (
                 <Text className="text-abnormal text-description font-regular">
                   กรุณาอัพโหลดเอกสารประกอบทางการแพทย์
                 </Text>
+              )}
+
+              {/* PDF Viewer Modal */}
+              {document && (
+                <PDFViewer
+                  uri={document.uri}
+                  isVisible={isPDFVisible}
+                  onClose={() => setIsPDFVisible(false)}
+                  fileName={document.name}
+                />
               )}
             </View>
 
