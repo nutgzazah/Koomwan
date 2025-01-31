@@ -37,7 +37,7 @@ export default function ProfileScreen() {
               />
               <TouchableOpacity
                 className="absolute bottom-0 right-0"
-                onPress={() => router.push("/profile/editprofile")}
+                onPress={() => router.push("/profile/editProfile")}
               >
                 <Image
                   source={require("../../assets/Profile/edit.png")}
