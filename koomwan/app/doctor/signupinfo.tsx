@@ -53,7 +53,7 @@ const DoctorSignUpInfoScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showHospitalDropdown, setShowHospitalDropdown] = useState(false);
   const [isPDFVisible, setIsPDFVisible] = useState(false);
-
+  // Toast แสดงสถานะอัพโหลดรูป
   const showToast = (type: "success" | "error", message: string) => {
     Toast.show({
       type: type,
@@ -63,7 +63,7 @@ const DoctorSignUpInfoScreen = () => {
       visibilityTime: 3000,
     });
   };
-
+  //อัพโหลดรูป
   const pickImageAsync = async () => {
     try {
       const { status } =
@@ -88,7 +88,7 @@ const DoctorSignUpInfoScreen = () => {
       showToast("error", "เกิดข้อผิดพลาดในการเลือกรูปภาพ");
     }
   };
-
+  //อัพโหลดเอกสาร
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
