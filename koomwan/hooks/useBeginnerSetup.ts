@@ -7,6 +7,7 @@ export type DateModalType = "day" | "month" | "year" | null;
 export const useBeginnerSetup = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [selections, setSelections] = useState({
+    userType: "", //เก็บว่า user ทั่วไป หรือ เบาหวาน
     gender: "",
     birthday: { day: "", month: "", year: "" },
   });
