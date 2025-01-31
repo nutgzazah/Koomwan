@@ -60,7 +60,7 @@ export default function NotificationCard({notification, onPress}: notificationIn
         } else if (diffInDays === 1) {
             return `เมื่อวาน ${formatTime(targetDate)}`;
         } else if (diffInDays < 7) {
-            return `${diffInDays}วันก่อนเมื่อ ${formatTime(targetDate)}`;
+            return `${diffInDays} วันก่อนเมื่อ ${formatTime(targetDate)}`;
         } else if (diffInDays < 14) {
             return `สัปดาห์ก่อนเมื่อ ${formatTime(targetDate)}`;
         } else {
@@ -68,6 +68,10 @@ export default function NotificationCard({notification, onPress}: notificationIn
                 "July", "August", "September", "October", "November", "December"];
             const day = targetDate.getDate();
             const month = monthNames[targetDate.getMonth()];
+            if (now.getFullYear() !== targetDate.getFullYear()){
+                const year = targetDate.getFullYear();
+                return `${day} ${transformMonthToThai(month)} ${year} เมื่อ ${formatTime(targetDate)}`;
+            }
             return `${day} ${transformMonthToThai(month)} เมื่อ ${formatTime(targetDate)}`;
         }
     }
