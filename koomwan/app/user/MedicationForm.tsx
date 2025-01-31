@@ -65,7 +65,7 @@ export default function MedicationFormScreen() {
   // Loading states
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // Dropdown ยา
   const medicationTypes = [
     "ยารักษาโรคเบาหวาน",
     "ยารักษาเฉพาะโรค",
@@ -75,7 +75,9 @@ export default function MedicationFormScreen() {
     "ยาวิตามินและอาหารเสริม",
     "อื่นๆ",
   ];
-
+  {
+    /* สำหรับอัพโหลดภาพ */
+  }
   const handleImageUpload = async () => {
     try {
       const { status } =
@@ -192,18 +194,19 @@ export default function MedicationFormScreen() {
     );
   };
 
+  // ชนิดยา
   const handleSelectType = (selectedType: string) => {
     setPillType(selectedType);
     setIsDropdownOpen(false);
   };
-
+  //ปุ่ม กลับ
   const handleBack = () => {
     if (isSubmitting) {
       return; // Prevent navigation while submitting
     }
     router.back();
   };
-
+  //ปุ่ม เพิ่มยา
   const handleAddMedication = async () => {
     if (isSubmitting) {
       return; // Prevent double submission
