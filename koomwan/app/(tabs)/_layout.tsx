@@ -27,7 +27,7 @@ export default function TabsLayout() {
 
   // Route ที่ไม่ต้องการให้แสดงอยู่ในแท็บอย่างเช่น notification, profile, setting
   // ตอนนี้ใส่คอมเมนต์ไปเพราะยังไม่ได้ทำ route, ถอดคอมเมนต์ข้างล่างออกได้ตอนทำ route จริง
-  // const hiddenRoutes = [];
+  const hiddenRoutes = ["notification"];
 
   return (
     <Tabs
@@ -66,7 +66,7 @@ export default function TabsLayout() {
         // notification แก้ไข Path ตอนทำจริง
         headerRight: () => (
           <TouchableOpacity 
-            onPress={(() => router.push("resource"))}
+            onPress={(() => router.push("notification"))}
             className="mr-4"
           >
             <Image className="w-6 h-6"
@@ -151,15 +151,15 @@ export default function TabsLayout() {
       />
       { // อันนี้เอาไว้ซ่อน Route ที่ไม่ต้องให้อยู่บน Navbar ข้างล่าง 
         // คอมเมนต์เอาไว้ก่อน ตอนมีค่อยถอดคอมเมนต์ข้างล่าง
-        // hiddenRoutes.map((path, key) => (
-        //   <Tabs.Screen
-        //     key={key}
-        //     name={path}
-        //     options={{
-        //       href: null,
-        //     }}
-        //   />
-        // ))
+        hiddenRoutes.map((path, key) => (
+          <Tabs.Screen
+            key={key}
+            name={path}
+            options={{
+              href: null,
+            }}
+          />
+        ))
       }
     </Tabs>
   );
