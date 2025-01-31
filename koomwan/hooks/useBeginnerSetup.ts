@@ -7,7 +7,6 @@ export type DateModalType = "day" | "month" | "year" | null;
 export const useBeginnerSetup = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [selections, setSelections] = useState({
-    userType: "",
     gender: "",
     birthday: { day: "", month: "", year: "" },
   });
