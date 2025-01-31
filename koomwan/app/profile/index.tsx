@@ -67,7 +67,7 @@ export default function ProfileScreen() {
                   source={require("../../assets/Profile/ruler-pen.png")}
                   className="w-6 h-6"
                 />
-                <Text className="text-description text-secondary ml-2">
+                <Text className="text-description text-secondary ml-2 font-regular">
                   168 ซม.
                 </Text>
               </View>
@@ -78,7 +78,7 @@ export default function ProfileScreen() {
                   source={require("../../assets/Profile/cake.png")}
                   className="w-6 h-6"
                 />
-                <Text className="text-description text-secondary ml-2">
+                <Text className="text-description text-secondary ml-2 font-regular">
                   26 ปี
                 </Text>
               </View>
@@ -89,7 +89,7 @@ export default function ProfileScreen() {
                   source={require("../../assets/Profile/sex.png")}
                   className="w-6 h-6"
                 />
-                <Text className="text-description text-secondary ml-2">
+                <Text className="text-description text-secondary ml-2 font-regular">
                   ชาย
                 </Text>
               </View>
@@ -101,7 +101,10 @@ export default function ProfileScreen() {
         <View className="w-full">
           {/* User Account Info */}
           <Card>
-            <TouchableOpacity className="flex-row items-center py-1 px-2 mt-2">
+            <TouchableOpacity
+              className="flex-row items-center py-1 px-2 mt-2"
+              onPress={() => router.push("/profile/editProfile")}
+            >
               <Text className="text-description text-secondary flex-1 font-bold">
                 ข้อมูลบัญชีผู้ใช้งาน
               </Text>
