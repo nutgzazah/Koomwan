@@ -22,10 +22,10 @@ export default function BirthdayInput({
     <View className="flex-col items-center">
       <Image
         source={require("../../assets/BeginnerSetup/cake.png")}
-        className="w-[150px] h-[150px] mb-6"
+        className="w-[100px] h-[100px] mb-6"
         resizeMode="contain"
       />
-      <View className="flex-row space-x-4 w-full">
+      <View className="flex-row space-x-4 w-full p-1 ">
         <TouchableOpacity
           className="flex-1 bg-background rounded p-3"
           onPress={onPressDay}

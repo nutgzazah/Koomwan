@@ -17,7 +17,7 @@ export default function HomeScreen() {
         <TouchableOpacity onPress={() => router.push("/user/login")}>
           <Text className="color-secondary text-button">User Login</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("/doctor/login")}>
+        <TouchableOpacity onPress={() => router.push("/user/login")}>
           <Text className="font-regular">Doctor Login</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push("onboarding")}>
@@ -25,6 +25,12 @@ export default function HomeScreen() {
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push("profile")}>
           <Text className="font-bold">Profile</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/user/beginner")}>
+          <Text className="font-bold">Beginner</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/doctor/signupinfo")}>
+          <Text className="font-bold">Doctor info</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

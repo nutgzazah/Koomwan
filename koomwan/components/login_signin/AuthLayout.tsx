@@ -31,7 +31,7 @@ export function AuthLayout({ children, backgroundImage }: AuthLayoutProps) {
             resizeMode="cover"
           />
           {/* White Overlay */}
-          <View className="absolute bottom-0 w-full h-8 bg-card rounded-t-[50px] mb-1" />
+          <View className="absolute bottom-0 w-full h-8 bg-card rounded-t-[50px] " />
         </View>
 
         {/* Content Container - Added minHeight to ensure it fills remaining space */}
