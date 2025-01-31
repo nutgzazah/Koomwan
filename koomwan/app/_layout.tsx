@@ -1,4 +1,4 @@
-import { Stack, } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import "../global.css";
 import { useFonts } from "expo-font";
@@ -33,7 +33,7 @@ export default function RootLayout() {
 
       <Stack.Screen name="user/login" />
       <Stack.Screen name="user/signin" />
-      <Stack.Screen name="doctor/login" />
+
       <Stack.Screen name="doctor/signin" />
     </Stack>
   );
