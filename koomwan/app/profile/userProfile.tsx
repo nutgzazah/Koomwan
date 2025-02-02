@@ -10,7 +10,7 @@ import {
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import BackButton from "../../global/components/BackButton";
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 
 // InfoRow component สำหรับแสดงข้อมูลแต่ละแถว
 interface InfoRowProps {
@@ -34,7 +34,10 @@ const InfoRow: React.FC<InfoRowProps> = ({
       </Text>
     </View>
     {isButton ? (
-      <TouchableOpacity className="bg-primary px-4 py-1 rounded">
+      <TouchableOpacity
+        className="bg-primary px-4 py-1 rounded"
+        onPress={() => router.push("/profile/editProfile")}
+      >
         <Text className="font-regular text-tag text-white">{value}</Text>
       </TouchableOpacity>
     ) : (
