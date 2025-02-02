@@ -1,6 +1,6 @@
 import { registerRootComponent } from 'expo';
 import React from 'react';
-import App from './App';
+import App from "./app";
 import Toast from 'react-native-toast-message';
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);

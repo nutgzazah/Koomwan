@@ -2,6 +2,12 @@ const JWT = require('jsonwebtoken')
 const { hashPassword, comparePassword } = require('../helpers/authHelper');
 const userModel = require('../models/userModel')
 const doctorModel = require('../models/doctorModel')
+var { expressjwt: jwt } = require("express-jwt");
+
+//middleware
+const requireSignIn = jwt({
+    secret:process.env.JWT_SECRET, algorithms: ["HS256"]
+})
 
 //register
 const registerController = async (req, res) => {
@@ -89,6 +95,146 @@ const registerController = async (req, res) => {
         });
     }
 }
+
+//doctor register
+const registerDoctorController = async (req, res) => {
+    try {
+        const { username, email, password, phone, firstname, lastname, occupation, expert, hospital, document, image } = req.body;
+
+        // Validation
+        if (!username) {
+            return res.status(400).send({
+                success: false,
+                message: 'Username is required'
+            });
+        }
+        if (!email) {
+            return res.status(400).send({
+                success: false,
+                message: 'Email is required'
+            });
+        }
+        if (!password || password.length < 6) {
+            return res.status(400).send({
+                success: false,
+                message: 'Password is required and must be at least 6 characters long'
+            });
+        }
+        if (!phone) {
+            return res.status(400).send({
+                success: false,
+                message: 'Phone is required'
+            });
+        }
+        if (!firstname) {
+            return res.status(400).send({
+                success: false,
+                message: 'First name is required'
+            });
+        }
+        if (!lastname) {
+            return res.status(400).send({
+                success: false,
+                message: 'Last name is required'
+            });
+        }
+        if (!occupation) {
+            return res.status(400).send({
+                success: false,
+                message: 'Occupation is required'
+            });
+        }
+        if (!expert) {
+            return res.status(400).send({
+                success: false,
+                message: 'Expert field is required'
+            });
+        }
+        if (!hospital) {
+            return res.status(400).send({
+                success: false,
+                message: 'Hospital name is required'
+            });
+        }
+        if (!document) {
+            return res.status(400).send({
+                success: false,
+                message: 'Document is required'
+            });
+        }
+
+        // Optional image validation (if image is required)
+        if (!image) {
+            return res.status(400).send({
+                success: false,
+                message: 'Profile image is required'
+            });
+        }
+
+        // Check if username already exists in userModel or doctorModel
+        const existingUsernameInUser = await userModel.findOne({ username });
+        const existingUsernameInDoctor = await doctorModel.findOne({ username });
+        if (existingUsernameInUser || existingUsernameInDoctor) {
+            return res.status(400).send({
+                success: false,
+                message: 'Username is already taken',
+            });
+        }
+
+        // Check if email already exists in userModel or doctorModel
+        const existingEmailInUser = await userModel.findOne({ email });
+        const existingEmailInDoctor = await doctorModel.findOne({ email });
+        if (existingEmailInUser || existingEmailInDoctor) {
+            return res.status(400).send({
+                success: false,
+                message: 'Email is already registered',
+            });
+        }
+
+        // Check if phone already exists in userModel or doctorModel
+        const existingPhoneInUser = await userModel.findOne({ phone });
+        const existingPhoneInDoctor = await doctorModel.findOne({ phone });
+        if (existingPhoneInUser || existingPhoneInDoctor) {
+            return res.status(400).send({
+                success: false,
+                message: 'Phone number is already registered',
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await hashPassword(password);
+
+        // Save doctor
+        const doctor = await doctorModel({
+            username,
+            email,
+            password: hashedPassword,
+            phone,
+            firstname,
+            lastname,
+            occupation,
+            expert,
+            hospital,
+            document,
+            image,  // Save profile image
+        }).save();
+
+        return res.status(201).send({
+            success: true,
+            message: 'Doctor registration successful, please login',
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success: false,
+            message: 'Error in doctor registration API',
+            error,
+        });
+    }
+}
+
+
 
 //User check Duplicate
 const checkDuplicateController = async (req, res) => {
@@ -321,4 +467,4 @@ const resetPasswordController = async (req, res) => {
     }
 };
 
-module.exports = { registerController, loginController, checkDuplicateController, resetPasswordController, checkUserResetPasswordController };
+module.exports = { requireSignIn, registerController, registerDoctorController, loginController, checkDuplicateController, resetPasswordController, checkUserResetPasswordController };
