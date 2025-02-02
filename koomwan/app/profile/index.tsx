@@ -12,7 +12,7 @@ import BreakLine from "../../global/components/BreakLine";
 import BackButton from "../../global/components/BackButton";
 import { useRouter } from "expo-router";
 
-export default function ProfileScreen() {
+export default function IndexProfileScreen() {
   const router = useRouter();
 
   return (
@@ -103,7 +103,7 @@ export default function ProfileScreen() {
           <Card>
             <TouchableOpacity
               className="flex-row items-center py-1 px-2 mt-2"
-              onPress={() => router.push("/profile/editProfile")}
+              onPress={() => router.push("/profile/userProfile")}
             >
               <Text className="text-description text-secondary flex-1 font-bold">
                 ข้อมูลบัญชีผู้ใช้งาน
@@ -130,7 +130,10 @@ export default function ProfileScreen() {
 
           {/* Update Medicine */}
           <Card>
-            <TouchableOpacity className="flex-row items-center py-1 px-2 mt-2">
+            <TouchableOpacity
+              className="flex-row items-center py-1 px-2 mt-2"
+              onPress={() => router.push("/profile/(med)")}
+            >
               <Text className="text-description text-secondary flex-1 font-bold">
                 อัพเดทข้อมูลยาประจำ
               </Text>
