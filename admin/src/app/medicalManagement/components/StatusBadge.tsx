@@ -6,10 +6,10 @@ interface StatusBadgeProps {
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
   const statusColor =
-    status === "approve" ? "text-green-500" : status === "disapprove" ? "text-red-500" : "text-gray-500";
+    status === "approve" ? "text-normal" : status === "disapprove" ? "text-abnormal" : "text-primary";
 
   return (
-    <span className={`${statusColor} font-bold`}>
+    <span className={`${statusColor} text-detail_2`}>
       {status === "pending" ? "รออนุมัติ" : status === "approve" ? "อนุมัติแล้ว" : "ไม่อนุมัติ"}
     </span>
   );
