@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
@@ -80,143 +81,152 @@ export default function EditProfileScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <BackButton title="โปรไฟล์ของฉัน" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 48 : 0}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
+          <BackButton title="โปรไฟล์ของฉัน" />
 
-        <Card>
-          <View className="flex-col items-center w-full mb-4">
-            <Text className="text-title font-bold text-secondary">
-              แก้ไขโปรไฟล์
-            </Text>
-            <BreakLine />
-
-            {/* Profile Image Section */}
-            <View className="relative mb-4">
-              <Image
-                source={formData.profileImage}
-                className="w-[150px] h-[150px] rounded-full"
-              />
-              <TouchableOpacity className="absolute bottom-0 right-0">
-                <Image
-                  source={require("../../assets/Profile/edit.png")}
-                  className="w-12 h-12"
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Username Display */}
-            <View className="flex-row items-center mb-4">
-              <Image
-                source={require("../../assets/Profile/user.png")}
-                className="w-6 h-6"
-              />
-              <Text className="text-headline font-bold text-secondary pl-2">
-                {formData.username}
+          <Card>
+            <View className="flex-col items-center w-full mb-4">
+              <Text className="text-title font-bold text-secondary">
+                แก้ไขโปรไฟล์
               </Text>
-            </View>
+              <BreakLine />
 
-            <BreakLine />
-
-            {/* Profile Input Fields */}
-            <View className="w-full space-y-6 py-2 gap-4">
-              <ProfileInputField
-                icon={require("../../assets/Profile/ruler-pen.png")}
-                label="ส่วนสูง"
-                value={formData.height}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, height: text })
-                }
-              />
-
-              {/* Date of Birth Field */}
-              <View>
-                <ProfileInputField
-                  icon={require("../../assets/Profile/cake.png")}
-                  label="วันเกิด"
-                  value={formData.birthDate}
-                  isDatePicker={true}
-                  showDatePicker={showDatePicker}
-                  onPressDate={() => setShowDatePicker(true)}
-                  onDateChange={handleDateChange}
-                  tempDate={tempDate}
+              {/* Profile Image Section */}
+              <View className="relative mb-4">
+                <Image
+                  source={formData.profileImage}
+                  className="w-[150px] h-[150px] rounded-full"
                 />
-
-                {/* iOS Date Picker Controls */}
-                {Platform.OS === "ios" && showDatePicker && (
-                  <View className="flex-row justify-end space-x-2 mt-2">
-                    <TouchableOpacity
-                      className="bg-white rounded-lg px-4 py-2"
-                      onPress={handleIOSDateCancel}
-                    >
-                      <Text className="text-secondary font-bold text-sub-button">
-                        ยกเลิก
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className="bg-primary rounded-lg px-4 py-2"
-                      onPress={handleIOSDateConfirm}
-                    >
-                      <Text className="text-white font-bold text-sub-button">
-                        ยืนยัน
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
+                <TouchableOpacity className="absolute bottom-0 right-0">
+                  <Image
+                    source={require("../../assets/Profile/edit.png")}
+                    className="w-12 h-12"
+                  />
+                </TouchableOpacity>
               </View>
 
-              <ProfileInputField
-                icon={require("../../assets/Profile/sex.png")}
-                label="เพศ"
-                value={formData.gender}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, gender: text })
-                }
-              />
+              {/* Username Display */}
+              <View className="flex-row items-center mb-4">
+                <Image
+                  source={require("../../assets/Profile/user.png")}
+                  className="w-6 h-6"
+                />
+                <Text className="text-headline font-bold text-secondary pl-2">
+                  {formData.username}
+                </Text>
+              </View>
 
-              <ProfileInputField
-                icon={require("../../assets/Profile/heart.png")}
-                label="สถานะ"
-                value={formData.status}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, status: text })
-                }
-              />
+              <BreakLine />
 
-              <ProfileInputField
-                icon={require("../../assets/Profile/email.png")}
-                label="อีเมล"
-                value={formData.email}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, email: text })
-                }
-                placeholder="เพิ่มอีเมล"
-              />
+              {/* Profile Input Fields */}
+              <View className="w-full space-y-6 py-2 gap-4">
+                <ProfileInputField
+                  icon={require("../../assets/Profile/ruler-pen.png")}
+                  label="ส่วนสูง"
+                  value={formData.height}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, height: text })
+                  }
+                />
 
-              <ProfileInputField
-                icon={require("../../assets/Profile/phone.png")}
-                label="เบอร์โทรศัพท์"
-                value={formData.phone}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, phone: text })
-                }
-              />
+                {/* Date of Birth Field */}
+                <View>
+                  <ProfileInputField
+                    icon={require("../../assets/Profile/cake.png")}
+                    label="วันเกิด"
+                    value={formData.birthDate}
+                    isDatePicker={true}
+                    showDatePicker={showDatePicker}
+                    onPressDate={() => setShowDatePicker(true)}
+                    onDateChange={handleDateChange}
+                    tempDate={tempDate}
+                  />
+
+                  {/* iOS Date Picker Controls */}
+                  {Platform.OS === "ios" && showDatePicker && (
+                    <View className="flex-row justify-end space-x-2 mt-2">
+                      <TouchableOpacity
+                        className="bg-white rounded-lg px-4 py-2"
+                        onPress={handleIOSDateCancel}
+                      >
+                        <Text className="text-secondary font-bold text-sub-button">
+                          ยกเลิก
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        className="bg-primary rounded-lg px-4 py-2"
+                        onPress={handleIOSDateConfirm}
+                      >
+                        <Text className="text-white font-bold text-sub-button">
+                          ยืนยัน
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                <ProfileInputField
+                  icon={require("../../assets/Profile/sex.png")}
+                  label="เพศ"
+                  value={formData.gender}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, gender: text })
+                  }
+                />
+
+                <ProfileInputField
+                  icon={require("../../assets/Profile/heart.png")}
+                  label="สถานะ"
+                  value={formData.status}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, status: text })
+                  }
+                />
+
+                <ProfileInputField
+                  icon={require("../../assets/Profile/email.png")}
+                  label="อีเมล"
+                  value={formData.email}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, email: text })
+                  }
+                  placeholder="เพิ่มอีเมล"
+                />
+
+                <ProfileInputField
+                  icon={require("../../assets/Profile/phone.png")}
+                  label="เบอร์โทรศัพท์"
+                  value={formData.phone}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, phone: text })
+                  }
+                />
+              </View>
             </View>
-          </View>
-        </Card>
+          </Card>
 
-        {/* Save Button */}
-        <TouchableOpacity
-          className="bg-primary mx-6 py-4 rounded-lg my-4"
-          onPress={() => {
-            // TODO: Handle save
-            router.back();
-          }}
-        >
-          <Text className="text-white text-center font-bold text-button">
-            บันทึก
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {/* Save Button */}
+          <TouchableOpacity
+            className="bg-primary mx-6 py-4 rounded-lg my-4"
+            onPress={() => {
+              // TODO: Handle save
+              router.back();
+            }}
+          >
+            <Text className="text-white text-center font-bold text-button">
+              บันทึก
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
