@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from "react-native";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
@@ -16,7 +17,7 @@ import { useRouter } from "expo-router";
 export default function EditProfileScreen() {
   const router = useRouter();
 
-  // State สำหรับเก็บข้อมูลฟอร์ม
+  // Form Data State
   const [formData, setFormData] = useState({
     username: "Somchai123",
     profileImage: require("../../assets/Profile/images/profile.png"),
@@ -27,6 +28,55 @@ export default function EditProfileScreen() {
     email: "",
     phone: "0819430552",
   });
+
+  // Date Picker States
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date | undefined>(undefined);
+
+  // Handle Date Selection
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    if (selectedDate === undefined) {
+      // User cancelled the picker
+      setShowDatePicker(false);
+      setTempDate(undefined);
+      return;
+    }
+
+    // Store the temporary date
+    setTempDate(selectedDate);
+
+    if (Platform.OS === "android") {
+      // On Android, update immediately due to native OK/Cancel buttons
+      const formattedDate = formatDate(selectedDate);
+      setFormData({ ...formData, birthDate: formattedDate });
+      setShowDatePicker(false);
+      setTempDate(undefined);
+    }
+  };
+
+  // Handle iOS Date Confirmation
+  const handleIOSDateConfirm = () => {
+    if (tempDate) {
+      const formattedDate = formatDate(tempDate);
+      setFormData({ ...formData, birthDate: formattedDate });
+      setShowDatePicker(false);
+      setTempDate(undefined);
+    }
+  };
+
+  // Handle iOS Date Cancel
+  const handleIOSDateCancel = () => {
+    setShowDatePicker(false);
+    setTempDate(undefined);
+  };
+
+  // Helper function to format date
+  const formatDate = (date: Date): string => {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const thaiYear = date.getFullYear() + 543;
+    return `${day}/${month}/${thaiYear}`;
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -40,7 +90,7 @@ export default function EditProfileScreen() {
             </Text>
             <BreakLine />
 
-            {/* Profile Image with Edit Button */}
+            {/* Profile Image Section */}
             <View className="relative mb-4">
               <Image
                 source={formData.profileImage}
@@ -54,7 +104,7 @@ export default function EditProfileScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Username */}
+            {/* Username Display */}
             <View className="flex-row items-center mb-4">
               <Image
                 source={require("../../assets/Profile/user.png")}
@@ -67,7 +117,7 @@ export default function EditProfileScreen() {
 
             <BreakLine />
 
-            {/* Input Fields */}
+            {/* Profile Input Fields */}
             <View className="w-full space-y-6 py-2 gap-4">
               <ProfileInputField
                 icon={require("../../assets/Profile/ruler-pen.png")}
@@ -78,14 +128,41 @@ export default function EditProfileScreen() {
                 }
               />
 
-              <ProfileInputField
-                icon={require("../../assets/Profile/cake.png")}
-                label="วันเกิด"
-                value={formData.birthDate}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, birthDate: text })
-                }
-              />
+              {/* Date of Birth Field */}
+              <View>
+                <ProfileInputField
+                  icon={require("../../assets/Profile/cake.png")}
+                  label="วันเกิด"
+                  value={formData.birthDate}
+                  isDatePicker={true}
+                  showDatePicker={showDatePicker}
+                  onPressDate={() => setShowDatePicker(true)}
+                  onDateChange={handleDateChange}
+                  tempDate={tempDate}
+                />
+
+                {/* iOS Date Picker Controls */}
+                {Platform.OS === "ios" && showDatePicker && (
+                  <View className="flex-row justify-end space-x-2 mt-2">
+                    <TouchableOpacity
+                      className="bg-white rounded-lg px-4 py-2"
+                      onPress={handleIOSDateCancel}
+                    >
+                      <Text className="text-secondary font-bold text-sub-button">
+                        ยกเลิก
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      className="bg-primary rounded-lg px-4 py-2"
+                      onPress={handleIOSDateConfirm}
+                    >
+                      <Text className="text-white font-bold text-sub-button">
+                        ยืนยัน
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
 
               <ProfileInputField
                 icon={require("../../assets/Profile/sex.png")}
