@@ -21,7 +21,7 @@ export default function ApprovePopup({
   return (
     <PopupCard title="อนุมัติ" onClose={onClose}>
       <div className="flex flex-col items-center space-y-4">
-        <p className="font-bold text-center">{doctorName}</p>
+        <p className="text-detail_2 text-center">{doctorName}</p>
         <p className="text-normal">สำเร็จ</p>
       </div>
     </PopupCard>
