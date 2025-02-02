@@ -36,16 +36,99 @@ body {
 }
 
 .popup-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
+  background: var(--color-card);
+  padding: 30px;
+  border-radius: 5px;
   width: 500px;
   max-width: 90%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-img {
-  width: 128px;
-  height: 128px;
-  border-radius: 50%;
+/* button section */
+.btn {
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s ease, color 0.3s ease;
+  box-shadow: 0px 2px 4px rgba(57, 57, 57, 0.068);
+}
+
+.long-btn {
+  padding: 10px 80px;
+}
+
+.short-btn {
+  padding: 10px 40px;
+}
+
+.blue-btn {
+  background: var(--color-primary);
+  color: var(--color-card);
+}
+
+.blue-btn:hover {
+  background: var(--color-hover-primary);
+}
+
+.lightblue-btn {
+  background: var(--color-unread);
+  color: var(--color-primary);
+}
+
+.lightblue-btn:hover {
+  background: var(--color-hover-unread);
+}
+
+.white-btn {
+  background: var(--color-card);
+  color: var(--color-primary);
+}
+
+.white-btn:hover {
+  background: var(--color-hover-card);
+}
+
+.red-btn {
+  background: var(--color-abnormal);
+  color: var(--color-card);
+}
+
+.red-btn:hover {
+  background: var(--color-hover-abnormal);
+}
+
+.green-btn {
+  background: var(--color-normal);
+  color: var(--color-card);
+}
+
+.green-btn:hover {
+  background: var(--color-hover-Normal);
+}
+
+/* Form section */
+.search {
+
+}
+
+.input {
+  width: 100%;
+  padding: 12px 18px;
+  border: 1px solid var(--color-our-gray); 
+  border-radius: 5px;
+  background: var(--color-background); 
+  font-size: 14px;
+  color: var(--color-secondary);
+  outline: none;
+  transition: border 0.3s ease, background 0.3s ease;
+}
+
+.input::placeholder {
+  color: var(--color-our-gray); 
+}
+
+.input:focus {
+  background: var(--color-card);
+  border-color: var(--color-our-gray);
+  box-shadow: 0px 2px 4px rgba(191, 191, 191, 0.052);
 }

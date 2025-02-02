@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import type { PluginAPI } from "tailwindcss/types/config";
 
 export default {
   content: [
@@ -10,71 +11,104 @@ export default {
     extend: {
       colors: {
         primary: "#3972F0",
-        hoverPrimary: "#386de3",
         secondary: "#3E3B5B",
+        background: "#F8F8F8",
         card: "#FFFFFF",
         normal: "#2ED74D",
         warning: "#FFD444",
         abnormal: "#FE5757", 
-        hoverRead: "#F5F5F5",
         unread: "#D6E3FF",
+        ourGray: "#DBDBDB",
+        
+        hoverPrimary: "#386de3",
+        hoverCard: "#F5F5F5",
         hoverUnread:"#C9DAFF",
+        hoverNormal:"#0CB82C",
+        hoverAbnormal:"#F74141",
       },
       fontFamily: {
         K2D: ["K2D", "serif"],
       },
       fontSize: {
-        display: [
+        title: [
+          "48px", 
+          {
+            lineHeight: "36px",
+            fontWeight: "600",
+          },
+        ],
+        headline_1: [
+          "32px", 
+          {
+            lineHeight: "36px",
+            fontWeight: "500",
+          },
+        ],
+        headline_2: [
           "24px", 
           {
             lineHeight: "36px",
-            fontWeight: "700",
+            fontWeight: "500",
           },
         ],
-        title: [
+        headline_3: [
           "20px", 
           {
-            lineHeight: "30px",
-            fontWeight: "700",
-          },
-        ],
-        headline: [
-          "18px",
-          {
-            lineHeight: "27px",
+            lineHeight: "36px",
             fontWeight: "500",
           },
         ],
-        description: [
+        detail_1: [
+          "18px", 
+          {
+            lineHeight: "36px",
+            fontWeight: "300",
+          },
+        ],
+        detail_2: [
           "16px", 
           {
-            lineHeight: "24px",
-            fontWeight: "400",
+            lineHeight: "36px",
+            fontWeight: "300",
           },
         ],
-        tag: [
+        detail_3: [
           "14px", 
           {
-            lineHeight: "21px",
-            fontWeight: "500",
+            lineHeight: "36px",
+            fontWeight: "300",
           },
         ],
-        button: [
+        bold_detail: [
           "16px", 
           {
-            lineHeight: "24px",
-            fontWeight: "700",
-          },
-        ],
-        "sub-button": [
-          "14px", 
-          {
-            lineHeight: "21px",
-            fontWeight: "500",
+            lineHeight: "36px",
+            fontWeight: "600",
           },
         ],
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addBase, theme }: PluginAPI) {
+      addBase({
+        ":root": {
+          "--color-primary": theme("colors.primary"),
+          "--color-secondary": theme("colors.secondary"),
+          "--color-background": theme("colors.background"),
+          "--color-card": theme("colors.card"),
+          "--color-normal": theme("colors.normal"),
+          "--color-warning": theme("colors.warning"),
+          "--color-abnormal": theme("colors.abnormal"),
+          "--color-unread": theme("colors.unread"),
+          "--color-our-gray": theme("colors.ourGray"),
+          "--color-hover-primary": theme("colors.hoverPrimary"),
+          "--color-hover-card": theme("colors.hoverCard"),
+          "--color-hover-unread": theme("colors.hoverUnread"),
+          "--color-hover-Normal": theme("colors.hoverNormal"),
+          "--color-hover-abnormal": theme("colors.hoverAbnormal"),
+        },
+      });
+    },
+  ],
 } satisfies Config;

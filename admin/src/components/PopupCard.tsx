@@ -9,10 +9,13 @@ interface PopupCardProps {
 export default function PopupCard({ title, children, onClose }: PopupCardProps) {
   return (
     <div className="popup-overlay">
-      <div className="popup-content">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold">{title}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
+      <div className="popup-content relative">
+        <div className="flex justify-between items-center w-full">
+          <h2 className="text-headline_2 flex-1 text-center pb-2">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-secondary hover:text-hoverAbnormal absolute top-2 right-3"
+          >
             ✖
           </button>
         </div>
