@@ -1,5 +1,7 @@
 import { useRouter } from "expo-router";
+import { useEffect } from 'react';
 import React, { useState } from "react";
+import { useLocalSearchParams } from 'expo-router';  // ถ้าใช้ Expo Router
 import {
   View,
   Text,
@@ -14,6 +16,9 @@ import * as DocumentPicker from "expo-document-picker";
 import Toast from "react-native-toast-message";
 import StatusModal from "../../components/login_signin/StatusModal";
 import PDFViewer from "../../components/beginner/PDFViewer";
+import BASE_URL from "../../config"
+import axios from "axios";
+import * as FileSystem from 'expo-file-system';
 
 // Mock data for dropdowns
 const experts = [
@@ -35,6 +40,9 @@ const hospitals = [
 ];
 
 const DoctorSignUpInfoScreen = () => {
+  const router = useRouter();
+  const { username, email, password, phone } = useLocalSearchParams();
+  console.log(username, email, password, phone);
   const [first_name, setFirstName] = useState("");
   const [last_name, setLastName] = useState("");
   const [occupation, setOccupation] = useState("");
@@ -63,7 +71,7 @@ const DoctorSignUpInfoScreen = () => {
       visibilityTime: 3000,
     });
   };
-  //อัพโหลดรูป
+
   const pickImageAsync = async () => {
     try {
       const { status } =
@@ -156,10 +164,25 @@ const DoctorSignUpInfoScreen = () => {
 
       try {
         // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // After successful submission
-        setIsLoading(false);
+        const response = await axios.post(`${BASE_URL}/api/v1/auth/registerdoctor`, {
+          username,
+          email,
+          password,
+          phone,
+          firstname: first_name,
+          lastname: last_name,
+          occupation,
+          expert,
+          hospital,
+          document: "test",
+          image:selectedImage,
+        });
+        if (response.status === 201) {
+          // After successful submission
+          setIsLoading(false);
+        } else {
+          console.error("Registration failed:", response.data);
+        }
       } catch (error) {
         console.error("Error submitting form:", error);
         setShowModal(false);
@@ -173,8 +196,6 @@ const DoctorSignUpInfoScreen = () => {
 
     router.push("/user/login");
   };
-
-  const router = useRouter();
 
   return (
     <SafeAreaView className="flex-1 bg-background">

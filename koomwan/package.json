@@ -17,9 +17,11 @@
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.2.0",
     "axios": "^1.7.9",
-    "expo-constants": "~17.0.4",
+    "expo-constants": "^17.0.5",
+    "expo-document-picker": "~13.0.2",
     "expo-font": "~13.0.3",
-    "expo-linking": "~7.0.4",
+    "expo-image-picker": "^16.0.5",
+    "expo-linking": "^7.0.5",
     "expo-router": "^4.0.17",
     "expo-splash-screen": "^0.29.21",
     "expo-status-bar": "~2.0.1",
@@ -39,15 +41,13 @@
     "react-native-toast-message": "^2.2.1",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.19.13",
-    "tailwindcss": "^3.4.17",
-    "expo-image-picker": "~16.0.4",
-    "expo-document-picker": "~13.0.2",
-    "react-native-webview": "13.12.5"
+    "react-native-webview": "13.12.5",
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~18.3.12",
-    "expo": "^52.0.26",
+    "expo": "^52.0.28",
     "typescript": "^5.7.3"
   },
   "private": true
