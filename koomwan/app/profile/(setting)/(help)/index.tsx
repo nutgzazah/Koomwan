@@ -31,7 +31,7 @@ export default function SettingsScreen() {
         <Card>
           <TouchableOpacity
             className="flex-row items-center py-1 px-2 mt-2"
-            onPress={() => router.push("/profile/term")}
+            onPress={() => router.push("/profile/(account)")}
           >
             <Text className="text-description text-secondary flex-1 font-bold">
               บัญชี
@@ -46,7 +46,7 @@ export default function SettingsScreen() {
         <Card>
           <TouchableOpacity
             className="flex-row items-center py-1 px-2 mt-2"
-            onPress={() => router.push("/profile/privacy")}
+            onPress={() => router.push("/profile/(health)")}
           >
             <Text className="text-description text-secondary flex-1 font-bold">
               การติดตามสุขภาพ
