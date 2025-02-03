@@ -117,7 +117,10 @@ export default function IndexProfileScreen() {
 
           {/* Settings */}
           <Card>
-            <TouchableOpacity className="flex-row items-center py-1 px-2 mt-2">
+            <TouchableOpacity
+              className="flex-row items-center py-1 px-2 mt-2"
+              onPress={() => router.push("/profile/(setting)")}
+            >
               <Text className="text-description text-secondary flex-1 font-bold">
                 การตั้งค่า
               </Text>
