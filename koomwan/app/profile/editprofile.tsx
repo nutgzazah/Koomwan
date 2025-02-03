@@ -8,12 +8,14 @@ import {
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import BackButton from "../../global/components/BackButton";
 import ProfileInputField from "../../components/profile/ProfileInputField";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -33,6 +35,8 @@ export default function EditProfileScreen() {
   // Date Picker States
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date | undefined>(undefined);
+  // Image Picker
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Handle Date Selection
   const handleDateChange = (selectedDate: Date | undefined) => {
@@ -79,6 +83,36 @@ export default function EditProfileScreen() {
     return `${day}/${month}/${thaiYear}`;
   };
 
+  const pickImage = async () => {
+    try {
+      // ขอสิทธิ์การเข้าถึงคลังรูปภาพ
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "ต้องการการอนุญาต",
+          "แอพต้องการสิทธิ์ในการเข้าถึงคลังรูปภาพของคุณ"
+        );
+        return;
+      }
+
+      // เปิดตัวเลือกรูปภาพ
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert("ข้อผิดพลาด", "ไม่สามารถเลือกรูปภาพได้");
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
@@ -102,10 +136,17 @@ export default function EditProfileScreen() {
               {/* Profile Image Section */}
               <View className="relative mb-4">
                 <Image
-                  source={formData.profileImage}
+                  source={
+                    selectedImage
+                      ? { uri: selectedImage }
+                      : formData.profileImage
+                  }
                   className="w-[150px] h-[150px] rounded-full"
                 />
-                <TouchableOpacity className="absolute bottom-0 right-0">
+                <TouchableOpacity
+                  className="absolute bottom-0 right-0"
+                  onPress={pickImage}
+                >
                   <Image
                     source={require("../../assets/Profile/edit.png")}
                     className="w-12 h-12"
