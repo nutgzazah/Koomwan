@@ -9,6 +9,11 @@ import {
   ScrollView,
   SafeAreaView,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
+import Toast from "react-native-toast-message";
+import StatusModal from "../../components/login_signin/StatusModal";
+import PDFViewer from "../../components/beginner/PDFViewer";
 
 // Mock data for dropdowns
 const experts = [
@@ -35,8 +40,86 @@ const DoctorSignUpInfoScreen = () => {
   const [occupation, setOccupation] = useState("");
   const [expert, setExpert] = useState("");
   const [hospital, setHospital] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | undefined>(
+    undefined
+  );
+  const [document, setDocument] = useState<{
+    name: string;
+    uri: string;
+    size: number;
+  } | null>(null);
   const [showExpertDropdown, setShowExpertDropdown] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showHospitalDropdown, setShowHospitalDropdown] = useState(false);
+  const [isPDFVisible, setIsPDFVisible] = useState(false);
+  // Toast แสดงสถานะอัพโหลดรูป
+  const showToast = (type: "success" | "error", message: string) => {
+    Toast.show({
+      type: type,
+      text1: type === "success" ? "สำเร็จ" : "ข้อผิดพลาด",
+      text2: message,
+      position: "bottom",
+      visibilityTime: 3000,
+    });
+  };
+  //อัพโหลดรูป
+  const pickImageAsync = async () => {
+    try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        showToast("error", "ต้องการสิทธิ์ในการเข้าถึงคลังรูปภาพ");
+        return;
+      }
+
+      let result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        quality: 0.7,
+        aspect: [1, 1],
+      });
+
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0].uri);
+        showToast("success", "อัพโหลดรูปภาพสำเร็จ");
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      showToast("error", "เกิดข้อผิดพลาดในการเลือกรูปภาพ");
+    }
+  };
+  //อัพโหลดเอกสาร
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        multiple: false,
+        copyToCacheDirectory: true,
+      });
+
+      if (result.assets && result.assets[0]) {
+        const selectedDoc = result.assets[0];
+
+        // ตรวจสอบขนาดไฟล์ (จำกัดที่ 10MB)
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+        if (selectedDoc.size && selectedDoc.size > MAX_FILE_SIZE) {
+          showToast("error", "ขนาดไฟล์ต้องไม่เกิน 10MB");
+          return;
+        }
+
+        setDocument({
+          name: selectedDoc.name,
+          uri: selectedDoc.uri,
+          size: selectedDoc.size ?? 0,
+        });
+        setErrors((prev) => ({ ...prev, document: false }));
+        showToast("success", "อัพโหลดเอกสารสำเร็จ");
+      }
+    } catch (error) {
+      console.error("Error picking document:", error);
+      showToast("error", "เกิดข้อผิดพลาดในการอัพโหลดเอกสาร");
+    }
+  };
 
   // Validation states
   const [errors, setErrors] = useState({
@@ -45,6 +128,8 @@ const DoctorSignUpInfoScreen = () => {
     occupation: false,
     expert: false,
     hospital: false,
+    document: false,
+    selectedImage: false,
   });
 
   // Validation function
@@ -55,18 +140,38 @@ const DoctorSignUpInfoScreen = () => {
       occupation: !occupation.trim(),
       expert: !expert,
       hospital: !hospital,
+      document: !document,
+      selectedImage: !selectedImage,
     };
 
     setErrors(newErrors);
     return !Object.values(newErrors).some((error) => error);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const isValid = validateForm();
     if (isValid) {
-      // Handle form submission
-      console.log("Form is valid");
+      setShowModal(true);
+      setIsLoading(true);
+
+      try {
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // After successful submission
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        setShowModal(false);
+        setIsLoading(false);
+      }
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+
+    router.push("/user/login");
   };
 
   const router = useRouter();
@@ -80,12 +185,26 @@ const DoctorSignUpInfoScreen = () => {
           </Text>
 
           {/* Profile Image */}
-          <TouchableOpacity onPress={() => {}} className="items-center mb-6">
+          <Text className="text-description text-secondary text-center font-regular mb-2">
+            รูปโปรไฟล์
+          </Text>
+          <TouchableOpacity
+            onPress={pickImageAsync}
+            className="items-center mb-6"
+          >
             <View className="w-36 h-36 bg-background rounded items-center justify-center border border-gray shadow-sm">
-              <Image
-                source={require("../../assets/Doctor/signup.png")}
-                className="w-10 h-10"
-              />
+              {selectedImage ? (
+                <Image
+                  source={{ uri: selectedImage }}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                />
+              ) : (
+                <Image
+                  source={require("../../assets/Doctor/signup.png")}
+                  className="w-10 h-10"
+                />
+              )}
             </View>
           </TouchableOpacity>
 
@@ -253,17 +372,63 @@ const DoctorSignUpInfoScreen = () => {
               <Text className="text-description text-secondary font-regular mb-2">
                 เอกสารประกอบทางการแพทย์
               </Text>
-              <TouchableOpacity
-                onPress={() => {}}
-                className="w-full h-[50px] px-4 border border-gray rounded bg-background flex-row items-center mb-3 justify-between"
-              >
-                <Text className="text-description text-gray font-regular">
-                  เอกสารประกอบทางการแพทย์
+              <View className="flex-row items-center">
+                <TouchableOpacity
+                  onPress={pickDocument}
+                  className={`flex-1 h-[50px] px-4 border rounded bg-background flex-row items-center mb-3 justify-between ${
+                    errors.document ? "border-abnormal" : "border-gray"
+                  }`}
+                >
+                  <View className="flex-1 flex-row items-center">
+                    <Text
+                      className={`text-description ${
+                        document ? "text-secondary" : "text-gray"
+                      } font-regular flex-1`}
+                      numberOfLines={1}
+                      ellipsizeMode="middle"
+                    >
+                      {document ? document.name : "เอกสารประกอบทางการแพทย์"}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center ml-2">
+                    {document && (
+                      <Text className="text-description text-gray mr-2">
+                        {(document.size / (1024 * 1024)).toFixed(1)}MB
+                      </Text>
+                    )}
+                    <View className="w-12 h-6 bg-primary rounded-full items-center justify-center">
+                      <Text className="text-card text-tag">PDF</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+
+                {document && (
+                  <TouchableOpacity
+                    onPress={() => setIsPDFVisible(true)}
+                    className="ml-2 p-2"
+                  >
+                    <Image
+                      source={require("../../assets/Login/eye.png")}
+                      className="w-6 h-6"
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+              {errors.document && (
+                <Text className="text-abnormal text-description font-regular">
+                  กรุณาอัพโหลดเอกสารประกอบทางการแพทย์
                 </Text>
-                <View className="w-12 h-6 bg-primary rounded-full items-center justify-center">
-                  <Text className="text-card text-tag">PDF</Text>
-                </View>
-              </TouchableOpacity>
+              )}
+
+              {/* PDF Viewer Modal */}
+              {document && (
+                <PDFViewer
+                  uri={document.uri}
+                  isVisible={isPDFVisible}
+                  onClose={() => setIsPDFVisible(false)}
+                  fileName={document.name}
+                />
+              )}
             </View>
 
             {/* Error Message */}
@@ -296,6 +461,12 @@ const DoctorSignUpInfoScreen = () => {
           </View>
         </View>
       </ScrollView>
+      <Toast />
+      <StatusModal
+        visible={showModal}
+        isLoading={isLoading}
+        onClose={handleCloseModal}
+      />
     </SafeAreaView>
   );
 };
