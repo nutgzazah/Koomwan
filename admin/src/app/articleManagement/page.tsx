@@ -10,7 +10,7 @@ import SearchCategory from "./components/Category";
 export default function BlogManagement() {
   const router = useRouter();
   const blogList = blogs as BlogInterface[];
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("ทั้งหมด");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const filteredBlogs = blogList.filter((blog) => {
@@ -19,7 +19,7 @@ export default function BlogManagement() {
   });
 
   const filteredCategory =
-  selectedCategory === "All"
+  selectedCategory === "ทั้งหมด"
     ? filteredBlogs
     : filteredBlogs.filter((blog) =>
         blog.category.some(
