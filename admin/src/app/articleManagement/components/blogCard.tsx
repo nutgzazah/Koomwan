@@ -11,7 +11,7 @@ interface BlogCardProps {
 
 export default function BlogCard({ blog_id, title, image, category = [] }: BlogCardProps) {
   return (
-    <div className="bg-card flex flex-col border rounded-md shadow-md w-full overflow-hidden">
+    <div className="bg-card flex flex-col border rounded-md shadow-md w-full h-[500px] overflow-hidden">
       {/* Blog Image */}
       <div className="w-full h-80 relative bg-ourGray">
         {image ? (
