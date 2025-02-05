@@ -1,60 +1,59 @@
 import Image from "next/image";
 import React from "react";
+import Link from "next/link";
 
 interface BlogCardProps {
-    title: string;
-    author: string;
-    image: string; 
-    categories: string[];
+  blog_id: string;
+  title: string;
+  image?: string;
+  category?: string[];
 }
 
-export default function BlogCard({ title, author, image, categories }: BlogCardProps) {
+export default function BlogCard({ blog_id, title, image, category = [] }: BlogCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md border w-96 overflow-hidden">
+    <div className="bg-card flex flex-col border rounded-md shadow-md w-full overflow-hidden">
       {/* Blog Image */}
-      <div className="w-full h-64 relative bg-gray-200">
+      <div className="w-full h-80 relative bg-ourGray">
         {image ? (
           <Image
             src={image}
-            alt={title}
+            alt={title || "Blog Image"}
             layout="fill"
             objectFit="cover"
-            className="rounded-t-lg"
+            className="rounded-t-md"
           />
         ) : (
           <div className="flex justify-center items-center w-full h-full">
-            <p className="text-gray-500">No Image Available</p>
+            <p className="text-ourGray">No Image Available</p>
           </div>
         )}
       </div>
 
       {/* Blog Content */}
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-grow">
         <div className="flex justify-between items-center mb-2">
-          {/* Title */}
-          <h2 className="text-lg font-semibold text-gray-900 line-clamp-2">
-            {title}
-          </h2>
+          <h2 className="text-bold_detail text-secondary line-clamp-2">{title}</h2>
 
-          {/* Edit Button */}
-          <button className="p-1 bg-blue-100 text-blue-600 text-sm font-medium rounded hover:bg-blue-200">
-            แก้ไข
-          </button>
+          <Link href={`/articleManagement/${blog_id}/editArticle`} passHref>
+            <button
+              className="p-2 btn blue-btn rounded-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              แก้ไข
+            </button>
+          </Link>
         </div>
-
-        <p className="text-sm text-gray-500">เขียนโดย: {author}</p>
 
         {/* Categories */}
-        <div className="flex flex-wrap gap-2 mt-4">
-          {categories.map((category, index) => (
-            <span
-              key={index}
-              className="bg-blue-100 text-blue-600 text-sm font-medium px-3 py-1 rounded-full"
-            >
-              {category}
-            </span>
-          ))}
-        </div>
+        {category.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {category.map((cat, index) => (
+              <span key={index} className="btn lightblue-btn p-2 rounded-md">
+                {cat}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
