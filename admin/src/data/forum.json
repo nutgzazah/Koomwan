@@ -1,36 +1,38 @@
 [
-    {
-      "forum_id": "1",
-      "user_id": "101",
-      "text": "ตัวอย่างเนื้อหาฟอรั่ม เช่น รูปภาพ ข้อความ หรือคอนเทนต์อื่น ๆ ที่ต้องการตรวจสอบ",
-      "date_and_time": "2025-01-21T10:30:00",
-      "like": 0,
-      "doctor_id": null,
-      "doctor_comment": null,
-      "title_report": "สแปม",
-      "reason_report": "มีการโพสต์ข้อความซ้ำหลายครั้ง"
-    },
-    {
-      "forum_id": "2",
-      "user_id": "102",
-      "text": "คำแนะนำที่เกี่ยวกับการดูแลสุขภาพและการออกกำลังกาย",
-      "date_and_time": "2025-01-21T10:25:00",
-      "like": 2,
-      "doctor_id": null,
-      "doctor_comment": null,
-      "title_report": "ข้อมูลเท็จ",
-      "reason_report": "ข้อมูลไม่ตรงกับหลักฐานทางวิทยาศาสตร์"
-    },
-    {
-      "forum_id": "3",
-      "user_id": "103",
-      "text": "หัวข้อสนทนาเกี่ยวกับอาหารที่เหมาะสำหรับผู้ป่วยโรคเบาหวาน",
-      "date_and_time": "2025-01-21T10:20:00",
-      "like": 5,
-      "doctor_id": null,
-      "doctor_comment": null,
-      "title_report": "เนื้อหาไม่เหมาะสม",
-      "reason_report": "มีคำพูดไม่สุภาพในโพสต์"
-    }
-  ]
-  
+  {
+    "forum_id": "1",
+    "user_id": "01",
+    "username": "Popo",
+    "text": "ตัวอย่างเนื้อหาฟอรั่ม เช่น รูปภาพ ข้อความ หรือคอนเทนต์อื่น ๆ ที่ต้องการตรวจสอบ",
+    "date_and_time": "2025-01-21T10:30:00",
+    "like": 0,
+    "doctor_id": null,
+    "doctor_comment": null,
+    "title_report": "สแปม",
+    "reason_report": ""
+  },
+  {
+    "forum_id": "2",
+    "user_id": "02",
+    "username": "Popo",
+    "text": "คำแนะนำที่เกี่ยวกับการดูแลสุขภาพและการออกกำลังกาย",
+    "date_and_time": "2025-01-21T10:25:00",
+    "like": 2,
+    "doctor_id": null,
+    "doctor_comment": null,
+    "title_report": "ข้อมูลเท็จ",
+    "reason_report": ""
+  },
+  {
+    "forum_id": "3",
+    "user_id": "03",
+    "username": "Popo",
+    "text": "หัวข้อสนทนาเกี่ยวกับอาหารที่เหมาะสำหรับผู้ป่วยโรคเบาหวาน",
+    "date_and_time": "2025-01-21T10:20:00",
+    "like": 5,
+    "doctor_id": null,
+    "doctor_comment": null,
+    "title_report": "เนื้อหาไม่เหมาะสม",
+    "reason_report": ""
+  }
+]
