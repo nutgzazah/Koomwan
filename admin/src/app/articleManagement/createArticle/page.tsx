@@ -6,11 +6,11 @@ import { BlogInterface } from "@/interfaces/blogInterface";
 const CreateArticle: React.FC = () => {
   const [blog, setBlog] = useState<Partial<BlogInterface>>({
     title: "",
-    author: "",
     publish_date: "",
     category: [],
     image: "",
     content: "",
+    ref: "",
   });
 
   const categories = [
@@ -41,11 +41,9 @@ const CreateArticle: React.FC = () => {
   };
 
   return (
-    <div className="p-8 w-full">
-      <h2 className="text-3xl font-bold mb-8">จัดการบทความ</h2>
-
-      <div className="mb-6">
-        <label className="block font-bold mb-2" htmlFor="title">เพิ่มบทความ</label>
+    <div className="w-full flex flex-col gap-4">
+      <div>
+        <label className="text-bold_detail" htmlFor="title">ชื่อบทความ</label>
         <input
           type="text"
           id="title"
@@ -53,25 +51,25 @@ const CreateArticle: React.FC = () => {
           placeholder="ชื่อบทความ"
           value={blog.title || ""}
           onChange={handleChange}
-          className="px-4 py-2 border rounded-md focus:outline-none w-full text-lg"
+          className="input"
         />
       </div>
 
-      <div className="mb-6">
-        <label className="block font-bold mb-2" htmlFor="author">ผู้เขียน</label>
+      <div>
+        <label className="text-bold_detail" htmlFor="ref">อ้างอิง</label>
         <input
           type="text"
-          id="author"
-          name="author"
-          placeholder="ผู้เขียน"
-          value={blog.author || ""}
+          id="ref"
+          name="ref"
+          placeholder="อ้างอิง"
+          value={blog.ref || ""}
           onChange={handleChange}
-          className="px-4 py-2 border rounded-md focus:outline-none w-full text-lg"
+          className="input"
         />
       </div>
 
-      <div className="mb-6">
-        <label className="block font-bold mb-2">หมวดหมู่</label>
+      <div>
+        <label className="text-bold_detail">หมวดหมู่</label>
         <div className="flex flex-wrap gap-4">
           {categories.map((category) => (
             <label key={category} className="flex items-center gap-2">
@@ -87,8 +85,8 @@ const CreateArticle: React.FC = () => {
         </div>
       </div>
 
-      <div className="mb-6">
-        <label className="block font-bold mb-2" htmlFor="image">รูปภาพ</label>
+      <div>
+        <label className="text-bold_detail" htmlFor="image">รูปภาพ</label>
         <input
           type="text"
           id="image"
@@ -96,26 +94,26 @@ const CreateArticle: React.FC = () => {
           placeholder="URL ของรูปภาพ"
           value={blog.image || ""}
           onChange={handleChange}
-          className="px-4 py-2 border rounded-md focus:outline-none w-full text-lg"
+          className="input"
         />
         <div className="mt-4 w-full h-48 border-dashed border-2 rounded-md flex items-center justify-center">
           <span className="text-gray-500">เพิ่มรูปภาพ</span>
         </div>
       </div>
 
-      <div className="mb-6">
-        <label className="block font-bold mb-2" htmlFor="content">เนื้อหา</label>
+      <div>
+        <label className="text-bold_detail" htmlFor="content">เนื้อหา</label>
         <textarea
           id="content"
           name="content"
           placeholder="กรอกเนื้อหา"
           value={blog.content || ""}
           onChange={handleChange}
-          className="px-4 py-2 border rounded-md focus:outline-none w-full h-40 text-lg"
+          className="input h-64"
         ></textarea>
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex justify-center space-x-4">
         <button
           onClick={handleSubmit}
           className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"

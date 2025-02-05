@@ -90,11 +90,11 @@ const EditBlogForm: React.FC = () => {
       </div>
 
       <div>
-        <label className="text-bold_detail" htmlFor="author">อ้างอิง</label>
+        <label className="text-bold_detail" htmlFor="ref">อ้างอิง</label>
         <input
           type="text"
-          id="author"
-          name="author"
+          id="ref"
+          name="ref"
           placeholder="อ้างอิง"
           value={blog.ref}
           onChange={handleChange}
@@ -154,7 +154,7 @@ const EditBlogForm: React.FC = () => {
           </button>
       </div>
       
-      <div className="flex justify-center space-x-4 mt-4">
+      <div className="flex justify-center space-x-4">
         <button
           onClick={handleSubmit}
           className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
