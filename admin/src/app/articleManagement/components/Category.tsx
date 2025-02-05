@@ -17,7 +17,7 @@ const SearchCategory: React.FC<SearchCategoryProps> = ({ selectedCategory, setSe
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const categories: Category[] = [
-        { value: "การดูแลสุขภาพ", label: "การดูแลสุขภาพv" },
+        { value: "การดูแลสุขภาพ", label: "การดูแลสุขภาพ" },
         { value: "ความรู้", label: "ความรู้" },
         { value: "โภชนาการ", label: "โภชนาการ" },
         { value: "การออกกำลังกาย", label: "การออกกำลังกาย" },
@@ -47,21 +47,21 @@ const SearchCategory: React.FC<SearchCategoryProps> = ({ selectedCategory, setSe
         <div className="relative flex justify-end" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="bg-zinc-950 text-white font-medium px-3 py-2 border rounded-3xl w-fit min-w-16 h-10 flex justify-center items-center hover:shadow hover:bg-zinc-800"
+                className="btn short-btn blue-btn flex items-center justify-center whitespace-nowrap"
             >
                 <>
-                    <p className="md:hidden text-xs">Category</p>
-                    <p className="hidden text-base md:inline">Select a category</p>
+                    <p className="md:hidden">หมวดหมู่</p>
+                    <p className="hidden md:block">เลือกหมวดหมู่</p>
                 </>
             </button>
 
             {isOpen && (
-                <ul className="absolute mt-14 bg-white z-10">
+                <ul className="absolute mt-16 bg-card z-10">
                     {categories.map((category) => (
                         <li
                             key={category.value}
                             onClick={() => handleSelect(category.value)}
-                            className={`px-5 py-2 border border-zinc-200 text-base hover:bg-zinc-200 hover:font-medium cursor-pointer ${selectedCategory === category.value ? 'bg-zinc-200' : ''}`}
+                            className={`px-7 py-2 border border-ourGray text-detail_3 hover:bg-unread cursor-pointer ${selectedCategory === category.value ? 'bg-unread' : ''}`}
                         >
                             {category.label}
                         </li>
