@@ -24,9 +24,9 @@ export default function DeleteReasonPopup({
     <PopupCard title="แจ้งลบฟอรั่มนี้" onClose={onClose}>
       <div className="flex flex-col items-center space-y-4">
         <div className="w-full">
-          <label className="block mb-2 font-bold text-gray-700">เนื่องจาก</label>
+          <label className="block text-bold_detail text-secondary">เนื่องจาก</label>
           <textarea
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-400"
+            className="input"
             rows={4}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -35,13 +35,13 @@ export default function DeleteReasonPopup({
         </div>
         <div className="flex space-x-4 mt-4">
           <button
-            className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
+            className="btn white-btn short-btn"
             onClick={onClose}
           >
             ยกเลิก
           </button>
           <button
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            className="btn red-btn short-btn"
             onClick={handleConfirm}
           >
             ยืนยัน
