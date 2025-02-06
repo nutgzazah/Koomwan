@@ -20,7 +20,8 @@ app.use(express.json())
 app.use(morgan('dev'))
 
 //ROUTES
-app.use('/api/v1/auth', require('./routes/userRoutes'))
+app.use('/api/v1/auth', require('./routes/authRoutes'))
+app.use('/api/v1/user', require('./routes/userRoutes'))
 app.use('/api/v1/admin', require('./routes/adminRoutes'))
 
 

@@ -45,14 +45,15 @@ const healthInfoSchema = new mongoose.Schema({
         },
         description: {
             type: String,
+            required: false,
+            default: "",
             trim: true
         },
         reminderTimes: [{
             type: String,
             required: false,
             trim: true // รูปแบบเวลา เช่น "06:00" สำหรับ 6 โมงเช้าของทุกวัน
-        }],
-        required: false,
+        }]
     },
 }, { timestamps: true });
 

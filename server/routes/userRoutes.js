@@ -1,24 +1,15 @@
 const express = require('express')
-const { registerController, loginController, checkDuplicateController, resetPasswordController, checkUserResetPasswordController, requireSignIn, registerDoctorController } = require('../controllers/authController')
+const { requireSignIn } = require('../controllers/authController')
+const { beginnerSetup } = require('../controllers/userController')
 
 
 //router object
 const router = express.Router()
 
-//routes
+//ROUTES
 
-// REGISTER || POST
-router.post('/register', registerController)
-router.post('/registerdoctor', registerDoctorController)
-router.post('/checkDuplicate', checkDuplicateController)
-// LOGIN || POST
-router.post('/login', loginController)
-
-// FORGET PASSWORD 
-router.post('/checkUserResetPassword', checkUserResetPasswordController)
-router.put('/resetPassword' /*,requireSignIn*/ , resetPasswordController)
-
-
+//BEGGINER SETUP|| POST
+router.post('/beginnerSetup' /*,requireSignIn*/ , beginnerSetup)
 
 //export
 module.exports = router
