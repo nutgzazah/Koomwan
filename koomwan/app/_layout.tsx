@@ -29,8 +29,6 @@ export default function RootLayout() {
 
       <Stack.Screen name="(tabs)" />
 
-      <Stack.Screen name="profile/index" />
-
       <Stack.Screen name="user/login" />
       <Stack.Screen name="user/signin" />
 
