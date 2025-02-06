@@ -38,10 +38,10 @@ export default function MedicalManagement() {
           <button
             key={status}
             onClick={() => setFilterStatus(status)}
-            className={`w-full rounded-lg py-2 ${
+            className={`w-full ${
               filterStatus === status
-                ? "bg-primary text-button text-card hover:bg-hoverPrimary"
-                : "bg-gray-200 hover:bg-gray-300 font-semibold"
+                ? "btn blue-btn long-btn"
+                : "btn white-btn long-btn"
             }`}
           >
             {status}
@@ -55,7 +55,7 @@ export default function MedicalManagement() {
         placeholder="ค้นหาด้วยชื่อ-นามสกุล..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full p-2 mb-4 rounded border-2 focus:outline-slate-400"
+        className="input"
       />
 
       {/* Doctor Table */}
