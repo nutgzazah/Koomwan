@@ -3,28 +3,28 @@ const mongoose = require('mongoose');
 const doctorSchema = new mongoose.Schema({
     username: {
         type: String,
-        required: [true, 'Please Add Username'],
+        required: [true, 'กรุณาเพิ่ม Username'],
         lowercase: true,
         unique: true,
         trim: true
     },
     email: {
         type: String,
-        required: [true,'Please Add Email'],
+        required: [true,'กรุณาเพิ่ม Email'],
         unique: true,
         trim: true,
         lowercase: true,
-        match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address']
+        match: [/^\S+@\S+\.\S+$/, 'กรุณาใช้ Email ที่ถูกต้อง']
     },
     password: {
         type: String,
-        required: [true,'Please Add Password'],
+        required: [true,'กรุณาเพิ่ม Password'],
         minlength: 6,
         maxlength: 64
     },
     phone: {
         type: String,
-        required: [true, 'Please Add Phone Number'],
+        required: [true, 'กรุณาเพิ่มเบอร์โทรศัพท์'],
         unique: true,
         trim: true,
         match: /^[0-9]{10}$/, // เบอร์โทรศัพท์ 10 หลัก
