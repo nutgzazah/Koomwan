@@ -4,6 +4,7 @@ import "../global.css";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import React from "react";
+import { AuthProvider } from "../context/authContext";
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
@@ -23,6 +24,7 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
+    <AuthProvider>
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="onboarding/index" />
@@ -36,5 +38,6 @@ export default function RootLayout() {
 
       <Stack.Screen name="doctor/signin" />
     </Stack>
+    </AuthProvider>
   );
 }

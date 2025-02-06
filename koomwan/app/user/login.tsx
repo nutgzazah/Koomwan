@@ -6,7 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import BASE_URL from "../../config"
@@ -15,8 +15,10 @@ import InputField from "../../global/components/InputField";
 import Toast from 'react-native-toast-message';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthContext } from "../../context/authContext";
 
 export default function UserLoginScreen() {
+  const [state, setState] = useContext(AuthContext)
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +60,8 @@ export default function UserLoginScreen() {
 
 
         const response = await axios.post(`${BASE_URL}/api/v1/auth/login`, loginData);
-        await AsyncStorage.setItem('@auth',JSON.stringify(response));
+        setState(response)
+        await AsyncStorage.setItem('@auth',JSON.stringify(response.data));
         router.replace("/user/beginner");
       }
     } catch (error) {
@@ -83,7 +86,7 @@ export default function UserLoginScreen() {
   //temp function to check local storage data
   const getLocalStorageData = async () =>{
     let data = await AsyncStorage.getItem('@auth')
-    // console.log('Local Storage => ',data.data)
+    console.log('Local Storage => ', data)
   }
   getLocalStorageData()
 

@@ -19,7 +19,7 @@ type FormData = {
   role: "user" | "doctor";
 };
 
-export default function DoctorSignInScreen() {
+export default function DoctorSignUpScreen() {
   const [formData, setFormData] = useState<FormData>({
     username: "",
     email: "",
@@ -204,7 +204,16 @@ export default function DoctorSignInScreen() {
           }
           onButtonPress={() => {
             if (showStatus === "success") {
-              router.replace("/doctor/signupinfo");
+              // ส่งแค่ข้อมูล username, email, password, phone ไปที่หน้า signupinfo
+              router.push({
+                pathname: '/doctor/signupinfo',
+                params: { 
+                  username: formData.username,
+                  email: formData.email,
+                  password: formData.password,
+                  phone: formData.phone,
+                },
+              });
             } else {
               setShowStatus("none");
               setOtp("");
