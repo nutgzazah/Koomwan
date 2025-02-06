@@ -234,8 +234,6 @@ const registerDoctorController = async (req, res) => {
     }
 }
 
-
-
 //User check Duplicate
 const checkDuplicateController = async (req, res) => {
     try {
@@ -282,8 +280,6 @@ const checkDuplicateController = async (req, res) => {
         });
     }
 }
-
-
 
 //login
 const loginController = async (req,res) => {
