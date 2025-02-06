@@ -15,8 +15,9 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import Card from "../../global/components/Card";
-import BreakLine from "../../global/components/BreakLine";
+import Card from "../../../global/components/Card";
+import BreakLine from "../../../global/components/BreakLine";
+import BackButton from "../../../global/components/BackButton";
 
 type ImagePickerResult = {
   canceled: boolean;
@@ -55,7 +56,7 @@ const api = {
   },
 };
 
-export default function MedicationFormScreen() {
+export default function MedicationForm() {
   const [pill_name, setPillName] = useState("");
   const [pill_type, setPillType] = useState("");
   const [pill_description, setPillDescription] = useState("");
@@ -251,22 +252,7 @@ export default function MedicationFormScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-2 border-b border-gray">
-        <TouchableOpacity
-          onPress={handleBack}
-          className="flex-row items-center"
-          disabled={isSubmitting}
-        >
-          <Image
-            source={require("../../assets/Signup/arrow-circle-left.png")}
-            className="w-6 h-6"
-            resizeMode="contain"
-          />
-          <Text className="text-body text-secondary font-regular ml-2">
-            ย้อนกลับ
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <BackButton title="ย้อนกลับ" />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -301,7 +287,7 @@ export default function MedicationFormScreen() {
                   />
                   <View className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-2">
                     <Image
-                      source={require("../../assets/BeginnerSetup/trash.png")}
+                      source={require("../../../assets/BeginnerSetup/trash.png")}
                       className="w-5 h-5"
                       resizeMode="contain"
                     />
@@ -310,7 +296,7 @@ export default function MedicationFormScreen() {
               ) : (
                 <View className="items-center">
                   <Image
-                    source={require("../../assets/BeginnerSetup/add-image.png")}
+                    source={require("../../../assets/BeginnerSetup/add-image.png")}
                     className="w-16 h-16 mb-2"
                     resizeMode="contain"
                   />
@@ -346,11 +332,11 @@ export default function MedicationFormScreen() {
                   disabled={isSubmitting}
                   className="w-full bg-background border border-gray rounded p-3 flex-row justify-between items-center"
                 >
-                  <Text className="text-description font-regular text-gray">
+                  <Text className="text-description font-regular text-secondary">
                     {pill_type || "เลือกประเภทยา"}
                   </Text>
                   <Image
-                    source={require("../../assets/BeginnerSetup/drop-arrow.png")}
+                    source={require("../../../assets/BeginnerSetup/drop-arrow.png")}
                     className="w-5 h-5"
                     resizeMode="contain"
                   />
@@ -396,11 +382,27 @@ export default function MedicationFormScreen() {
                 editable={!isSubmitting}
               />
             </View>
+
+            {/* Medicine Noti */}
+            <View className="mt-4 mb-4 flex-row">
+              <Text className="text-description text-secondary font-regular mb-2">
+                แจ้งเตือนการใช้ยา (Optional)
+              </Text>
+              <TouchableOpacity
+                className="items-center"
+                onPress={() => router.push("user/medNoti")}
+              >
+                <Image
+                  source={require("../../../assets/BeginnerSetup/add.png")}
+                  className="w-8 h-8 ml-1"
+                />
+              </TouchableOpacity>
+            </View>
           </Card>
         </ScrollView>
 
         {/* Add Button */}
-        <View className="px-4 py-4 bg-card border-t border-gray">
+        <View className="px-4 py-4 bg-card border-gray">
           <TouchableOpacity
             onPress={handleAddMedication}
             disabled={isSubmitting}
