@@ -28,7 +28,6 @@ const ForumID: React.FC = () => {
   const { forumId } = useParams();
   const transformedForums = transformData(forums);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-  const [deleteReason, setDeleteReason] = useState("");
   const [isApprovePopupOpen, setIsApprovePopupOpen] = useState(false);
   const router = useRouter();
 
@@ -38,8 +37,7 @@ const ForumID: React.FC = () => {
     setIsApprovePopupOpen(true);
   };
 
-  const handleDeleteConfirm = (reason: string) => {
-    setDeleteReason(reason);
+  const handleDeleteConfirm = () => {
     setIsDeletePopupOpen(false);
     router.push("/forumManagement");
   };

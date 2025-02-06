@@ -3,7 +3,6 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import Table from "@/components/Table";
-import { ForumDataInterface } from "@/interfaces/forumInterface";
 import forums from "@/data/forum.json";
 
 const ForumTable: React.FC = () => {
