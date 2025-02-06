@@ -4,6 +4,7 @@ const doctorSchema = new mongoose.Schema({
     username: {
         type: String,
         required: [true, 'Please Add Username'],
+        lowercase: true,
         unique: true,
         trim: true
     },
@@ -49,6 +50,10 @@ const doctorSchema = new mongoose.Schema({
         required: true
     },
     document: {
+        type: String,
+        required: true
+    },
+    image: {
         type: String,
         required: true
     },
