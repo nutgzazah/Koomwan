@@ -48,6 +48,7 @@ export default function BeginnerSetupScreen() {
     setModalVisible,
     setModalType,
     isBirthdayComplete,
+    isStepValid,
   } = useBeginnerSetup();
 
   const renderStepContent = () => {
@@ -118,11 +119,7 @@ export default function BeginnerSetupScreen() {
           <View className="px-4 pb-8">
             <NextButton
               onPress={handleNext}
-              disabled={
-                (currentStep === 2 && !isBirthdayComplete()) ||
-                (currentStep === 3 && !height) ||
-                (currentStep === 4 && !weight)
-              }
+              disabled={!isStepValid()}
               isLastStep={currentStep === 5}
             />
           </View>
