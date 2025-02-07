@@ -27,7 +27,7 @@ export default function BirthdayInput({
       />
       <View className="flex-row space-x-4 w-full p-1 ">
         <TouchableOpacity
-          className="flex-1 bg-background rounded p-3 h-10 justify-center"
+          className="flex-1 bg-background rounded p-3 h-12 justify-center"
           onPress={onPressDay}
         >
           <Text
@@ -39,7 +39,7 @@ export default function BirthdayInput({
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="flex-1 bg-background p-3 h-10 justify-center"
+          className="flex-1 bg-background p-3 h-12 justify-center"
           onPress={onPressMonth}
         >
           <Text
@@ -51,7 +51,7 @@ export default function BirthdayInput({
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="flex-1 bg-background rounded p-3 h-10 justify-center"
+          className="flex-1 bg-background rounded p-3 h-12 justify-center"
           onPress={onPressYear}
         >
           <Text
