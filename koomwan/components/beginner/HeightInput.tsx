@@ -15,7 +15,7 @@ export const HeightInput = ({ height, setHeight }: HeightInputProps) => {
 
   const isHeightValid = (height: string) => {
     const heightNum = parseInt(height);
-    return !height || (heightNum >= 100 && heightNum <= 299);
+    return !height || (heightNum >= 100 && heightNum <= 250);
   };
 
   return (
