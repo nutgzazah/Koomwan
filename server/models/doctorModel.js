@@ -69,8 +69,8 @@ const doctorSchema = new mongoose.Schema({
         }
     },
     healthinfo: {
-        type: String,
-        required: false,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'HealthInfo', // อ้างอิงไปที่ HealthInfo model
     },
     role: {
         type: String,
