@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { router } from 'expo-router';
 
@@ -16,10 +15,28 @@ export const useBeginnerSetup = () => {
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
 
+  const isHeightValid = (height: string) => {
+    const heightNum = parseInt(height);
+    return heightNum >= 100 && heightNum <= 299;
+  };
+
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 2:
+        return isBirthdayComplete();
+      case 3:
+        return height && isHeightValid(height);
+      case 4:
+        return !!weight;
+      default:
+        return true;
+    }
+  };
+
   const handleNext = () => {
     if (currentStep === 2 && isBirthdayComplete()) {
       setCurrentStep(3);
-    } else if (currentStep === 3 && height) {
+    } else if (currentStep === 3 && height && isHeightValid(height)) {
       setCurrentStep(4);
     } else if (currentStep === 4 && weight) {
       setCurrentStep(5);
@@ -94,5 +111,6 @@ export const useBeginnerSetup = () => {
     setModalVisible,
     setModalType,
     isBirthdayComplete,
+    isStepValid,
   };
 };
