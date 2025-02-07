@@ -28,7 +28,7 @@ const healthInfoSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    regularpill: {
+    regularpill: [{
         pillName: {
             type: String,
             required: true,
@@ -54,7 +54,7 @@ const healthInfoSchema = new mongoose.Schema({
             required: false,
             trim: true // รูปแบบเวลา เช่น "06:00" สำหรับ 6 โมงเช้าของทุกวัน
         }]
-    },
+    }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('HealthInfo', healthInfoSchema);
