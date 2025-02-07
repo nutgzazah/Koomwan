@@ -20,6 +20,11 @@ export const useBeginnerSetup = () => {
     return heightNum >= 100 && heightNum <= 299;
   };
 
+  const isWeightValid = (weight: string) => {
+    const weightNum = parseInt(weight);
+    return weightNum > 30 && weightNum <= 200;
+  };
+
   const isStepValid = () => {
     switch (currentStep) {
       case 2:
@@ -27,7 +32,7 @@ export const useBeginnerSetup = () => {
       case 3:
         return height && isHeightValid(height);
       case 4:
-        return !!weight;
+        return weight && isWeightValid(weight);
       default:
         return true;
     }
