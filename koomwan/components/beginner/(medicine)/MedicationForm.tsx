@@ -18,6 +18,8 @@ import * as ImagePicker from "expo-image-picker";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import BackButton from "../../../global/components/BackButton";
+import MedDropdown from "./MedDropdown";
+import { MEDICATION_TYPES } from "../../../constant/medication";
 
 type ImagePickerResult = {
   canceled: boolean;
@@ -66,16 +68,6 @@ export default function MedicationForm() {
   // Loading states
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Dropdown ยา
-  const medicationTypes = [
-    "ยารักษาโรคเบาหวาน",
-    "ยารักษาเฉพาะโรค",
-    "ยาสามัญประจำบ้าน",
-    "ยาใช้ภายนอก",
-    "ยาอันตราย",
-    "ยาวิตามินและอาหารเสริม",
-    "อื่นๆ",
-  ];
   {
     /* สำหรับอัพโหลดภาพ */
   }
@@ -316,7 +308,7 @@ export default function MedicationForm() {
                 value={pill_name}
                 onChangeText={setPillName}
                 placeholder="ชื่อยา"
-                className="w-full bg-background border border-gray rounded p-3 text-description font-regular"
+                className="w-full bg-background border border-gray rounded p-3 px-4 text-description font-regular h-12"
                 editable={!isSubmitting}
               />
             </View>
@@ -326,44 +318,12 @@ export default function MedicationForm() {
               <Text className="text-description text-secondary font-regular mb-2">
                 ประเภท (Optional)
               </Text>
-              <View className="relative">
-                <TouchableOpacity
-                  onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-                  disabled={isSubmitting}
-                  className="w-full bg-background border border-gray rounded p-3 flex-row justify-between items-center"
-                >
-                  <Text className="text-description font-regular text-secondary">
-                    {pill_type || "เลือกประเภทยา"}
-                  </Text>
-                  <Image
-                    source={require("../../../assets/BeginnerSetup/drop-arrow.png")}
-                    className="w-5 h-5"
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-
-                {isDropdownOpen && (
-                  <View className="absolute top-full left-0 right-0 mt-1 bg-card border border-gray rounded-lg shadow-lg z-50 max-h-48">
-                    <ScrollView>
-                      {medicationTypes.map((medicationType, index) => (
-                        <Pressable
-                          key={index}
-                          onPress={() => handleSelectType(medicationType)}
-                          className={`p-3 border-b border-gray ${
-                            index === medicationTypes.length - 1
-                              ? "border-b-0"
-                              : ""
-                          }`}
-                        >
-                          <Text className="text-description font-regular">
-                            {medicationType}
-                          </Text>
-                        </Pressable>
-                      ))}
-                    </ScrollView>
-                  </View>
-                )}
-              </View>
+              <MedDropdown
+                value={pill_type}
+                options={MEDICATION_TYPES}
+                onSelect={handleSelectType}
+                disabled={isSubmitting}
+              />
             </View>
 
             {/* Details Input */}
@@ -377,7 +337,7 @@ export default function MedicationForm() {
                 placeholder="เพิ่มรายละเอียดเกี่ยวกับยา"
                 multiline
                 numberOfLines={4}
-                className="w-full bg-background border border-gray rounded p-3 text-description font-regular h-32"
+                className="w-full bg-background border border-gray rounded p-3 px-4 text-description font-regular h-32"
                 textAlignVertical="top"
                 editable={!isSubmitting}
               />
