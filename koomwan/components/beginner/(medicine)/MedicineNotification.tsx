@@ -14,8 +14,10 @@ import DateTimePicker, {
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import BackButton from "../../../global/components/BackButton";
+import { useRouter } from "expo-router";
 
 const MedicineNotification = () => {
+  const router = useRouter();
   const [selectedDay, setSelectedDay] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<Date>(new Date());
   const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
@@ -70,9 +72,9 @@ const MedicineNotification = () => {
             <Text className="text-description text-secondary font-regular mb-2">
               วัน
             </Text>
-            <View className="w-full border border-gray rounded-lg bg-background p-2">
+            <View className="w-full border border-gray rounded-lg bg-background p-4">
               <TouchableOpacity
-                className="w-full flex-row justify-between px-2 h-8"
+                className="w-full flex-row justify-between rounded-lg bg-background"
                 onPress={() => setShowDayPicker(true)}
               >
                 <Text className="text-description font-regular text-secondary">
@@ -112,11 +114,16 @@ const MedicineNotification = () => {
               is24Hour={true}
               display="spinner"
               onChange={handleTimeChange}
+              minimumDate={new Date(new Date().setHours(0, 0, 0))}
+              maximumDate={new Date(new Date().setHours(23, 59, 0))}
             />
           )}
 
           {/* Add Button */}
-          <TouchableOpacity className="w-full bg-primary py-4 rounded-md mt-4">
+          <TouchableOpacity
+            className="w-full bg-primary py-4 rounded-md mt-4"
+            onPress={() => router.back()}
+          >
             <Text className="text-button text-card text-center font-bold">
               เพิ่ม
             </Text>
