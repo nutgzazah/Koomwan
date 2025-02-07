@@ -15,7 +15,7 @@ export const WeightInput = ({ weight, setWeight }: WeightInputProps) => (
     />
     <View className="w-full flex-row justify-center items-center space-x-2">
       <TextInput
-        className="flex-1 bg-background rounded p-3 text-center text-description font-regular"
+        className="flex-1 bg-background rounded p-3 h-10 justify-center text-center text-description font-regular"
         placeholder="น้ำหนัก"
         keyboardType="numeric"
         value={weight}
