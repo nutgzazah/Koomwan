@@ -5,14 +5,14 @@ import { router } from "expo-router";
 export const MedicineInput = () => (
   <View className="flex-col items-center w-full">
     <Image
-      source={require("../../assets/BeginnerSetup/medicine.png")}
+      source={require("../../../assets/BeginnerSetup/medicine.png")}
       className="w-32 h-32 mb-6"
       resizeMode="contain"
     />
     <View className="w-full">
       <TouchableOpacity
         className="w-full flex-row items-center justify-between bg-background rounded p-4"
-        onPress={() => router.push("/user/MedicationForm")}
+        onPress={() => router.push("/user/medForm")}
       >
         <Text className="text-gray pr-12 text-description font-regular">
           เพิ่มยาประจำของคุณ

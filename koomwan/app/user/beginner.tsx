@@ -17,9 +17,9 @@ import BirthdayInput from "../../components/beginner/BirthdayInput";
 import NavigationDots from "../../components/beginner/NavigationDots";
 import { HeightInput } from "../../components/beginner/HeightInput";
 import { WeightInput } from "../../components/beginner/WeightInput";
-import { MedicineInput } from "../../components/beginner/MedicineInput";
+import { MedicineInput } from "../../components/beginner/(medicine)/MedicineInput";
 import { StepOption } from "../../components/beginner/StepOption";
-import { BackButton } from "../../components/beginner/BackButton";
+import { BeginnerBackButton } from "../../components/beginner/BackButton";
 import { NextButton } from "../../components/beginner/NextButton";
 import { useBeginnerSetup } from "../../hooks/useBeginnerSetup";
 import {
@@ -48,6 +48,7 @@ export default function BeginnerSetupScreen() {
     setModalVisible,
     setModalType,
     isBirthdayComplete,
+    isStepValid,
   } = useBeginnerSetup();
 
   const renderStepContent = () => {
@@ -88,7 +89,7 @@ export default function BeginnerSetupScreen() {
       <SafeAreaView className="flex-1 bg-background">
         <StatusBar barStyle="dark-content" backgroundColor="#F8F8F8" />
 
-        {currentStep > 0 && <BackButton onPress={handleBack} />}
+        {currentStep > 0 && <BeginnerBackButton onPress={handleBack} />}
 
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View className="flex-1 justify-center px-4">
@@ -118,11 +119,7 @@ export default function BeginnerSetupScreen() {
           <View className="px-4 pb-8">
             <NextButton
               onPress={handleNext}
-              disabled={
-                (currentStep === 2 && !isBirthdayComplete()) ||
-                (currentStep === 3 && !height) ||
-                (currentStep === 4 && !weight)
-              }
+              disabled={!isStepValid()}
               isLastStep={currentStep === 5}
             />
           </View>
