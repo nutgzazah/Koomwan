@@ -41,7 +41,7 @@ const getRecord = async (req, res) => {
 //ADD
 const addRecord = async (req, res) => {
     try {
-        const { userId, height, weight, bloodsugar, a1c, bloodpressure, moodstatus, additionpill } = req.body;
+        const { userId, height, weight, bloodsugar, a1c, bloodpressure, moodstatus, additionpill, recordtime } = req.body;
 
         if (!userId) {
             return res.status(400).json({ success: false, message: "User ID is required" });
@@ -62,6 +62,9 @@ const addRecord = async (req, res) => {
             return res.status(400).json({ success: false, message: "User does not have health information" });
         }
 
+        // หากไม่มี recordtime ให้ใช้เวลาปัจจุบัน
+        const recordTime = recordtime || new Date();
+
         // สร้าง Record ใหม่
         const newRecord = new recordModel({
             healthinfo: user.healthinfo, // เชื่อมโยงกับ HealthInfo ของ user
@@ -71,7 +74,8 @@ const addRecord = async (req, res) => {
             a1c,
             bloodpressure,
             moodstatus,
-            additionpill
+            additionpill,
+            recordtime: recordTime // บันทึกเวลา
         });
 
         // บันทึก Record
@@ -98,7 +102,7 @@ const addRecord = async (req, res) => {
 const updateRecord = async (req, res) => {
     try {
         const { recordId } = req.params;
-        const { height, weight, bloodsugar, a1c, bloodpressure, moodstatus, additionpill } = req.body;
+        const { height, weight, bloodsugar, a1c, bloodpressure, moodstatus, additionpill, recordtime } = req.body;
 
         if (!recordId) {
             return res.status(400).json({ success: false, message: "Record ID is required" });
@@ -119,6 +123,9 @@ const updateRecord = async (req, res) => {
         if (moodstatus !== undefined) record.moodstatus = moodstatus;
         if (additionpill !== undefined) record.additionpill = additionpill;
 
+        // ถ้ามีการส่ง recordtime มาให้ อัปเดตเวลา
+        if (recordtime !== undefined) record.recordtime = recordtime;
+
         // บันทึกการเปลี่ยนแปลง
         const updatedRecord = await record.save();
 
@@ -129,6 +136,7 @@ const updateRecord = async (req, res) => {
     }
 };
 
+//DELETE
 const deleteRecord = async (req, res) => {
     try {
         const { recordId } = req.params;
