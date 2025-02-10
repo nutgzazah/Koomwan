@@ -1,9 +1,4 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image
-} from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import React from "react";
 import { useRouter, Tabs } from "expo-router";
 import { NavTabIcon, NavBigIcon } from "../../global/components/NavBarBottom";
@@ -37,14 +32,12 @@ export default function TabsLayout() {
           // headerLeft : ส่วน Icon โปรไฟล์
           // โปรไฟล์ แก้ไข Path รูปโปรไฟล์ ตอนทำจริง
           // บทบาท (ทั่วไป) แก้ไขตอนทำจริง
-          <TouchableOpacity 
-            onPress={(() => router.push("suggestion"))}
+          <TouchableOpacity
+            onPress={() => router.push("profile")}
             className="ml-4"
           >
             <View className="flex-row items-baseline">
-              <Image className="w-12 h-12"
-                source={profileIcon}
-              />
+              <Image className="w-12 h-12" source={profileIcon} />
               <View className="bg-primary right-6 px-3 rounded-3xl">
                 <Text className="text-card font-sans font-medium">ทั่วไป</Text>
               </View>
@@ -53,25 +46,18 @@ export default function TabsLayout() {
         ),
         // headerTitle : ส่วน Logo
         headerTitle: () => (
-          <TouchableOpacity 
-            onPress={(() => router.replace(""))}
-
-          >
-            <Image className="w-10 h-10"
-              source={logoIcon}
-            />
+          <TouchableOpacity onPress={() => router.replace("")}>
+            <Image className="w-10 h-10" source={logoIcon} />
           </TouchableOpacity>
         ),
         // headerRight : ส่วน Icon notification
         // notification แก้ไข Path ตอนทำจริง
         headerRight: () => (
-          <TouchableOpacity 
-            onPress={(() => router.push("notification"))}
+          <TouchableOpacity
+            onPress={() => router.push("notification")}
             className="mr-4"
           >
-            <Image className="w-6 h-6"
-              source={notificationsIcon}
-            />
+            <Image className="w-6 h-6" source={notificationsIcon} />
           </TouchableOpacity>
         ),
         headerTitleAlign: "center",
@@ -84,7 +70,7 @@ export default function TabsLayout() {
           borderTopRightRadius: 30,
           borderTopWidth: 1,
           height: 75,
-        }
+        },
       }}
     >
       <Tabs.Screen
@@ -97,7 +83,7 @@ export default function TabsLayout() {
               iconNormal={homeIcon}
               iconBold={homeBoldIcon}
             />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -111,16 +97,14 @@ export default function TabsLayout() {
               iconNormal={suggestionIcon}
               iconBold={suggestionBoldIcon}
             />
-          )
+          ),
         }}
       />
       <Tabs.Screen
         name="tracking"
         options={{
           title: "tracking",
-          tabBarIcon: ({ }) => (
-            <NavBigIcon icon={trackingIcon} />
-          )
+          tabBarIcon: ({}) => <NavBigIcon icon={trackingIcon} />,
         }}
       />
       <Tabs.Screen
@@ -133,7 +117,7 @@ export default function TabsLayout() {
               iconNormal={resourceIcon}
               iconBold={resourceBoldIcon}
             />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -146,10 +130,11 @@ export default function TabsLayout() {
               iconNormal={forumIcon}
               iconBold={forumBoldIcon}
             />
-          )
+          ),
         }}
       />
-      { // อันนี้เอาไว้ซ่อน Route ที่ไม่ต้องให้อยู่บน Navbar ข้างล่าง 
+      {
+        // อันนี้เอาไว้ซ่อน Route ที่ไม่ต้องให้อยู่บน Navbar ข้างล่าง
         // คอมเมนต์เอาไว้ก่อน ตอนมีค่อยถอดคอมเมนต์ข้างล่าง
         hiddenRoutes.map((path, key) => (
           <Tabs.Screen
