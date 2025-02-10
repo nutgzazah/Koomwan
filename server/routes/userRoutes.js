@@ -1,6 +1,7 @@
 const express = require('express')
 const { requireSignIn } = require('../controllers/authController')
-const { beginnerSetup, addHealthRecord } = require('../controllers/userController')
+const { beginnerSetup, } = require('../controllers/userController')
+const { addHealthRecord, updateHealthRecord } = require('../controllers/trackingController')
 
 
 //router object
@@ -14,6 +15,10 @@ router.post('/beginnerSetup' /*,requireSignIn*/ , beginnerSetup)
 //TRACKING
 //ADD RECORD || POST
 router.post('/addRecord' /*,requireSignIn*/ , addHealthRecord)
+//UPDATE RECORD || PUT
+router.put('/updateRecord' /*,requireSignIn*/ , updateHealthRecord)
+
+
 
 //export
 module.exports = router
