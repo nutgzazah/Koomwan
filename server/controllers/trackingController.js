@@ -4,8 +4,42 @@ const healthInfoModel = require("../models/healthInfoModel");
 const recordModel = require('../models/recordModel');
 
 //TRACKING
+//GET
+const getRecord = async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // ค้นหาข้อมูล healthinfo จาก userModel หรือ doctorModel
+        let user = await userModel.findById(userId);
+        if (!user) {
+            user = await doctorModel.findById(userId);
+        }
+
+        if (!user || !user.healthinfo) {
+            return res.status(404).json({ success: false, message: "User health information not found" });
+        }
+
+        // ค้นหา Record ทั้งหมดที่เกี่ยวข้องกับ healthinfo ของผู้ใช้
+        const records = await recordModel.find({ healthinfo: user.healthinfo });
+
+        if (!records.length) {
+            return res.status(404).json({ success: false, message: "No health records found" });
+        }
+
+        return res.status(200).json({ success: true, records });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Error retrieving health records", error });
+    }
+};
+
+
 //ADD
-const addHealthRecord = async (req, res) => {
+const addRecord = async (req, res) => {
     try {
         const { userId, height, weight, bloodsugar, a1c, bloodpressure, moodstatus, additionpill } = req.body;
 
@@ -61,9 +95,10 @@ const addHealthRecord = async (req, res) => {
 };
 
 //UPDATE
-const updateHealthRecord = async (req, res) => {
+const updateRecord = async (req, res) => {
     try {
-        const { recordId, height, weight, bloodsugar, a1c, bloodpressure, moodstatus, additionpill } = req.body;
+        const { recordId } = req.params;
+        const { height, weight, bloodsugar, a1c, bloodpressure, moodstatus, additionpill } = req.body;
 
         if (!recordId) {
             return res.status(400).json({ success: false, message: "Record ID is required" });
@@ -94,5 +129,26 @@ const updateHealthRecord = async (req, res) => {
     }
 };
 
+const deleteRecord = async (req, res) => {
+    try {
+        const { recordId } = req.params;
 
-module.exports = { addHealthRecord, updateHealthRecord };
+        if (!recordId) {
+            return res.status(400).json({ success: false, message: "Record ID is required" });
+        }
+
+        // ค้นหาและลบ Record
+        const deletedRecord = await recordModel.findByIdAndDelete(recordId);
+        if (!deletedRecord) {
+            return res.status(404).json({ success: false, message: "Health record not found" });
+        }
+
+        return res.status(200).json({ success: true, message: "Health record deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Error deleting health record", error });
+    }
+};
+
+
+module.exports = { getRecord ,addRecord, updateRecord, deleteRecord };
