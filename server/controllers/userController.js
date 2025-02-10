@@ -1,6 +1,7 @@
 const userModel = require("../models/userModel");
 const doctorModel = require("../models/doctorModel");
 const healthInfoModel = require("../models/healthInfoModel");
+const recordModel = require('../models/recordModel');
 
 // ฟังก์ชันเช็คว่า userId มี healthinfo แล้วหรือยัง (รองรับทั้ง userModel และ doctorModel)
 const checkHealthInfoExists = async (userId) => {
@@ -81,4 +82,59 @@ const beginnerSetup = async (req, res) => {
     }
 };
 
-module.exports = { beginnerSetup, checkHealthInfoExists };
+const addHealthRecord = async (req, res) => {
+    try {
+        const { userId, height, weight, bloodsugar, a1c, bloodpressure, moodstatus, additionpill } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // ค้นหาผู้ใช้จาก userModel หรือ doctorModel
+        let user = await userModel.findById(userId);
+        if (!user) {
+            user = await doctorModel.findById(userId);
+        }
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // ตรวจสอบว่า user มี healthinfo หรือไม่
+        if (!user.healthinfo) {
+            return res.status(400).json({ success: false, message: "User does not have health information" });
+        }
+
+        // สร้าง Record ใหม่
+        const newRecord = new recordModel({
+            healthinfo: user.healthinfo, // เชื่อมโยงกับ HealthInfo ของ user
+            height,
+            weight,
+            bloodsugar,
+            a1c,
+            bloodpressure,
+            moodstatus,
+            additionpill
+        });
+
+        // บันทึก Record
+        const savedRecord = await newRecord.save();
+
+        // อัปเดต height และ weight ใน healthInfoModel
+        try {
+            await healthInfoModel.findByIdAndUpdate(user.healthinfo, {
+                $set: { height, weight }
+            });
+        } catch (updateError) {
+            console.error("Error updating healthInfoModel:", updateError);
+            // ไม่ต้อง return error ตรงนี้ เพื่อให้ API ยังคงตอบกลับ success ได้
+        }
+
+        return res.status(201).json({ success: true, message: "Health record saved successfully", record: savedRecord });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Error saving health record", error });
+    }
+};
+
+module.exports = { beginnerSetup, checkHealthInfoExists, addHealthRecord };
