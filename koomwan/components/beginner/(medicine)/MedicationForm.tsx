@@ -261,7 +261,7 @@ export default function MedicationForm() {
             <TouchableOpacity
               onPress={pill_image ? handleRemoveImage : showImageOptions}
               disabled={isUploadingImage}
-              className="w-full aspect-[2/1] bg-background rounded-lg items-center justify-center border border-gray relative"
+              className="w-full h-[150px] aspect-[2/1] bg-background rounded-lg items-center justify-center border border-gray relative"
             >
               {isUploadingImage ? (
                 <View className="items-center">
@@ -274,10 +274,10 @@ export default function MedicationForm() {
                 <>
                   <Image
                     source={{ uri: pill_image }}
-                    className="w-full h-full rounded-lg p-1"
+                    className="w-full h-[150px] p-1 "
                     resizeMode="contain"
                   />
-                  <View className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-2">
+                  <View className="absolute top-4 right-4 bg-black bg-opacity-50 rounded-full p-2">
                     <Image
                       source={require("../../../assets/BeginnerSetup/trash.png")}
                       className="w-5 h-5"
