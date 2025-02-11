@@ -31,6 +31,7 @@ const MedicineNotification = () => {
     "วันศุกร์",
     "วันเสาร์",
     "วันอาทิตย์",
+    "ทุกวัน",
   ];
 
   const handleTimeChange = (
