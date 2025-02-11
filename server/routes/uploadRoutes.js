@@ -1,34 +1,29 @@
 const express = require('express');
-const upload = require('../middlewares/upload');
+const multer = require('multer')
+const path = require('path')
+const { uploadToR2 } = require('../Services/uploadService')
+
 const router = express.Router();
 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb){
+        cb(null, "uploads/")
+    },
+    filename: function (req, file, cb){
+        cb(null, Date.now() + "-" + file.originalname)
+    },
+})
+
+const upload = multer({ storage: storage})
+
 // อัปโหลดรูปภาพหรือไฟล์ PDF ไปยัง R2
-router.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ success: false, message: 'No file uploaded' });
-    }
-    
-    return res.status(201).json({
-        success: true,
-        message: 'File uploaded successfully',
-        fileUrl: req.file.location, // URL ของไฟล์ที่อัปโหลด
-    });
-});
-
-router.delete('/delete', async (req, res) => {
-    const { fileKey } = req.body; // รับค่า key ของไฟล์ที่ต้องการลบ
-
-    if (!fileKey) {
-        return res.status(400).json({ success: false, message: 'File key is required' });
-    }
-
-    try {
-        await deleteFile(fileKey);
-        return res.status(200).json({ success: true, message: 'File deleted successfully' });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: 'Error deleting file', error });
+router.post('/uploadFile', upload.single('file'), async (req, res) => {
+    try{
+        await uploadToR2(req.file.path, req.file.filename)
+        res.send("File uploaded and processed successfully")
+    }catch (error){
+        res.status(500).send("Error processing file:"+ error.message)
     }
 });
-
 
 module.exports = router;
