@@ -21,7 +21,12 @@
     "expo-checkbox": "~4.0.1",
     "expo-constants": "~17.0.4",
     "expo-font": "~13.0.3",
+<<<<<<< Updated upstream
     "expo-linking": "~7.0.4",
+=======
+    "expo-image-picker": "^16.0.5",
+    "expo-linking": "^7.0.5",
+>>>>>>> Stashed changes
     "expo-router": "^4.0.17",
     "expo-splash-screen": "^0.29.21",
     "expo-status-bar": "~2.0.1",
@@ -49,7 +54,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~18.3.12",
-    "expo": "^52.0.26",
+    "expo": "^52.0.28",
     "typescript": "^5.7.3"
   },
   "private": true

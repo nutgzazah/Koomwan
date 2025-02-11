@@ -14,32 +14,33 @@ const ArticleId: React.FC = () => {
   if (!blog) {
     return (
       <div className="text-center p-4">
-        <h1 className="text-xl text-red-500">ไม่พบบทความ</h1>
+        <h1 className="text-detail_2 text-abnormal">ไม่พบบทความ</h1>
       </div>
     );
   }
 
   return (
-    <div className="w-full p-4 relative">
+    <div className="w-full relative">
       {/* Edit Button */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-0 right-0">
         <Link href={`/articleManagement/${articleId}/editArticle`}>
-          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+          <button className="p-2 btn blue-btn rounded-md">
             แก้ไข
           </button>
         </Link>
       </div>
 
       {/* Header Section */}
-      <h2 className="text-display text-primary font-bold mb-2">{blog.title}</h2>
-      <p className="text-sm text-gray-500 mb-4">เขียนเมื่อ {blog.publish_date} โดย {blog.author}</p>
+      <h2 className="text-headline_3 text-secondary">{blog.title}</h2>
+      <p className="text-detail_3 text-secondary">เขียนเมื่อ {blog.publish_date}</p>
 
-      {/* Category and Tags */}
+      {/* Category */}
       <div className="flex items-center space-x-2 mb-4">
+        <p className='text-detail_3 text-secondary'>หมวดหมู่ : </p>
         {blog.category.map((cat) => (
           <span
             key={cat}
-            className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-sm"
+            className="btn lightblue-btn p-2 rounded-md"
           >
             {cat}
           </span>
@@ -56,7 +57,7 @@ const ArticleId: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="text-lg text-gray-800 leading-relaxed">
+      <div className="text-detail_2 text-secondary leading-relaxed">
         {blog.content}
       </div>
     </div>

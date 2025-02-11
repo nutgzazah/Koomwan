@@ -1,16 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ForumDataInterface } from "@/interfaces/forumInterface";
 import forums from "@/data/forum.json";
 import DeleteReasonPopup from "../components/deleteReason";
+import ApprovePopup from "../components/ApprovePopup";
 
 const transformData = (data: ForumDataInterface[]) => {
   if (!Array.isArray(data)) return [];
   return data.map((item, index) => ({
     transID: index + 1,
     forumId: item.forum_id,
+    user_id: item.user_id,
+    username: item.username,
     text: item.text,
     date_and_time: item.date_and_time,
     like: item.like,
@@ -25,68 +28,86 @@ const ForumID: React.FC = () => {
   const { forumId } = useParams();
   const transformedForums = transformData(forums);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-  const [deleteReason, setDeleteReason] = useState("");
+  const [isApprovePopupOpen, setIsApprovePopupOpen] = useState(false);
+  const router = useRouter();
 
   const forum = transformedForums.find((f) => String(f.forumId) === forumId);
 
-  const handleDelete = (reason: string) => {
-    // Logic to delete the forum with the provided reason
-    console.log("Deleting with reason:", reason);
-    setDeleteReason(reason);
+  const handleApprove = () => {
+    setIsApprovePopupOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
     setIsDeletePopupOpen(false);
+    router.push("/forumManagement");
   };
 
   if (!forum) {
     return (
       <div className="text-center p-4">
-        <p className="text-red-500">ไม่พบข้อมูลของแพทย์</p>
+        <p className="text-secondary">ไม่พบข้อมูลฟอรั่ม</p>
       </div>
     );
   }
 
   return (
     <div className="w-full">
-      <div className="flex justify-between w-full py-2 px-10 gap-20 bg-blue-200">
-        {/* Image Section */}
-        <div className="w-2/5 h-96 flex justify-center items-center bg-slate-200">
-          <p>Image</p>
-        </div>
+      <div className="flex items-center space-x-2">
+        <p className='text-detail_3 text-secondary'>หมวดหมู่ : </p>
+          <p
+            className="btn lightblue-btn p-2 rounded-md"
+          >
+            {forum.title_report}
+          </p>
+      </div>
 
-        {/* Details Section */}
-        <div className="flex flex-col justify-start w-3/5">
-          <div className="mb-4">
-            <p className="font-bold">{forum.doctor_comment || "No Comment"}</p>
-            <p className="text-gray-600 text-sm">{forum.date_and_time || "No Date Provided"}</p>
-          </div>
-          <div className="mb-4">
-            <p>{forum.text || "No Content Available"}</p>
-          </div>
+      <h2 className="text-headline_3 text-secondary">{forum.username}</h2>
+      <p className="text-detail_3 text-secondary">เขียนเมื่อ {forum.date_and_time}</p>
 
-          {/* Buttons Section */}
-          <div className="flex space-x-4 mt-4">
-            <button
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-              onClick={() => alert("Approved")}
-            >
-              อนุมัติ
-            </button>
-            <button
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              onClick={() => setIsDeletePopupOpen(true)}
-            >
-              ลบ
-            </button>
-          </div>
-        </div>
+      <div>
+        <p className="text-detail_2 text-secondary">
+          {forum.text}
+        </p>
+      </div>
+
+      {/* Image */}
+      <div className="w-full h-auto mb-6">
+        <img
+          src={forum.image}
+          alt="forum image"
+          className="w-full h-auto object-cover rounded-md"
+        />
+      </div>
+
+      <div className="flex w-full justify-center space-x-4 mt-4">
+          <button
+            className="btn green-btn short-btn"
+            onClick={handleApprove}
+          >
+            อนุมัติ
+          </button>
+          <button
+            className="btn red-btn short-btn"
+            onClick={() => setIsDeletePopupOpen(true)}
+          >
+            ลบ
+          </button>
       </div>
 
       {/* Delete Reason Popup */}
       {isDeletePopupOpen && (
         <DeleteReasonPopup
           onClose={() => setIsDeletePopupOpen(false)}
-          onConfirm={handleDelete}
+          onConfirm={handleDeleteConfirm}
         />
       )}
+
+      {isApprovePopupOpen && (
+        <ApprovePopup
+          onClose={() => setIsApprovePopupOpen(false)}
+        />
+      )}
+
     </div>
   );
 };
