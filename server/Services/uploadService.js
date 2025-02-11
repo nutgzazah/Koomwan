@@ -13,10 +13,11 @@ const s3 = new AWS.S3({
 });
 
 module.exports = {
+    //UPLOAD
     uploadToR2: async (filePath, fileName) => {
         const fileStats = fs.statSync(filePath)
 
-        if (fileStats.size > 52428800){
+        if (fileStats.size > 10 * 1024 * 1024){
             const file = fs.readFileSync(filePath)
             const params = {
                 Bucket: "koomwan-storage",
@@ -38,6 +39,23 @@ module.exports = {
             }
             const data = await s3.upload(params).promise()
             console.log(data)
+        }
+    },
+    //DELETE
+    deleteFromR2: async (fileName) => {
+        const params = {
+            Bucket: "koomwan-storage",
+            Key: fileName,
+        };
+
+        try {
+            // ลบไฟล์จาก Cloudflare R2
+            const data = await s3.deleteObject(params).promise();
+            console.log("File deleted successfully:", data);
+            return data;
+        } catch (error) {
+            console.error("Error deleting file:", error);
+            throw new Error("Error deleting file from R2");
         }
     }
 }
