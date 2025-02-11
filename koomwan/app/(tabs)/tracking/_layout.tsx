@@ -8,6 +8,9 @@ export default function TrackingLayout() {
     <Stack screenOptions={{ headerShown: false }}>    
       <Stack.Screen name="index" />
       <Stack.Screen name="medicineCollected" />
+      <Stack.Screen name="medicineDetail" />
+      <Stack.Screen name="addMedicine" />
+      <Stack.Screen name="summaryTracking" /> 
     </Stack>
   );
 }
