@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity, Text, View, Image } from "react-native";
+import { TouchableOpacity, Text, Image } from "react-native";
 
 interface ShortButtonProps {
   title: string; // ข้อความบนปุ่ม
@@ -19,14 +19,15 @@ export const ShortButton: React.FC<ShortButtonProps> = ({
   <TouchableOpacity
     onPress={onPress}
     activeOpacity={0.7}
-    className={`bg-primary rounded-lg py-3 px-5 flex-row items-center justify-center ${className}`}
+    className={`bg-primary rounded-lg py-5 px-5 flex-row items-center justify-center ${className}`}
   >
     {iconSrc && iconPosition === "left" && (
       <Image source={iconSrc} className="w-5 h-5 mr-2" />
     )}
-    <Text className="color-card text-lg font-sans">{title}</Text>
+    <Text className="text-button font-bold color-card font-sans">{title}</Text>
     {iconSrc && iconPosition === "right" && (
       <Image source={iconSrc} className="w-5 h-5 ml-2" />
     )}
   </TouchableOpacity>
 );
+export default ShortButton;
