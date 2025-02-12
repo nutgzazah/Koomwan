@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
+import LayoutWrapper from "@/components/LayoutWrapper";
 import "./globals.css";
-import MenuBar from "@/components/MenuBar";
-
 
 export const metadata: Metadata = {
   title: "KoomWan Admin Panel",
@@ -15,13 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="flex w-full h-screen">
-        <div className="flex w-1/6 h-full"> 
-          <MenuBar /> 
-        </div>
-        <div className="w-5/6 h-full overflow-auto">
-          {children}
-        </div>
+      <body>
+        <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
   );
