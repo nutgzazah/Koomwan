@@ -1,44 +1,87 @@
 const userModel = require("../models/userModel");
 const doctorModel = require("../models/doctorModel");
+const healthInfoModel = require("../models/healthInfoModel");
 
-// Get user by username
-const getUserByUsername = async (req, res) => {
+
+//BEGINNER SETUp
+// ฟังก์ชันเช็คว่า userId มี healthinfo แล้วหรือยัง (รองรับทั้ง userModel และ doctorModel)
+const checkHealthInfoExists = async (userId) => {
     try {
-        const { username } = req.params;
+        // ค้นหา userId จากทั้ง userModel และ doctorModel
+        let user = await userModel.findById(userId);
+        let userType = "user";
 
-        if (!username) {
-            return res.status(400).send({
-                success: false,
-                message: "Username is required",
-            });
+        if (!user) {
+            user = await doctorModel.findById(userId);
+            userType = "doctor";
         }
 
-        // Search for the user in both models
-        const user = await userModel.findOne({ username });
-        const doctor = await doctorModel.findOne({ username });
-
-        if (!user && !doctor) {
-            return res.status(404).send({
-                success: false,
-                message: "User not found",
-            });
+        // ถ้าไม่พบทั้งใน userModel และ doctorModel
+        if (!user) {
+            return { status: 404, message: "User not found in system" };
         }
 
-        // Determine which model the user was found in
-        const userData = user || doctor;
-
-        return res.status(200).send({
-            success: true,
-            data: userData,
-        });
+        // เช็คว่า user มี healthinfo หรือไม่
+        if (user.healthinfo) {
+            return { status: 400, message: `${userType} already has health information` };
+        } else {
+            return { status: 200, message: `${userType} does not have health information` };
+        }
     } catch (error) {
         console.error(error);
-        return res.status(500).send({
-            success: false,
-            message: "Error fetching user data",
-            error,
-        });
+        return { status: 500, message: "Error checking health information" };
     }
 };
 
-module.exports = { getUserByUsername };
+// ฟังก์ชันบันทึก healthinfo ใหม่ (รองรับทั้ง userModel และ doctorModel)
+const beginnerSetup = async (req, res) => {
+    try {
+        const { userId, diabetestype, gender, birthdate, height, weight, regularpill } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // เช็คว่า userId มี healthinfo แล้วหรือยัง
+        const healthInfoCheck = await checkHealthInfoExists(userId);
+        if (healthInfoCheck.status !== 200) {
+            return res.status(healthInfoCheck.status).json({ success: false, message: healthInfoCheck.message });
+        }
+
+        // ถ้ายังไม่มี healthinfo ให้สร้างใหม่
+        const newHealthInfo = new healthInfoModel({
+            user: userId,
+            diabetestype,
+            gender,
+            birthdate,
+            height,
+            weight,
+            regularpill,
+        });
+
+        // บันทึก HealthInfo ใหม่
+        const savedHealthInfo = await newHealthInfo.save();
+
+        // ค้นหา user จากทั้ง userModel และ doctorModel
+        let user = await userModel.findById(userId);
+        if (!user) {
+            user = await doctorModel.findById(userId);
+        }
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found after saving health info" });
+        }
+
+        // อัปเดต healthinfo ObjectId ใน user หรือ doctor
+        user.healthinfo = savedHealthInfo._id;
+        await user.save();
+
+        return res.status(201).json({ success: true, message: "Health information saved successfully", healthInfoId: savedHealthInfo._id });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Error saving health information", error });
+    }
+};
+
+
+module.exports = { beginnerSetup, checkHealthInfoExists };

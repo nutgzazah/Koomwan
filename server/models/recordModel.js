@@ -6,10 +6,6 @@ const recordSchema = new mongoose.Schema({
         ref: 'HealthInfo',
         required: true,
     },
-    id: {
-        type: Number,
-        required: true,
-    },
     recordtime: {
         type: Date,
         default: Date.now,
@@ -24,24 +20,55 @@ const recordSchema = new mongoose.Schema({
     },
     bloodsugar: {
         type: Number,
-        required: true,
+        required: false,
     },
     a1c: {
         type: Number,
-        required: true,
+        required: false,
     },
     bloodpressure: {
-        type: Number,
-        required: true,
+        systolic: {
+            type: Number,
+            required: false, // ความดันตัวบน
+        },
+        diastolic: {
+            type: Number,
+            required: false, // ความดันตัวล่าง
+        }
     },
     moodstatus: {
         type: String,
-        required: true,
+        enum: ['laughing', 'happy', 'neutral', 'irritated', 'sick', 'crying', 'angry'],
+        lowercase: true,
+        required: false,
     },
-    medicineaddition: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'AdditionPill',
-    },
+    additionpill: [{
+        pillName: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        pillImage: {
+            type: String,
+            required: false,
+        },
+        pillType: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        description: {
+            type: String,
+            required: false,
+            default: "",
+            trim: true
+        },
+        takePillTimes: [{
+            type: String,
+            required: false,
+            trim: true // รูปแบบเวลาที่ทานยา เช่น "06:00" 
+        }]
+    }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Record', recordSchema);
