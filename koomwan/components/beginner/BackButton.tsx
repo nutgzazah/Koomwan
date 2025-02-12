@@ -1,14 +1,14 @@
 import React from "react";
 import { TouchableOpacity, Text, Image } from "react-native";
 
-type BackButtonProps = {
+type BeginnerBackButtonProps = {
   onPress: () => void;
 };
 
-export const BackButton = ({ onPress }: BackButtonProps) => (
+export const BeginnerBackButton = ({ onPress }: BeginnerBackButtonProps) => (
   <TouchableOpacity
     onPress={onPress}
-    className="px-4 mt-safe flex-row items-center"
+    className="flex flex-row ml-6 mt-6 mb-3 items-center"
   >
     <Image
       source={require("../../assets/Signup/arrow-circle-left.png")}

@@ -157,13 +157,13 @@ const EditBlogForm: React.FC = () => {
       <div className="flex justify-center space-x-4">
         <button
           onClick={handleSubmit}
-          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+          className="btn blue-btn short-btn"
         >
           ส่งบทความ
         </button>
         <button
           onClick={() => router.back()}
-          className="bg-gray-300 text-black px-6 py-2 rounded-md hover:bg-gray-400"
+          className="btn white-btn short-btn"
         >
           ยกเลิก
         </button>

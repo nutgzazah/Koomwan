@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { BlogInterface } from "@/interfaces/blogInterface";
 
 const CreateArticle: React.FC = () => {
@@ -12,6 +13,7 @@ const CreateArticle: React.FC = () => {
     content: "",
     ref: "",
   });
+   const router = useRouter();
 
   const categories = [
     "การดูแลสุขภาพ",
@@ -38,6 +40,11 @@ const CreateArticle: React.FC = () => {
 
   const handleSubmit = () => {
     console.log("Blog submitted: ", blog);
+    router.push("/articleManagement")
+  };
+
+  const handleCancel = () => {
+    router.back()
   };
 
   return (
@@ -116,12 +123,13 @@ const CreateArticle: React.FC = () => {
       <div className="flex justify-center space-x-4">
         <button
           onClick={handleSubmit}
-          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+          className="btn blue-btn short-btn"
         >
           ส่งบทความ
         </button>
         <button
-          className="bg-gray-300 text-black px-6 py-2 rounded-md hover:bg-gray-400"
+          onClick={handleCancel}  
+          className="btn white-btn short-btn"
         >
           ยกเลิก
         </button>

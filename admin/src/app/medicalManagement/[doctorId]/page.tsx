@@ -76,7 +76,7 @@ const DoctorID: React.FC = () => {
 
         {/* Details Section */}
         <div className="flex justify-start items-center w-3/5">
-          <table className="w-full text-left">
+          <table className="w-full text-left text-secondary">
             <tbody>
               <tr>
                 <td className="text-bold_detail py-2">ชื่อ-นามสกุล</td>
