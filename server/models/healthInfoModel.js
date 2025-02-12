@@ -8,15 +8,16 @@ const healthInfoSchema = new mongoose.Schema({
     },
     diabetestype: {
         type: String,
-        enum: ['Type 1', 'Type 2', 'none'],
-        required: true,
-    },
-    birthdate: {
-        type: Date,
+        enum: ['none', 'diabetes'],
         required: true,
     },
     gender: {
         type: String,
+        enum: ['male', 'female'],
+        required: true,
+    },
+    birthdate: {
+        type: Date,
         required: true,
     },
     height: {
@@ -27,11 +28,33 @@ const healthInfoSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    regularpill: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'RegularPill',
-        required: true,
-    },
+    regularpill: [{
+        pillName: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        pillImage: {
+            type: String,
+            required: false,
+        },
+        pillType: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        description: {
+            type: String,
+            required: false,
+            default: "",
+            trim: true
+        },
+        reminderTimes: [{
+            type: String,
+            required: false,
+            trim: true // รูปแบบเวลา เช่น "06:00" สำหรับ 6 โมงเช้าของทุกวัน
+        }]
+    }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('HealthInfo', healthInfoSchema);
