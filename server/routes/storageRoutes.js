@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer')
 const path = require('path')
-const { uploadToR2, deleteFromR2 } = require('../Services/uploadService')
+const { uploadToR2, deleteFromR2, generateSignedUrl } = require('../Services/uploadService')
 const fs = require('fs'); // เพิ่มการ import fs
 const crypto = require('crypto'); // เพิ่มการใช้ crypto สำหรับการสร้างอักษรสุ่ม
 
@@ -35,10 +35,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage})
 
-// อัปโหลดรูปภาพหรือไฟล์ PDF ไปยัง R2
+// อัปโหลดรูปภาพหรือไฟล์ PDF ไปยัง R2 to uploads
 router.post('/uploadFile', upload.single('file'), async (req, res) => {
     try{
-        await uploadToR2(req.file.path, req.file.filename)
+        await uploadToR2(req.file.path, req.file.filename, req.body.folder)
 
         // ลบไฟล์หลังจากอัปโหลดไป R2 เสร็จแล้ว
         fs.unlinkSync(req.file.path);
@@ -51,14 +51,28 @@ router.post('/uploadFile', upload.single('file'), async (req, res) => {
 
 // ลบไฟล์จาก Cloudflare R2
 router.delete('/deleteFile', async (req, res) => {
-    const { fileName } = req.body;
+    const { folder,fileName } = req.body;
 
     try {
-        await deleteFromR2(fileName); // ลบไฟล์จาก R2
+        await deleteFromR2(folder,fileName); // ลบไฟล์จาก R2
         res.send("File deleted successfully");
     } catch (error) {
         res.status(500).send("Error deleting file: " + error.message);
     }
 });
+
+//รับ url file
+router.get("/getFileUrl", async (req, res) => {
+    try {
+      const { fileName, folder } = req.query;
+      const bucket = process.env.R2_BUCKET_NAME;
+      const fileKey = `${folder}/${fileName}`;
+      
+      const signedUrl = await generateSignedUrl(bucket, fileKey);
+      res.json({ success: true, url: signedUrl });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
 
 module.exports = router;
