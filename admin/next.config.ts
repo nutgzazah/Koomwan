@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/medicalManagement",
+        permanent: true, // ใช้ true ถ้าต้องการ redirect แบบถาวร
+      },
+    ];
+  },
 };
 
 export default nextConfig;
