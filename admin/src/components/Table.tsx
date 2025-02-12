@@ -11,7 +11,7 @@ const Table: React.FC<TableProps> = ({ headers, data, onRowClick }) => {
     <div className="overflow-x-auto mt-4">
       <table className="w-full border-collapse bg-card shadow rounded-lg overflow-hidden">
         <thead>
-          <tr className="bg-card text-bold_detail">
+          <tr className="bg-card text-bold_detail text-secondary">
             {headers.map((header, index) => (
               <th
                 key={`header-${index}`} 
@@ -34,7 +34,7 @@ const Table: React.FC<TableProps> = ({ headers, data, onRowClick }) => {
               {row.map((cell, cellIndex) => (
                 <td
                   key={`row-${rowIndex}-cell-${cellIndex}`} 
-                  className="px-6 py-4 text-detail_2"
+                  className="px-6 py-4 text-detail_2 text-secondary"
                 >
                   {cell}
                 </td>

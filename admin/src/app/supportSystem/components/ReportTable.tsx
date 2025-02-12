@@ -3,40 +3,48 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import Table from "@/components/Table";
-
 import { ReportDataInterface } from "@/interfaces/reportInterface";
-import reports from "@/data/report.json";
 
-const ReportTable: React.FC = () => {
+interface ReportTableProps {
+  reports: ReportDataInterface[];
+}
+
+const ReportTable: React.FC<ReportTableProps> = ({ reports }) => {
   const router = useRouter();
+  
+  const isPending = reports.some(report => report.resolved === "pending");
 
-  const headers = ["ลำดับ", "ชื่อบัญชีผู้ใช้", "หัวข้อที่แจ้ง", "เนื้อหาที่แจ้ง", "วันที่แจ้ง", "การตอบกลับ"];
+  const headers = isPending
+    ? ["ลำดับ", "ชื่อบัญชีผู้ใช้", "หัวข้อที่แจ้ง", "เนื้อหาที่แจ้ง", "วันที่แจ้ง"]
+    : ["ลำดับ", "ชื่อบัญชีผู้ใช้", "หัวข้อที่แจ้ง", "เนื้อหาที่แจ้ง", "วันที่แจ้ง", "การตอบกลับ"];
 
-  const sanitizedData: ReportDataInterface[] = reports.map((report) => ({
-    user: report.user || "ไม่ระบุชื่อ",
-    role: report.role || "ไม่ระบุบทบาท",
-    title: report.title || "ไม่มีหัวข้อ",
-    problem_details: report.problem_details || "ไม่มีรายละเอียด",
-    report_date: report.report_date || "ไม่ระบุวันที่",
-    response_to_user: report.response_to_user || "ยังไม่มีการตอบกลับ",
-  }));
+  const data = reports.map((report, index) => {
+    const row = [
+      index + 1,
+      report.username,
+      report.title,
+      report.problem_details,
+      report.report_date,
+    ];
+    if (!isPending) {
+      row.push(report.response_to_user);
+    }
+    return row;
+  });
 
-  const data: (string | React.ReactNode)[][] = sanitizedData.map((report, index) => [
-    (index + 1).toString(),
-    report.user,
-    report.title,
-    report.problem_details,
-    report.report_date,
-    report.response_to_user,
-  ]);
-
-  const handleRowClick = (rowData: React.ReactNode[]) => {
-    const rowIndex = parseInt(rowData[0] as string, 10) - 1; 
-    router.push(`/supportSystem/${rowIndex}`); 
+  const handleRowClick = (rowData: (string | React.ReactNode)[]) => {
+    const reportIndex = Number(rowData[0]);
+    const report = reports[reportIndex - 1];
+    if (report && report.report_id) {
+      router.push(`/supportSystem/${report.report_id}`); 
+    } else {
+      console.warn("Invalid report ID:", report?.report_id);
+    }
+    
   };
 
   return (
-    <div>
+    <div className="w-full">
       <Table headers={headers} data={data} onRowClick={handleRowClick} />
     </div>
   );
