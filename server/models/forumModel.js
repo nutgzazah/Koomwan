@@ -4,10 +4,10 @@ const mongoose = require('mongoose');
 const commentSchema = new mongoose.Schema({
     doctor: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Doctor', // Reference to the Doctor model
+        ref: 'Doctor',
         required: true
     },
-    text: {
+    answer: {
         type: String,
         required: true
     },
@@ -15,26 +15,40 @@ const commentSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-}, {
-    _id: false // No need for separate IDs for comments in this case
-});
+},);
+
+// Schema for report reasons
+const reportReasonSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    reason: {
+        type: String,
+        required: true
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    }
+}, { _id: false });
 
 // Define the forum post schema
 const forumSchema = new mongoose.Schema({
-    user: {
+    postedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Reference to the User model
+        ref: 'User',
         required: true
     },
-    content: {
-        text: {
-            type: String,
-            required: true
-        },
-        image: {
-            type: String, // Store the image URL or path
-            default: ''
-        }
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    image: {
+        type: String,
+        default: null // Use null instead of an empty string
     },
     date: {
         type: Date,
@@ -48,11 +62,12 @@ const forumSchema = new mongoose.Schema({
         users: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'User' // Reference to the User model for tracking who liked the post
+                ref: 'User',
+                index: true // Improve performance for searching likes
             }
         ]
     },
-    comments: [commentSchema], // Array of comments from doctors
+    comments: [commentSchema],
     reports: {
         count: {
             type: Number,
@@ -61,26 +76,11 @@ const forumSchema = new mongoose.Schema({
         users: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'User' // Reference to the User model for tracking who reported the post
+                ref: 'User',
+                index: true // Improve performance for searching reports
             }
         ],
-        reasons: [
-            {
-                user: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'User',
-                    required: true
-                },
-                reason: {
-                    type: String,
-                    required: true
-                },
-                date: {
-                    type: Date,
-                    default: Date.now
-                }
-            }
-        ]
+        reasons: [reportReasonSchema]
     }
 }, {
     timestamps: true
