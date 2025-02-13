@@ -139,6 +139,47 @@ const DoctorID: React.FC = () => {
                   <td className="py-2 text-detail_2 text-abnormal">{doctor.approval.reason}</td>
                 </tr>
               )}
+              <tr>
+                <td className="text-bold_detail py-2">จัดการสถานะ</td>
+                <td>
+                  <div className="flex flex-row gap-5">
+                    {doctor.approval.status === "pending" && (
+                      <>
+                        <button
+                          className="btn green-btn short-btn"
+                          onClick={handleApprove}
+                        >
+                          อนุมัติ
+                        </button>
+                        <button
+                          className="btn red-btn short-btn"
+                          onClick={handleDisapprove}
+                        >
+                          ไม่อนุมัติ
+                        </button>
+                      </>
+                    )}
+
+                    {doctor.approval.status === "approve" && (
+                      <button
+                        className="btn red-btn short-btn"
+                        onClick={handleDisapprove}
+                      >
+                        ยกเลิกการอนุมัติ
+                      </button>
+                    )}
+
+                    {doctor.approval.status === "disapprove" && (
+                      <button
+                        className="btn green-btn short-btn"
+                        onClick={handleApprove}
+                      >
+                        แก้ไขเป็นอนุมัติ
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
