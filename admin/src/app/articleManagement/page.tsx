@@ -1,31 +1,45 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import { BlogInterface } from "@/interfaces/blogInterface";
-import blogs from "../../data/blog.json";
 import BlogCard from "./components/blogCard";
 import SearchCategory from "./components/Category";
 
 export default function BlogManagement() {
   const router = useRouter();
-  const blogList = blogs as BlogInterface[];
+  const [blogList, setBlogList] = useState<BlogInterface[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("ทั้งหมด");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  const filteredBlogs = blogList.filter((blog) => {
-    const searchInFields = `${blog.title}`.toLowerCase();
-    return searchInFields.includes(searchTerm.toLowerCase());
-  });
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/api/v1/admin/blog");
+        console.log("Fetched blog data:", response.data.data);
+        setBlogList(response.data.data);
+      } catch (error) {
+        console.error("Error fetching blog data:", error);
+      }
+    };
 
+    fetchBlogs();
+  }, []);
+
+  // Filter by search term
+  const filteredBlogs = blogList.filter((blog) =>
+    blog.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Filter by category
   const filteredCategory =
-  selectedCategory === "ทั้งหมด"
-    ? filteredBlogs
-    : filteredBlogs.filter((blog) =>
-        blog.category.some(
-          (cat) => cat.toLowerCase() === selectedCategory.toLowerCase()
-        )
-      );
+    selectedCategory === "ทั้งหมด"
+      ? filteredBlogs
+      : filteredBlogs.filter((blog) => {
+          const categories = Array.isArray(blog.category) ? blog.category : [blog.category];
+          return categories.some((cat) => cat.toLowerCase() === selectedCategory.toLowerCase());
+        });
 
   const handleCreateBlog = () => {
     const session = true; 
@@ -38,40 +52,41 @@ export default function BlogManagement() {
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full space-y-4">
-        <div className="w-full flex gap-2">
-          <input
-            type="text"
-            placeholder="ค้นหาด้วยชื่อบทความ..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full input"
-          />
-          <SearchCategory
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-          />
-          <button
-            onClick={handleCreateBlog}
-            className="btn blue-btn px-5 rounded-full"
-          >
-            <p className="text-center">+</p>
-          </button>
-        </div>
+      <div className="w-full flex gap-2">
+        <input
+          type="text"
+          placeholder="ค้นหาด้วยชื่อบทความ..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full input"
+        />
+        <SearchCategory
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+        />
+        <button
+          onClick={handleCreateBlog}
+          className="btn blue-btn px-5 rounded-full"
+        >
+          <p className="text-center">+</p>
+        </button>
+      </div>
 
       {/* Blog List */}
       <div className="w-full">
         {filteredCategory.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-            {filteredCategory.map(({ blog_id, title, image, category }) => (
+            {filteredCategory.map(({ _id, title, image, category }) => (
               <div 
-                key={blog_id} 
+                key={_id} 
                 className="w-full cursor-pointer"
-                onClick={() => router.push(`/articleManagement/${blog_id}`)}
+                onClick={() => router.push(`/articleManagement/${_id}`)}
               >
+                {/* เว้นรูปไว้ก่อน */}
                 <BlogCard
-                  blog_id={blog_id}
+                  blog_id={_id}
                   title={title}
-                  image={image}
+                  // image={image}
                   category={Array.isArray(category) ? category : [category]}
                 />
               </div>
