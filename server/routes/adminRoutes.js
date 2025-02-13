@@ -1,5 +1,5 @@
 const express = require('express')
-const { getUserByUsername, getAllUser, getAllDoctor, getDoctorById } = require('../controllers/adminController')
+const { getUserByUsername, getAllUser, getAllDoctor, getDoctorById, editStatusDoctor } = require('../controllers/adminController')
 const { addBlog, getAllBlog, getBlogById, editBlog, deleteBlog } = require('../controllers/adminBlogController')
 
 //router object
@@ -12,6 +12,7 @@ router.get("/user", getAllUser);
 router.get("/doctor", getAllDoctor);
 router.get("/user/:username", getUserByUsername);
 router.get("/doctor/:id", getDoctorById);
+router.put('/doctor/status/:id', editStatusDoctor);
 
 // Blog data
 router.post("/addBlog", addBlog);
