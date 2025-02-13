@@ -12,14 +12,15 @@ const generateFileName = (file) => {
     const randomString = crypto.randomBytes(3).toString('hex'); // สร้างตัวอักษรสุ่ม 5 ตัว (3 ไบต์ = 6 ตัวอักษร Hex)
     const timestamp = Date.now();
     const fileExtension = path.extname(file.originalname).toLowerCase();
+    const originalName = path.basename(file.originalname, fileExtension); // เอาชื่อไฟล์เดิมที่ไม่รวมส่วนขยาย
 
     // กำหนด pattern สำหรับชื่อไฟล์ตามประเภท
     if (fileExtension === '.pdf') {
-        return `koomwan-${timestamp}-${randomString}-doc${fileExtension}`;
+        return `koomwan-${originalName}-${timestamp}-${randomString}-doc${fileExtension}`;
     } else if (fileExtension === '.jpg' || fileExtension === '.jpeg' || fileExtension === '.png') {
-        return `koomwan-${timestamp}-${randomString}-img${fileExtension}`;
+        return `koomwan-${originalName}-${timestamp}-${randomString}-img${fileExtension}`;
     } else {
-        return `koomwan-${timestamp}-${randomString}${fileExtension}`; // กรณีอื่นๆ
+        return `koomwan-${originalName}-${timestamp}-${randomString}${fileExtension}`; // กรณีอื่นๆ
     }
 };
 
@@ -38,12 +39,13 @@ const upload = multer({ storage: storage})
 // อัปโหลดรูปภาพหรือไฟล์ PDF ไปยัง R2 to uploads
 router.post('/uploadFile', upload.single('file'), async (req, res) => {
     try{
-        await uploadToR2(req.file.path, req.file.filename, req.body.folder)
+        const R2filePath = await uploadToR2(req.file.path, req.file.filename, req.body.folder)
 
         // ลบไฟล์หลังจากอัปโหลดไป R2 เสร็จแล้ว
         fs.unlinkSync(req.file.path);
 
-        res.send("File uploaded and processed successfully")
+        // ส่งข้อมูล path ที่อัปโหลดไปกลับไปยัง client
+        res.json({ R2filePath: R2filePath });
     }catch (error){
         res.status(500).send("Error processing file:"+ error.message)
     }

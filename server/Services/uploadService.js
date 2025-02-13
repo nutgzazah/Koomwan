@@ -36,7 +36,11 @@ module.exports = {
             });
             const data = await upload.done(); // ทำการอัปโหลดไฟล์
             console.log(data);
-            console.log(`${folder}/${fileName}`) // return fileName ออกมาด้วย
+
+            const R2filePath = `${folder}/${fileName}`;
+            console.log(R2filePath)
+            return R2filePath;
+
         } catch (err) {
             console.error("Error uploading file:", err);
         }
