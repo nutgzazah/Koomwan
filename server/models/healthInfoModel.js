@@ -31,7 +31,7 @@ const healthInfoSchema = new mongoose.Schema({
     regularpill: [{
         pillName: {
             type: String,
-            required: true,
+            required: false,
             trim: true
         },
         pillImage: {
@@ -40,7 +40,7 @@ const healthInfoSchema = new mongoose.Schema({
         },
         pillType: {
             type: String,
-            required: true,
+            required: false,
             trim: true
         },
         description: {
@@ -52,8 +52,8 @@ const healthInfoSchema = new mongoose.Schema({
         reminderTimes: [{
             type: String,
             required: false,
-            trim: true // รูปแบบเวลา เช่น "06:00" สำหรับ 6 โมงเช้าของทุกวัน
-        }]
+            trim: true // รูปแบบเวลา เช่น "06:00" สำหรับ 6 โมงเช้า
+        }],
     }],
 }, { timestamps: true });
 
