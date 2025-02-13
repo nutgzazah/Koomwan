@@ -332,9 +332,11 @@ const loginController = async (req,res) => {
             })
         }
         //TOKEN JWT
-        const token = await JWT.sign({ _id: user._id }, process.env.JWT_SECRET,{
-            expiresIn:'7d'
-        })
+        const token = await JWT.sign(
+            { _id: user._id, role: user.role },  // เพิ่ม role เข้าไปใน payload
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
 
         //แสดงข้อมูลหลัง Login สำเร็จแต่ไม่ต้องแสดง password ที่บันทึกไว้จริง
         user.password = undefined

@@ -23,21 +23,20 @@ const MedicineNotification = () => {
   const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
   const [showDayPicker, setShowDayPicker] = useState<boolean>(false);
 
-  const days: string[] = [
-    "วันจันทร์",
-    "วันอังคาร",
-    "วันพุธ",
-    "วันพฤหัสบดี",
-    "วันศุกร์",
-    "วันเสาร์",
-    "วันอาทิตย์",
-    "ทุกวัน",
-  ];
+  const dayMap: Record<string, string> = {
+    "วันจันทร์": "Mon",
+    "วันอังคาร": "Tue",
+    "วันพุธ": "Wed",
+    "วันพฤหัสบดี": "Thu",
+    "วันศุกร์": "Fri",
+    "วันเสาร์": "Sat",
+    "วันอาทิตย์": "Sun",
+    "ทุกวัน": "Everyday",
+  };
 
-  const handleTimeChange = (
-    event: DateTimePickerEvent,
-    selectedDate?: Date
-  ): void => {
+  const days = Object.keys(dayMap); // ["วันจันทร์", "วันอังคาร", ..., "ทุกวัน"]
+
+  const handleTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowTimePicker(false);
     if (selectedDate) {
       setSelectedTime(selectedDate);
@@ -54,6 +53,23 @@ const MedicineNotification = () => {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
+    });
+  };
+
+  const handleAddNotification = () => {
+    if (!selectedDay || !selectedTime) {
+      alert("กรุณาเลือกวันและเวลาให้ครบ");
+      return;
+    }
+
+    const formattedDay = dayMap[selectedDay] || "Everyday"; // แปลงวันภาษาไทย -> อังกฤษ
+    const formattedTime = formatTime(selectedTime); // "08:00"
+    const reminderFormat = `${formattedDay}/${formattedTime}`; // "Mon/08:00"
+    
+    console.log("Reminder:", reminderFormat); // ใช้ reminderFormat ต่อในหน้าอื่น
+    router.push({
+      pathname: 'user/medForm',
+      params: { reminderFormat },
     });
   };
 
@@ -123,7 +139,7 @@ const MedicineNotification = () => {
           {/* Add Button */}
           <TouchableOpacity
             className="w-full bg-primary py-4 rounded-md mt-4"
-            onPress={() => router.back()}
+            onPress={handleAddNotification}
           >
             <Text className="text-button text-card text-center font-bold">
               เพิ่ม

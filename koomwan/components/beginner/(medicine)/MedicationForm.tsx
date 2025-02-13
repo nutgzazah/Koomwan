@@ -13,7 +13,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams, usePathname } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
@@ -59,6 +59,7 @@ const api = {
 };
 
 export default function MedicationForm() {
+  const { reminderFormat } = useLocalSearchParams();
   const [pill_name, setPillName] = useState("");
   const [pill_type, setPillType] = useState("");
   const [pill_description, setPillDescription] = useState("");
@@ -71,6 +72,9 @@ export default function MedicationForm() {
   {
     /* สำหรับอัพโหลดภาพ */
   }
+  const pathname = usePathname();
+  console.log("Current Path:"+pathname)
+
   const handleImageUpload = async () => {
     try {
       const { status } =
@@ -228,7 +232,7 @@ export default function MedicationForm() {
       Alert.alert("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", [
         {
           text: "ตกลง",
-          onPress: () => router.back(),
+          onPress: () => router.back(), //แก้ไขกลับไปหน้า medInput ด้วย
         },
       ]);
     } catch (error) {
