@@ -6,6 +6,7 @@ import React, {
     useEffect,
   } from "react";
   import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
   
   // Define the shape of the context state
   interface AuthState {
@@ -31,6 +32,11 @@ import React, {
       user: null,
       token: "",
     });
+
+    let token = state && state.token
+
+    //Default Axios Setting
+    axios.defaults.headers.common["Authorization"]=  `Bearer ${token}`
   
     // Initialize local storage data
     useEffect(() => {

@@ -113,7 +113,6 @@ const getDoctorById = async (req, res) => {
     }
 };
 
-
 const editStatusDoctor = async (req, res) => {
     try {
         const { id } = req.params;
