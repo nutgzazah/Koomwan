@@ -39,7 +39,39 @@ const hospitals = [
   "โรงพยาบาลตำรวจ",
 ];
 
+type FormData = {
+  username: string;
+  email: string;
+  password: string;
+  phone: string;
+  firstname: string;
+  lastname: string;
+  occupation: string;
+  expert: string;
+  hospital: string;
+  document: string;  // ใช้ค่า R2imgPath
+  image: string;  // ใช้ค่า R2docPath
+};
+
 const DoctorSignUpInfoScreen = () => {
+
+  
+
+  const [formData, setFormData] = useState<FormData>({
+    username: "",
+    email: "",
+    password: "",
+    phone: "",
+    firstname: "",
+    lastname: "",
+    occupation: "",
+    expert: "",
+    hospital: "",
+    document: "",
+    image: "",
+  });
+
+
   const router = useRouter();
   const { username, email, password, phone } = useLocalSearchParams();
   console.log(username, email, password, phone);
@@ -48,9 +80,7 @@ const DoctorSignUpInfoScreen = () => {
   const [occupation, setOccupation] = useState("");
   const [expert, setExpert] = useState("");
   const [hospital, setHospital] = useState("");
-  const [selectedImage, setSelectedImage] = useState<string | undefined>(
-    undefined
-  );
+  const [selectedImage, setSelectedImage] = useState<{ uri: string; fileName: string; type: string } | undefined>(undefined);
   const [document, setDocument] = useState<{
     name: string;
     uri: string;
@@ -88,7 +118,12 @@ const DoctorSignUpInfoScreen = () => {
       });
 
       if (!result.canceled) {
-        setSelectedImage(result.assets[0].uri);
+        const fileName = result.assets[0].uri.split('/').pop() || 'image.jpg'; // สร้างชื่อไฟล์จาก uri หรือใช้ชื่อเริ่มต้น
+        setSelectedImage({
+          uri: result.assets[0].uri,
+          fileName: fileName,
+          type: result.assets[0].type || 'image/jpeg', // ถ้าไม่มีประเภทก็ใช้เป็น 'image/jpeg'
+        });
         showToast("success", "อัพโหลดรูปภาพสำเร็จ");
       }
     } catch (error) {
@@ -161,22 +196,88 @@ const DoctorSignUpInfoScreen = () => {
     if (isValid) {
       setShowModal(true);
       setIsLoading(true);
-
+      
       try {
-        // Simulate API call
-        const response = await axios.post(`${BASE_URL}/api/v1/auth/registerdoctor`, {
-          username,
-          email,
-          password,
-          phone,
-          firstname: first_name,
-          lastname: last_name,
-          occupation,
-          expert,
-          hospital,
-          document: "test",
-          image:selectedImage,
+        // Set formData here before submission
+
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          username: String(username),
+          email: String(email),
+          password: String(password),
+          phone: String(phone),
+          document: R2docPath,
+          image: R2imgPath,
+        }));
+        //form สำหรับอัปโหลดรูปลง R2 cloudflare storage
+        const formDataForUploadImg = new FormData();
+
+        // ตรวจสอบและเพิ่มไฟล์รูปภาพ (image)
+        if (selectedImage) {
+          const fileExtension = selectedImage.fileName.split('.').pop() || 'jpg'; // Get file extension or default to 'jpg'
+          const fileName = `doctor-${Array.isArray(username) ? username[0].toLowerCase() : username.toLowerCase()}.${fileExtension}`; // ตรวจสอบ username ว่าเป็น array หรือไม่
+          formDataForUploadImg.append("file", {
+            uri: selectedImage.uri,
+            name: fileName,
+            type: selectedImage.type || "image/jpeg",
+          });
+        }
+        formDataForUploadImg.append("folder", "doctor");
+
+        //อัปโหลดรูปลง R2 cloudflare storage
+        const uploadimg = await axios.post(`${BASE_URL}/api/v1/storage/uploadFile`, formDataForUploadImg,{
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Accept": "application/json",
+          },
         });
+        //ดึง path ที่อัปโหลดมาบันทึกลง form
+        const R2imgPath = uploadimg.data.R2filePath;
+        
+        //form สำหรับอัปโหลดเอกสารลง R2 cloudflare storage
+        const formDataForUploadDoc = new FormData();
+        // ตรวจสอบและเพิ่มไฟล์เอกสาร (document)
+        if (document) {
+          const fileExtension = document.uri.split('.').pop() || 'pdf'; // Get file extension or default to 'pdf'
+          const fileName = `doctor-${Array.isArray(username) ? username[0].toLowerCase() : username.toLowerCase()}.${fileExtension}`; // ตรวจสอบ username ว่าเป็น array หรือไม่
+          formDataForUploadDoc.append("file", {
+            uri: document.uri,
+            name: fileName,
+            type: document.type || "application/pdf",
+          });
+        }
+        formDataForUploadDoc.append("folder", "doctor");
+        //อัปโหลดรูปลง R2 cloudflare storage
+        const uploaddoc = await axios.post(`${BASE_URL}/api/v1/storage/uploadFile`, formDataForUploadDoc,{
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Accept": "application/json",
+          },
+        });
+        //ดึง path ที่อัปโหลดมาบันทึกลง form
+        const R2docPath = uploaddoc.data.R2filePath;
+
+        // อัปเดต formData ให้เสร็จสิ้นก่อนส่ง request
+      const updatedFormData = {
+        username: String(username),
+        email: String(email),
+        password: String(password),
+        phone: String(phone),
+        firstname: first_name,
+        lastname: last_name,
+        occupation,
+        expert,
+        hospital,
+        document: R2docPath,
+        image: R2imgPath,
+      };
+
+        console.log("First FormData:",formData);
+        console.log("Final FormData:", updatedFormData);
+        
+
+        const response = await axios.post(`${BASE_URL}/api/v1/auth/registerdoctor`, updatedFormData);
+
         if (response.status === 201) {
           // After successful submission
           setIsLoading(false);
@@ -216,7 +317,7 @@ const DoctorSignUpInfoScreen = () => {
             <View className="w-36 h-36 bg-background rounded items-center justify-center border border-gray shadow-sm">
               {selectedImage ? (
                 <Image
-                  source={{ uri: selectedImage }}
+                  source={{ uri: selectedImage.uri }}
                   className="w-full h-full"
                   resizeMode="cover"
                 />
@@ -243,6 +344,7 @@ const DoctorSignUpInfoScreen = () => {
                 value={first_name}
                 onChangeText={(text) => {
                   setFirstName(text);
+                  setFormData({ ...formData, firstname: text })
                   setErrors((prev) => ({ ...prev, first_name: false }));
                 }}
               />
@@ -253,6 +355,7 @@ const DoctorSignUpInfoScreen = () => {
                 placeholder="นามสกุล"
                 value={last_name}
                 onChangeText={(text) => {
+                  setFormData({ ...formData, lastname: text })
                   setLastName(text);
                   setErrors((prev) => ({ ...prev, last_name: false }));
                 }}
@@ -271,6 +374,7 @@ const DoctorSignUpInfoScreen = () => {
                 value={occupation}
                 onChangeText={(text) => {
                   setOccupation(text);
+                  setFormData({ ...formData, occupation: text })
                   setErrors((prev) => ({ ...prev, occupation: false }));
                 }}
               />
@@ -316,6 +420,7 @@ const DoctorSignUpInfoScreen = () => {
                           key={item}
                           onPress={() => {
                             setExpert(item);
+                            setFormData((prev) => ({ ...prev, expert: item })); // อัปเดต formData
                             setShowExpertDropdown(false);
                             setErrors((prev) => ({ ...prev, expert: false }));
                           }}
@@ -373,6 +478,7 @@ const DoctorSignUpInfoScreen = () => {
                           onPress={() => {
                             setHospital(item);
                             setShowHospitalDropdown(false);
+                            setFormData((prev) => ({ ...prev, hospital: item })); // อัปเดต formData
                             setErrors((prev) => ({ ...prev, hospital: false }));
                           }}
                           className="p-4 border-b border-gray"
