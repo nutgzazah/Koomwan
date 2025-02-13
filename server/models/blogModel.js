@@ -12,7 +12,7 @@ const blogSchema = new mongoose.Schema({
     },
     image: {
         type: String, // URL หรือ path ของรูปภาพ
-        required: true
+        required: false
     },
     date: {
         type: Date,
@@ -23,7 +23,7 @@ const blogSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    author: {
+    ref: {
         type: String,
         required: true,
         trim: true

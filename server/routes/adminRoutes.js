@@ -1,5 +1,6 @@
 const express = require('express')
 const { getUserByUsername, getAllUser, getAllDoctor, getDoctorById } = require('../controllers/adminController')
+const { addBlog, getAllBlog, getBlogById, editBlog, deleteBlog } = require('../controllers/adminBlogController')
 
 //router object
 const router = express.Router()
@@ -11,6 +12,14 @@ router.get("/user", getAllUser);
 router.get("/doctor", getAllDoctor);
 router.get("/user/:username", getUserByUsername);
 router.get("/doctor/:id", getDoctorById);
+
+// Blog data
+router.post("/addBlog", addBlog);
+router.get("/blog", getAllBlog);
+router.get("/blog/:id", getBlogById);
+router.put("/editBlog/:id", editBlog);
+router.delete("/deleteBlog/:id", deleteBlog);
+
 
 //export
 module.exports = router

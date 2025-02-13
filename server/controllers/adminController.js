@@ -1,5 +1,6 @@
 const userModel = require("../models/userModel");
 const doctorModel = require("../models/doctorModel");
+const blogModel = require("../models/blogModel");
 
 // Get user by username
 const getUserByUsername = async (req, res) => {
@@ -112,5 +113,4 @@ const getDoctorById = async (req, res) => {
     }
 };
 
-
-module.exports = { getUserByUsername, getAllUser, getAllDoctor, getDoctorById };
+module.exports = { getUserByUsername, getAllUser, getAllDoctor, getDoctorById};
