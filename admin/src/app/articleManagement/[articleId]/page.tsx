@@ -69,7 +69,6 @@ const ArticleId: React.FC = () => {
         }
       </div>
 
-
       {/* Image */}
       <div className="w-full h-auto mb-6">
         <img

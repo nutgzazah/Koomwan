@@ -113,4 +113,54 @@ const getDoctorById = async (req, res) => {
     }
 };
 
-module.exports = { getUserByUsername, getAllUser, getAllDoctor, getDoctorById};
+
+const editStatusDoctor = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, reason } = req.body;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Doctor ID is required",
+            });
+        }
+
+        if (!status || !['pending', 'approve', 'disapprove'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid status. Allowed values: pending, approve, disapprove",
+            });
+        }
+
+        const doctor = await doctorModel.findById(id);
+        if (!doctor) {
+            return res.status(404).json({
+                success: false,
+                message: "Doctor not found",
+            });
+        }
+
+        // Update only the status and reason (if provided)
+        doctor.approval.status = status;
+        if (reason) doctor.approval.reason = reason;
+
+        await doctor.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `Doctor status updated to ${status}`,
+            data: doctor,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error updating doctor status",
+            error: error.message,
+        });
+    }
+};
+
+
+module.exports = { getUserByUsername, getAllUser, getAllDoctor, getDoctorById, editStatusDoctor};
