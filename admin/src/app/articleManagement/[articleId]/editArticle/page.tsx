@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import blogs from '../../../../data/blog.json';
 import { BlogInterface } from "@/interfaces/blogInterface";
 import Image from "next/image";
+import axios from "axios";
 import DeletePopup from "./components/DeletePopup";
 
 const categories = [
@@ -17,19 +17,38 @@ const categories = [
 ];
 
 const EditBlogForm: React.FC = () => {
-  const { articleId } = useParams();
+  const { articleId } = useParams() as { articleId: string };
   const [blog, setBlog] = useState<BlogInterface | null>(null);
-  const blogList = blogs as BlogInterface[];
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const router = useRouter();
-  const [ isDeletePopupOpen, setIsDeletePopupOpen ] = useState(false)
 
   useEffect(() => {
-    const foundBlog = blogList.find((b) => b.blog_id === articleId);
-    if (foundBlog) {
-      setBlog(foundBlog);
-    }
-  }, [articleId, blogList]);
-
+    const fetchBlog = async () => {
+      if (!articleId) return;
+      setLoading(true);
+      try {
+        const response = await axios.get(`http://localhost:8080/api/v1/admin/blog/${articleId}`);
+        console.log("Fetched blog data:", response.data);
+        
+        setBlog({
+          ...response.data.data,
+          category: Array.isArray(response.data.data.category) 
+            ? response.data.data.category 
+            : typeof response.data.data.category === "string"
+            ? response.data.data.category.split(",").map((c: string) => c.trim()) 
+            : [],
+        });
+      } catch (error) {
+        console.error("Error fetching blog data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchBlog();
+  }, [articleId]);
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (blog) {
       const { name, value } = e.target;
@@ -42,20 +61,33 @@ const EditBlogForm: React.FC = () => {
 
   const handleCategoryChange = (category: string) => {
     if (blog) {
-      const updatedCategories = blog.category.includes(category)
-        ? blog.category.filter((c) => c !== category)
-        : [...blog.category, category];
-
+      const updatedCategories = Array.isArray(blog.category)
+        ? blog.category.includes(category)
+          ? blog.category.filter((c) => c !== category)
+          : [...blog.category, category]
+        : [category];
+  
       setBlog({
         ...blog,
         category: updatedCategories,
       });
     }
   };
+  
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (blog) {
-      console.log("Updated Blog:", blog);
+      try {
+        const blogData = {
+          ...blog,
+          category: Array.isArray(blog.category) ? blog.category.join(", ") : blog.category, 
+        };
+  
+        await axios.put(`http://localhost:8080/api/v1/admin/editBlog/${articleId}`, blogData);
+        router.push("/articleManagement");
+      } catch (error) {
+        console.error("Error updating blog:", error);
+      }
     }
   };
 
@@ -63,19 +95,34 @@ const EditBlogForm: React.FC = () => {
     setIsDeletePopupOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    console.log("Deleting blog:", blog?.blog_id);
-    setIsDeletePopupOpen(false);
-    router.push("/articleManagement");
+  const handleDeleteConfirm = async () => {
+    if (!articleId) {
+      console.error("Error: articleId is undefined");
+      return;
+    }
+  
+    try {
+      console.log("Deleting blog:", articleId);
+      await axios.delete(`http://localhost:8080/api/v1/admin/deleteBlog/${articleId}`);
+  
+      setIsDeletePopupOpen(false);
+      router.push("/articleManagement"); 
+    } catch (error) {
+      console.error("Error deleting blog:", error);
+    }
   };
+  
+
+  if (loading) {
+    return <div className="text-center p-4">Loading...</div>;
+  }
 
   if (!blog) {
-    return <div>Loading...</div>;
+    return <div className="text-center p-4">ไม่พบบทความ</div>;
   }
 
   return (
     <div className="w-full flex flex-col gap-4">
-
       <div>
         <label className="text-bold_detail" htmlFor="title">ชื่อบทความ</label>
         <input
@@ -119,7 +166,8 @@ const EditBlogForm: React.FC = () => {
         </div>
       </div>
 
-      <div>
+      {/* รูปภาพเว้นไว้ก่อน */}
+      {/* <div>
         <label className="text-bold_detail" htmlFor="image">รูปภาพ</label>
         <input
           type="text"
@@ -133,7 +181,7 @@ const EditBlogForm: React.FC = () => {
         <div className="mt-4 w-full h-48 border-dashed border-2 rounded-md flex items-center justify-center">
           <Image src={blog.image} alt="Blog Image" width={200} height={200} />
         </div>
-      </div>
+      </div> */}
 
       <div>
         <label className="text-bold_detail" htmlFor="content">เนื้อหา</label>
@@ -147,33 +195,24 @@ const EditBlogForm: React.FC = () => {
         ></textarea>
       </div>
       <div className="w-full flex justify-end">
-          <button
-              onClick={handleDelete}
-              className="w-fit text-abnormal hover:underline"
-          >ลบบทความ
-          </button>
+        <button onClick={handleDelete} className="w-fit text-abnormal hover:underline">ลบบทความ</button>
       </div>
       
       <div className="flex justify-center space-x-4">
-        <button
-          onClick={handleSubmit}
-          className="btn blue-btn short-btn"
-        >
-          ส่งบทความ
-        </button>
-        <button
-          onClick={() => router.back()}
-          className="btn white-btn short-btn"
-        >
-          ยกเลิก
-        </button>
+        <button onClick={handleSubmit} className="btn blue-btn short-btn">ส่งบทความ</button>
+        <button onClick={() => router.back()} className="btn white-btn short-btn">ยกเลิก</button>
       </div>
 
-      {isDeletePopupOpen && (
-        <DeletePopup onClose={() => setIsDeletePopupOpen(false)} onConfirm={handleDeleteConfirm} />
+      {isDeletePopupOpen && blog?._id && (
+        <DeletePopup 
+          onClose={() => setIsDeletePopupOpen(false)} 
+          onConfirm={handleDeleteConfirm} 
+          articleId={blog._id} 
+        />
       )}
+
+
     </div>
-    
   );
 };
 

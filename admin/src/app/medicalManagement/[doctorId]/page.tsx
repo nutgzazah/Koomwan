@@ -11,7 +11,7 @@ import ApprovePopup from "../components/ApprovePopup";
 
 const DoctorID: React.FC = () => {
   const params = useParams();
-  const doctorId = params?.doctorId || params?.id; // Ensure correct extraction
+  const doctorId = params?.doctorId || params?.id;
 
   const [doctor, setDoctor] = useState<DoctorInterface | null>(null);
   const [isDisapprovePopupOpen, setIsDisapprovePopupOpen] = useState(false);
@@ -25,7 +25,6 @@ const DoctorID: React.FC = () => {
         const response = await axios.get(`http://localhost:8080/api/v1/admin/doctor/${doctorId}`);
         console.log("Fetched doctor data:", response.data);
 
-        // Adjust depending on API response structure
         setDoctor(response.data.data || response.data);
       } catch (error) {
         console.error("Error fetching doctor data:", error);
@@ -43,18 +42,43 @@ const DoctorID: React.FC = () => {
     );
   }
 
-  const handleApprove = () => {
-    setIsApprovePopupOpen(true);
-  };
+  const handleApprove = async () => {
+    if (!doctorId) return;
+  
+    try {
+      const response = await axios.put(`http://localhost:8080/api/v1/admin/doctor/status/${doctorId}`, {
+        status: "approve",
+      });
+  
+      console.log("Doctor approved:", response.data);
+      setDoctor((prev) => prev ? { ...prev, approval: { ...prev.approval, status: "approve" } } : prev);
+      setIsApprovePopupOpen(false);
+    } catch (error) {
+      console.error("Error approving doctor:", error);
+    }
+  };  
 
   const handleDisapprove = () => {
     setIsDisapprovePopupOpen(true);
   };
 
-  const handleDisapproveConfirm = (reason: string) => {
-    console.log("Disapproving doctor with reason:", reason);
-    setIsDisapprovePopupOpen(false);
+  const handleDisapproveConfirm = async (reason: string) => {
+    if (!doctorId) return;
+  
+    try {
+      const response = await axios.put(`http://localhost:8080/api/v1/admin/doctor/status/${doctorId}`, {
+        status: "disapprove",
+        reason: reason,
+      });
+  
+      console.log("Doctor disapproved:", response.data);
+      setDoctor((prev) => prev ? { ...prev, approval: { status: "disapprove", reason: reason } } : prev);
+      setIsDisapprovePopupOpen(false);
+    } catch (error) {
+      console.error("Error disapproving doctor:", error);
+    }
   };
+  
 
   return (
     <div className="w-full">

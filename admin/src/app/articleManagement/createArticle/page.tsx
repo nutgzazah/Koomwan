@@ -3,17 +3,20 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BlogInterface } from "@/interfaces/blogInterface";
+import axios from "axios";
 
 const CreateArticle: React.FC = () => {
   const [blog, setBlog] = useState<Partial<BlogInterface>>({
     title: "",
-    publish_date: "",
+    date: "",
     category: [],
     image: "",
     content: "",
     ref: "",
   });
-   const router = useRouter();
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const router = useRouter();
 
   const categories = [
     "การดูแลสุขภาพ",
@@ -21,7 +24,8 @@ const CreateArticle: React.FC = () => {
     "โภชนาการ",
     "การออกกำลังกาย",
     "โรค",
-    "จิตใจ",
+    "ผู้ป่วยเบาหวาน",
+    "อื่นๆ",
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -38,13 +42,55 @@ const CreateArticle: React.FC = () => {
     });
   };
 
-  const handleSubmit = () => {
-    console.log("Blog submitted: ", blog);
-    router.push("/articleManagement")
+  const validate = () => {
+    const errors: Record<string, string> = {};
+    if (!blog.title) errors.title = 'Title is required';
+    if (!blog.category || blog.category.length === 0) errors.category = 'Category is required';
+    if (!blog.content) errors.content = 'Content is required';
+    if (!blog.ref) errors.ref = 'Ref is required';
+    return errors;
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+  
+    try {
+      const blogData = {
+        ...blog,
+        date: new Date().toISOString(),
+        category: Array.isArray(blog.category) ? blog.category.join(", ") : blog.category, // Ensure correct format
+      };
+  
+      console.log("Sending blog data:", JSON.stringify(blogData, null, 2)); // Debug log
+  
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/admin/addBlog",
+        blogData,
+        { headers: { "Content-Type": "application/json" } } 
+      );
+  
+      console.log("Response:", response.data); 
+      router.push("/articleManagement");
+    } catch (error) {
+      console.error("Error adding blog:", error);
+  
+      if (axios.isAxiosError(error) && error.response) {
+        console.error("Backend Response:", error.response.data);
+        setServerError(error.response.data.message || "An error occurred");
+      } else {
+        setServerError("An unexpected error occurred");
+      }
+    }
+  };  
+
   const handleCancel = () => {
-    router.back()
+    router.back();
   };
 
   return (
@@ -121,16 +167,10 @@ const CreateArticle: React.FC = () => {
       </div>
 
       <div className="flex justify-center space-x-4">
-        <button
-          onClick={handleSubmit}
-          className="btn blue-btn short-btn"
-        >
+        <button onClick={handleSubmit} className="btn blue-btn short-btn">
           ส่งบทความ
         </button>
-        <button
-          onClick={handleCancel}  
-          className="btn white-btn short-btn"
-        >
+        <button onClick={handleCancel} className="btn white-btn short-btn">
           ยกเลิก
         </button>
       </div>
