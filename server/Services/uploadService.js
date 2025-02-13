@@ -5,6 +5,8 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { Upload } = require('@aws-sdk/lib-storage'); // นำเข้า Upload
 const mime = require("mime-types"); // ใช้ตรวจสอบ Content-Type
 dotenv.config();
+const crypto = require('crypto');
+const path = require('path');
 
 const s3 = new S3Client({
     endpoint: process.env.R2_ENDPOINT, // Cloudflare R2 Endpoint
@@ -16,6 +18,40 @@ const s3 = new S3Client({
 });
 
 module.exports = {
+
+    uploadToR2v2: async (fileBuffer, fileName, folder) => {
+        const contentType = mime.lookup(fileName) || "application/octet-stream"; // รองรับทุกไฟล์
+        const randomString = crypto.randomBytes(3).toString('hex');
+        const timestamp = Date.now();
+        const fileExtension = path.extname(fileName).toLowerCase();
+        const newFileName = `koomwan-${path.basename(fileName, fileExtension)}-${timestamp}-${randomString}${fileExtension}`;
+        const key = `${folder}/${newFileName}`;
+        const params = {
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: contentType,
+        ACL: 'public-read' // กำหนดให้สามารถเข้าถึงได้ผ่าน URL
+    };
+
+        // ใช้ Upload สำหรับทั้งไฟล์ขนาดเล็กและขนาดใหญ่
+        try {
+            const upload = new Upload({
+                client: s3,
+                params: params,
+            });
+            const data = await upload.done(); // ทำการอัปโหลดไฟล์
+            console.log(data);
+
+            const R2filePath = `${folder}/${newFileName}`;
+            console.log(R2filePath)
+            return R2filePath;
+
+        } catch (err) {
+            console.error("Error uploading file:", err);
+        }
+    },
+
     //อัปโหลดลง Cloudflare Storage
     uploadToR2: async (filePath, fileName, folder) => {
         const contentType = mime.lookup(fileName) || "application/octet-stream"; // รองรับทุกไฟล์
