@@ -1,7 +1,7 @@
 export interface BlogInterface {
-    blog_id: string;
+    _id: string;
     title: string;
-    publish_date: string;
+    date: string;
     category: string[];
     image: string;
     content: string;
