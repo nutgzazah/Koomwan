@@ -77,4 +77,40 @@ const getAllDoctor = async (req, res) => {
     }
 };
 
-module.exports = { getUserByUsername, getAllUser, getAllDoctor };
+// Get doctor by ID
+const getDoctorById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Doctor ID is required",
+            });
+        }
+
+        const doctor = await doctorModel.findById(id).select("-password"); // Exclude password for security
+
+        if (!doctor) {
+            return res.status(404).json({
+                success: false,
+                message: "Doctor not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: doctor,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error fetching doctor data",
+            error: error.message,
+        });
+    }
+};
+
+
+module.exports = { getUserByUsername, getAllUser, getAllDoctor, getDoctorById };

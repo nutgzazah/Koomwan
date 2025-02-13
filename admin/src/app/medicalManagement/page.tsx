@@ -1,33 +1,47 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import DoctorTable from "./components/DoctorTable";
 import { DoctorInterface } from "@/interfaces/doctorInterface";
 import { statusMapping } from "@/utils/statusMapping";
-import doctors from "../../data/doctors.json";
 
 export default function MedicalManagement() {
-  const doctorList = doctors as DoctorInterface[];
-
+  const [doctorList, setDoctorList] = useState<DoctorInterface[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("รออนุมัติ");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/api/v1/admin/doctor");
+        console.log("Fetched doctor data:", response.data.data);
+        setDoctorList(response.data.data);
+      } catch (error) {
+        console.error("Error fetching doctor data:", error);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
+
   const filteredDoctors = doctorList.filter((doctor) => {
-    const status = Object.keys(statusMapping).find(
-      (key) => statusMapping[key] === filterStatus
+    const statusKey = Object.keys(statusMapping).find(
+      (key) => key === doctor.approval.status 
     );
+    const status = statusKey ? statusMapping[statusKey] : "";
 
     const searchInFields = [
-      `${doctor.first_name} ${doctor.last_name}`
+      `${doctor.firstname} ${doctor.lastname}`
     ]
       .join(" ") 
       .toLowerCase();
 
     return (
-      doctor.approval === status &&
+      status === filterStatus &&
       searchInFields.startsWith(searchTerm.toLowerCase())
     );
-  });
+});
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full space-y-4">
