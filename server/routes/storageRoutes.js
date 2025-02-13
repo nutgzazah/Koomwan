@@ -14,14 +14,9 @@ const generateFileName = (file) => {
     const fileExtension = path.extname(file.originalname).toLowerCase();
     const originalName = path.basename(file.originalname, fileExtension); // เอาชื่อไฟล์เดิมที่ไม่รวมส่วนขยาย
 
-    // กำหนด pattern สำหรับชื่อไฟล์ตามประเภท
-    if (fileExtension === '.pdf') {
-        return `koomwan-${originalName}-${timestamp}-${randomString}-doc${fileExtension}`;
-    } else if (fileExtension === '.jpg' || fileExtension === '.jpeg' || fileExtension === '.png') {
-        return `koomwan-${originalName}-${timestamp}-${randomString}-img${fileExtension}`;
-    } else {
-        return `koomwan-${originalName}-${timestamp}-${randomString}${fileExtension}`; // กรณีอื่นๆ
-    }
+
+    return `koomwan-${originalName}-${timestamp}-${randomString}${fileExtension}`; 
+
 };
 
 const storage = multer.diskStorage({
