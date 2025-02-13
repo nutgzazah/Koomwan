@@ -15,21 +15,22 @@ const DoctorTable: React.FC<DoctorTableProps> = ({ doctors }) => {
 
   const data = doctors.map((doctor, index) => [
     index + 1, 
-    `${doctor.first_name} ${doctor.last_name}`,
+    `${doctor.firstname} ${doctor.lastname}`,
     doctor.username,
     doctor.occupation,
     doctor.phone,
     doctor.email,
-    statusMapping[doctor.approval] || "สถานะไม่ทราบ",
+    statusMapping[doctor.approval.status] || "สถานะไม่ทราบ",
   ]);
 
   const handleRowClick = (rowData: (string | React.ReactNode)[]) => {
-    const doctorIndex = Number(rowData[0]); 
-    const doctor = doctors[doctorIndex - 1]; 
-    if (doctor && doctor.doctor_id) {
-      router.push(`/medicalManagement/${doctor.doctor_id}`); 
+    const doctorIndex = Number(rowData[0]) - 1;
+    const doctor = doctors[doctorIndex]; 
+
+    if (doctor?._id) {
+      router.push(`/medicalManagement/${doctor._id}`); 
     } else {
-      console.warn("Invalid doctor ID:", doctor?.doctor_id);
+      console.warn("Invalid doctor ID:", doctor?._id);
     }
   };
 
