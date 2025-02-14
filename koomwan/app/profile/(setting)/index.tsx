@@ -21,7 +21,7 @@ export default function SettingsScreen() {
         <Card>
           <TouchableOpacity
             className="flex-row items-center py-1 px-2 mt-2"
-            onPress={() => router.push("/profile/userProfile")}
+            onPress={() => router.push("/profile/term")}
           >
             <Text className="text-description text-secondary flex-1 font-bold">
               เงื่อนไขการให้บริการ
@@ -36,7 +36,7 @@ export default function SettingsScreen() {
         <Card>
           <TouchableOpacity
             className="flex-row items-center py-1 px-2 mt-2"
-            onPress={() => router.push("/profile/userProfile")}
+            onPress={() => router.push("/profile/privacy")}
           >
             <Text className="text-description text-secondary flex-1 font-bold">
               นโยบายความเป็นส่วนตัว
@@ -51,7 +51,7 @@ export default function SettingsScreen() {
         <Card>
           <TouchableOpacity
             className="flex-row items-center py-1 px-2 mt-2"
-            onPress={() => router.push("/profile/userProfile")}
+            onPress={() => router.push("/profile/(help)")}
           >
             <Text className="text-description text-secondary flex-1 font-bold">
               การช่วยเหลือผู้ใช้งาน

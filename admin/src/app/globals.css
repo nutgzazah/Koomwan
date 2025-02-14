@@ -46,7 +46,6 @@ body {
 
 /* button section */
 .btn {
-  border-radius: 5px;
   font-size: 14px;
   font-weight: 500;
   transition: background 0.3s ease, color 0.3s ease;
@@ -55,10 +54,12 @@ body {
 
 .long-btn {
   padding: 10px 80px;
+  border-radius: 5px;
 }
 
 .short-btn {
   padding: 10px 40px;
+  border-radius: 5px;
 }
 
 .blue-btn {

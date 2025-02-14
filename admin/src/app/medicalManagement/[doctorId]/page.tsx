@@ -1,43 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import axios from "axios";
 import { DoctorInterface } from "@/interfaces/doctorInterface";
-import doctors from "@/data/doctors.json"
 import Image from "next/image";
 import StatusBadge from "../components/StatusBadge";
 import DisapproveReasonPopup from "../components/DisapproveReason";
 import ApprovePopup from "../components/ApprovePopup";
 
-const transformData = (data: DoctorInterface[]) => {
-  if (!Array.isArray(data)) return [];
-  return data.map((item, index) => ({
-    transID: index + 1,
-    doctorId: item.doctor_id,
-    username: item.username,
-    email: item.email,
-    phone: item.phone,
-    name: `${item.first_name} ${item.last_name}`,
-    occupation: item.occupation,
-    expert: item.expert || "ไม่มีข้อมูล",
-    hospital: item.hospital,
-    document: item.document || "#",
-    approval: item.approval,
-    reason: item.reason || "",
-    image: item.image || "/assets/doctor-default.jpg",
-  }));
-};
-
 const DoctorID: React.FC = () => {
-  const { doctorId } = useParams();
-  const transformedDoctors = transformData(doctors);
+  const params = useParams();
+  const doctorId = params?.doctorId || params?.id;
 
+  const [doctor, setDoctor] = useState<DoctorInterface | null>(null);
   const [isDisapprovePopupOpen, setIsDisapprovePopupOpen] = useState(false);
   const [isApprovePopupOpen, setIsApprovePopupOpen] = useState(false);
 
-  const doctor = transformedDoctors.find(
-    (d) => String(d.doctorId) === doctorId
-  );
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      if (!doctorId) return;
+
+      try {
+        const response = await axios.get(`http://localhost:8080/api/v1/admin/doctor/${doctorId}`);
+        console.log("Fetched doctor data:", response.data);
+
+        setDoctor(response.data.data || response.data);
+      } catch (error) {
+        console.error("Error fetching doctor data:", error);
+      }
+    };
+
+    fetchDoctor();
+  }, [doctorId]);
 
   if (!doctor) {
     return (
@@ -47,40 +42,85 @@ const DoctorID: React.FC = () => {
     );
   }
 
-  const handleApprove = () => {
-    setIsApprovePopupOpen(true);
-  };
+  const handleApprove = async () => {
+    if (!doctorId) return;
+  
+    try {
+      const response = await axios.put(`http://localhost:8080/api/v1/admin/doctor/status/${doctorId}`, {
+        status: "approve",
+      });
+  
+      console.log("Doctor approved:", response.data);
+      setDoctor((prev) => prev ? { ...prev, approval: { ...prev.approval, status: "approve" } } : prev);
+      setIsApprovePopupOpen(false);
+    } catch (error) {
+      console.error("Error approving doctor:", error);
+    }
+  };  
 
   const handleDisapprove = () => {
     setIsDisapprovePopupOpen(true);
   };
 
-  const handleDisapproveConfirm = (reason: string) => {
-    console.log("Disapproving doctor with reason:", reason);
-    setIsDisapprovePopupOpen(false);
+  const handleDisapproveConfirm = async (reason: string) => {
+    if (!doctorId) return;
+  
+    try {
+      const response = await axios.put(`http://localhost:8080/api/v1/admin/doctor/status/${doctorId}`, {
+        status: "disapprove",
+        reason: reason,
+      });
+  
+      console.log("Doctor disapproved:", response.data);
+      setDoctor((prev) => prev ? { ...prev, approval: { status: "disapprove", reason: reason } } : prev);
+      setIsDisapprovePopupOpen(false);
+    } catch (error) {
+      console.error("Error disapproving doctor:", error);
+    }
   };
+  
 
   return (
     <div className="w-full">
       <div className="flex justify-between w-full py-2 px-10 gap-20">
         {/* Image Section */}
         <div className="w-2/5 h-96 flex justify-center items-center">
+            <Image
+              src="/assets/doctor-default.jpg"
+              alt="Default profile"
+              width={300}
+              height={300}
+              className="rounded-full"
+            />
+        
+        {/* {doctor.image ? (
           <Image
             src={doctor.image}
-            alt={`${doctor.name}'s profile`}
+            alt={`${doctor.firstname} ${doctor.lastname}'s profile`}
             width={300}
             height={300}
             className="rounded-full"
           />
+          ) : (
+            <Image
+              src="/assets/doctor-default.jpg"
+              alt="Default profile"
+              width={300}
+              height={300}
+              className="rounded-full"
+            />
+          )
+        } */}
+
         </div>
 
         {/* Details Section */}
         <div className="flex justify-start items-center w-3/5">
-          <table className="w-full text-left">
+          <table className="w-full text-left text-secondary">
             <tbody>
               <tr>
                 <td className="text-bold_detail py-2">ชื่อ-นามสกุล</td>
-                <td className="py-2 text-detail_2">{doctor.name}</td>
+                <td className="py-2 text-detail_2">{doctor.firstname} {doctor.lastname}</td>
               </tr>
               <tr>
                 <td className="text-bold_detail py-2">อาชีพ</td>
@@ -96,13 +136,13 @@ const DoctorID: React.FC = () => {
               </tr>
               <tr>
                 <td className="text-bold_detail py-2">ด้านที่เชี่ยวชาญ</td>
-                <td className="py-2 text-detail_2">{doctor.expert}</td>
+                <td className="py-2 text-detail_2">{doctor.expert || "ไม่มีข้อมูล"}</td>
               </tr>
               <tr>
                 <td className="text-bold_detail py-2">เอกสารประกอบทางการแพทย์</td>
                 <td className="py-2 text-detail_2">
                   <a
-                    href={doctor.document}
+                    href={doctor.document || "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-500 underline"
@@ -114,20 +154,20 @@ const DoctorID: React.FC = () => {
               <tr>
                 <td className="text-bold_detail py-2">สถานะ</td>
                 <td className="py-2 text-detail_2">
-                  <StatusBadge status={doctor.approval} />
+                  <StatusBadge status={doctor.approval.status} />
                 </td>
               </tr>
-              {doctor.approval === "disapprove" && doctor.reason && (
+              {doctor.approval.status === "disapprove" && doctor.approval.reason && (
                 <tr>
                   <td className="font-bold py-2">เหตุผล</td>
-                  <td className="py-2 text-detail_2 text-abnormal">{doctor.reason}</td>
+                  <td className="py-2 text-detail_2 text-abnormal">{doctor.approval.reason}</td>
                 </tr>
               )}
               <tr>
                 <td className="text-bold_detail py-2">จัดการสถานะ</td>
                 <td>
                   <div className="flex flex-row gap-5">
-                    {doctor.approval === "pending" && (
+                    {doctor.approval.status === "pending" && (
                       <>
                         <button
                           className="btn green-btn short-btn"
@@ -144,7 +184,7 @@ const DoctorID: React.FC = () => {
                       </>
                     )}
 
-                    {doctor.approval === "approve" && (
+                    {doctor.approval.status === "approve" && (
                       <button
                         className="btn red-btn short-btn"
                         onClick={handleDisapprove}
@@ -153,7 +193,7 @@ const DoctorID: React.FC = () => {
                       </button>
                     )}
 
-                    {doctor.approval === "disapprove" && (
+                    {doctor.approval.status === "disapprove" && (
                       <button
                         className="btn green-btn short-btn"
                         onClick={handleApprove}
@@ -171,7 +211,7 @@ const DoctorID: React.FC = () => {
 
       {isDisapprovePopupOpen && (
         <DisapproveReasonPopup
-          doctorName={doctor.name}
+          doctorName={`${doctor.firstname} ${doctor.lastname}`}
           onClose={() => setIsDisapprovePopupOpen(false)}
           onConfirm={handleDisapproveConfirm}
         />
@@ -179,7 +219,7 @@ const DoctorID: React.FC = () => {
 
       {isApprovePopupOpen && (
         <ApprovePopup
-          doctorName={doctor.name}
+          doctorName={`${doctor.firstname} ${doctor.lastname}`}
           onClose={() => setIsApprovePopupOpen(false)}
         />
       )}

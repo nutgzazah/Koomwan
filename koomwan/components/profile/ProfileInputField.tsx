@@ -63,7 +63,7 @@ export const ProfileInputField = ({
         {/* Show date value only when picker is not open */}
         {!showDatePicker && (
           <TouchableOpacity
-            className="bg-background rounded-lg w-[150px] px-4 py-2"
+            className="bg-background rounded-lg w-[150px] px-4 py-2 mb-2"
             onPress={onPressDate}
           >
             <Text className="text-description text-secondary font-regular">
@@ -93,7 +93,7 @@ export const ProfileInputField = ({
       </View>
     ) : (
       /* Regular Text Input */
-      <View className="bg-background rounded-lg w-[150px] px-4 py-2">
+      <View className="bg-background rounded-lg w-[150px] px-4 py-2 mb-2">
         <TextInput
           className="text-description text-secondary font-regular"
           value={value}

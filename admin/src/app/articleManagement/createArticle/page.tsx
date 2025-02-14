@@ -1,17 +1,22 @@
 'use client';
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { BlogInterface } from "@/interfaces/blogInterface";
+import axios from "axios";
 
 const CreateArticle: React.FC = () => {
   const [blog, setBlog] = useState<Partial<BlogInterface>>({
     title: "",
-    author: "",
-    publish_date: "",
+    date: "",
     category: [],
     image: "",
     content: "",
+    ref: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const router = useRouter();
 
   const categories = [
     "การดูแลสุขภาพ",
@@ -19,7 +24,8 @@ const CreateArticle: React.FC = () => {
     "โภชนาการ",
     "การออกกำลังกาย",
     "โรค",
-    "จิตใจ",
+    "ผู้ป่วยเบาหวาน",
+    "อื่นๆ",
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -36,16 +42,61 @@ const CreateArticle: React.FC = () => {
     });
   };
 
-  const handleSubmit = () => {
-    console.log("Blog submitted: ", blog);
+  const validate = () => {
+    const errors: Record<string, string> = {};
+    if (!blog.title) errors.title = 'Title is required';
+    if (!blog.category || blog.category.length === 0) errors.category = 'Category is required';
+    if (!blog.content) errors.content = 'Content is required';
+    if (!blog.ref) errors.ref = 'Ref is required';
+    return errors;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+  
+    try {
+      const blogData = {
+        ...blog,
+        date: new Date().toISOString(),
+        category: Array.isArray(blog.category) ? blog.category.join(", ") : blog.category, // Ensure correct format
+      };
+  
+      console.log("Sending blog data:", JSON.stringify(blogData, null, 2)); // Debug log
+  
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/admin/addBlog",
+        blogData,
+        { headers: { "Content-Type": "application/json" } } 
+      );
+  
+      console.log("Response:", response.data); 
+      router.push("/articleManagement");
+    } catch (error) {
+      console.error("Error adding blog:", error);
+  
+      if (axios.isAxiosError(error) && error.response) {
+        console.error("Backend Response:", error.response.data);
+        setServerError(error.response.data.message || "An error occurred");
+      } else {
+        setServerError("An unexpected error occurred");
+      }
+    }
+  };  
+
+  const handleCancel = () => {
+    router.back();
   };
 
   return (
-    <div className="p-8 w-full">
-      <h2 className="text-3xl font-bold mb-8">จัดการบทความ</h2>
-
-      <div className="mb-6">
-        <label className="block font-bold mb-2" htmlFor="title">เพิ่มบทความ</label>
+    <div className="w-full flex flex-col gap-4">
+      <div>
+        <label className="text-bold_detail" htmlFor="title">ชื่อบทความ</label>
         <input
           type="text"
           id="title"
@@ -53,25 +104,25 @@ const CreateArticle: React.FC = () => {
           placeholder="ชื่อบทความ"
           value={blog.title || ""}
           onChange={handleChange}
-          className="px-4 py-2 border rounded-md focus:outline-none w-full text-lg"
+          className="input"
         />
       </div>
 
-      <div className="mb-6">
-        <label className="block font-bold mb-2" htmlFor="author">ผู้เขียน</label>
+      <div>
+        <label className="text-bold_detail" htmlFor="ref">อ้างอิง</label>
         <input
           type="text"
-          id="author"
-          name="author"
-          placeholder="ผู้เขียน"
-          value={blog.author || ""}
+          id="ref"
+          name="ref"
+          placeholder="อ้างอิง"
+          value={blog.ref || ""}
           onChange={handleChange}
-          className="px-4 py-2 border rounded-md focus:outline-none w-full text-lg"
+          className="input"
         />
       </div>
 
-      <div className="mb-6">
-        <label className="block font-bold mb-2">หมวดหมู่</label>
+      <div>
+        <label className="text-bold_detail">หมวดหมู่</label>
         <div className="flex flex-wrap gap-4">
           {categories.map((category) => (
             <label key={category} className="flex items-center gap-2">
@@ -87,8 +138,8 @@ const CreateArticle: React.FC = () => {
         </div>
       </div>
 
-      <div className="mb-6">
-        <label className="block font-bold mb-2" htmlFor="image">รูปภาพ</label>
+      <div>
+        <label className="text-bold_detail" htmlFor="image">รูปภาพ</label>
         <input
           type="text"
           id="image"
@@ -96,35 +147,30 @@ const CreateArticle: React.FC = () => {
           placeholder="URL ของรูปภาพ"
           value={blog.image || ""}
           onChange={handleChange}
-          className="px-4 py-2 border rounded-md focus:outline-none w-full text-lg"
+          className="input"
         />
         <div className="mt-4 w-full h-48 border-dashed border-2 rounded-md flex items-center justify-center">
           <span className="text-gray-500">เพิ่มรูปภาพ</span>
         </div>
       </div>
 
-      <div className="mb-6">
-        <label className="block font-bold mb-2" htmlFor="content">เนื้อหา</label>
+      <div>
+        <label className="text-bold_detail" htmlFor="content">เนื้อหา</label>
         <textarea
           id="content"
           name="content"
           placeholder="กรอกเนื้อหา"
           value={blog.content || ""}
           onChange={handleChange}
-          className="px-4 py-2 border rounded-md focus:outline-none w-full h-40 text-lg"
+          className="input h-64"
         ></textarea>
       </div>
 
-      <div className="flex justify-between">
-        <button
-          onClick={handleSubmit}
-          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
-        >
+      <div className="flex justify-center space-x-4">
+        <button onClick={handleSubmit} className="btn blue-btn short-btn">
           ส่งบทความ
         </button>
-        <button
-          className="bg-gray-300 text-black px-6 py-2 rounded-md hover:bg-gray-400"
-        >
+        <button onClick={handleCancel} className="btn white-btn short-btn">
           ยกเลิก
         </button>
       </div>
