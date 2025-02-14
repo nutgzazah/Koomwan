@@ -101,20 +101,22 @@ const AddMedicineScreen: React.FC = () => {
           />
 
           {/*Dropdown Choice For Chosse Type*/}
-        <Text className="text-description font-bold font-sans text-secondary px-1 mb-2">ประเภท (Optional)</Text>
-        <Dropdown
-          choices={[
-            'ยาเฉพาะโรค',
-            'ยาสามัญประจำบ้าน',
-            'ยาใช้ภายนอก',
-            'ยาบำรุง',
-            'ยาวิตามินและเกลือแร่เสริม',
-            'อื่นๆ'
-          ]}
-          selectedChoice={selectedType}
-          onChoiceChange={(choice) => setSelectedType(choice)}
-          onOtherTextChange={(text) => setSelectedType(text)}
-        />
+          <Text className="text-description font-bold font-sans text-secondary px-1 mb-2">ประเภท (Optional)</Text>
+           <Dropdown
+            choices={[
+             'ยาเฉพาะโรค',
+             'ยาสามัญประจำบ้าน',
+             'ยาใช้ภายนอก',
+             'ยาบำรุง',
+             'ยาวิตามินและเกลือแร่เสริม',
+             'อื่นๆ'
+            ]}
+            selectedChoice={selectedType}
+            onChoiceChange={(choice) => setSelectedType(choice)}
+            onOtherTextChange={(text) => setSelectedType(text)}
+          />
+
+          
 
           {/* รายละเอียดของยา */}
           <InputFieldOne
