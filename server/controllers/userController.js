@@ -1,324 +1,87 @@
-const JWT = require('jsonwebtoken')
-const { hashPassword, comparePassword } = require('../helpers/authHelper');
-const userModel = require('../models/userModel')
-const doctorModel = require('../models/doctorModel')
+const userModel = require("../models/userModel");
+const doctorModel = require("../models/doctorModel");
+const healthInfoModel = require("../models/healthInfoModel");
 
-//register
-const registerController = async (req, res) => {
+
+//BEGINNER SETUp
+// ฟังก์ชันเช็คว่า userId มี healthinfo แล้วหรือยัง (รองรับทั้ง userModel และ doctorModel)
+const checkHealthInfoExists = async (userId) => {
     try {
-        const { username, email, password, phone } = req.body;
-        
-        // Validation
-        if (!username) {
-            return res.status(400).send({
-                success: false,
-                message: 'Username is required'
-            });
-        }
-        if (!email) {
-            return res.status(400).send({
-                success: false,
-                message: 'Email is required'
-            });
-        }
-        if (!password || password.length < 6) {
-            return res.status(400).send({
-                success: false,
-                message: 'Password is required and must be at least 6 characters long'
-            });
-        }
-        if (!phone) {
-            return res.status(400).send({
-                success: false,
-                message: 'Phone is required'
-            });
-        }
+        // ค้นหา userId จากทั้ง userModel และ doctorModel
+        let user = await userModel.findById(userId);
+        let userType = "user";
 
-         // Check if username already exists in userModel or doctorModel
-         const existingUsernameInUser = await userModel.findOne({ username });
-         const existingUsernameInDoctor = await doctorModel.findOne({ username });
-         if (existingUsernameInUser || existingUsernameInDoctor) {
-             return res.status(400).send({
-                 success: false,
-                 message: 'Username is already taken',
-             });
-         }
- 
-         // Check if email already exists in userModel or doctorModel
-         const existingEmailInUser = await userModel.findOne({ email });
-         const existingEmailInDoctor = await doctorModel.findOne({ email });
-         if (existingEmailInUser || existingEmailInDoctor) {
-             return res.status(400).send({
-                 success: false,
-                 message: 'Email is already registered',
-             });
-         }
- 
-         // Check if phone already exists in userModel or doctorModel
-         const existingPhoneInUser = await userModel.findOne({ phone });
-         const existingPhoneInDoctor = await doctorModel.findOne({ phone });
-         if (existingPhoneInUser || existingPhoneInDoctor) {
-             return res.status(400).send({
-                 success: false,
-                 message: 'Phone number is already registered',
-             });
-         }
- 
-         // Hash password
-         const hashedPassword = await hashPassword(password);
- 
-         // Save user
-         const user = await userModel({
-             username,
-             email,
-             password: hashedPassword,
-             phone,
-         }).save();
- 
-         return res.status(201).send({
-             success: true,
-             message: 'Registration successful, please login',
-         });
-
-    } catch (error) {
-        console.log(error);
-        return res.status(500).send({
-            success: false,
-            message: 'Error in register API',
-            error,
-        });
-    }
-}
-
-//User check Duplicate
-const checkDuplicateController = async (req, res) => {
-    try {
-        const { username, email, phone } = req.body;
-        // Check if username, email, or phone already exists
-        const existingUsernameUser = await userModel.findOne({ username });
-        const existingUsernameDoctor = await doctorModel.findOne({ username });
-        if (existingUsernameUser || existingUsernameDoctor) {
-            return res.status(400).send({
-                success: false,
-                message: 'Username is already taken'
-            });
-        }
-
-        const existingEmailInUser = await userModel.findOne({ email });
-        const existingEmailInDoctor = await doctorModel.findOne({ email });
-        if (existingEmailInUser || existingEmailInDoctor) {
-            return res.status(400).send({
-                success: false,
-                message: 'Email is already registered',
-            });
-        }
-
-        const existingPhoneInUser = await userModel.findOne({ phone });
-        const existingPhoneInDoctor = await doctorModel.findOne({ phone });
-        if (existingPhoneInUser || existingPhoneInDoctor) {
-            return res.status(400).send({
-                success: false,
-                message: 'Phone number is already registered',
-            });
-        }
-
-        // If no duplicates, return success
-        return res.status(201).send({
-            success: true,
-        });
-
-    } catch (error) {
-        console.log(error);
-        return res.status(500).send({
-            success: false,
-            message: 'Error in register API',
-            error,
-        });
-    }
-}
-
-
-
-//login
-const loginController = async (req,res) => {
-    try {
-        const { username, password } = req.body;
-    
-        // validation
-        if (!username) {
-          return res.status(500).send({
-            success: false,
-            message: 'Please provide username or phone number',
-          });
-        }
-        if (!password) {
-          return res.status(500).send({
-            success: false,
-            message: 'Please provide password',
-          });
-        }
-    
-        // Determine if username is a phone number or regular username
-        let user;
-        if (/^0[689]\d{8}$/.test(username)) {
-            // If it's a Thai phone number
-            user = await userModel.findOne({ phone: username });
-            if (!user) {
-                user = await doctorModel.findOne({ phone: username }); // Check in doctorModel if not found in userModel
-            }
-        } else {
-            // If it's a regular username
-            user = await userModel.findOne({ username });
-            if (!user) {
-                user = await doctorModel.findOne({ username }); // Check in doctorModel if not found in userModel
-            }
-        }
-    
         if (!user) {
-          return res.status(500).send({
-            success: false,
-            message: 'Username or phone number not found',
-          });
+            user = await doctorModel.findById(userId);
+            userType = "doctor";
         }
 
-        //match password
-        const match = await comparePassword(password, user.password)
-        if(!match){
-            return res.status(500).send({
-                success:false,
-                message:'Invalid username or password'
-            })
-        }
-        //TOKEN JWT
-        const token = await JWT.sign({ _id: user._id }, process.env.JWT_SECRET,{
-            expiresIn:'7d'
-        })
-
-        //แสดงข้อมูลหลัง Login สำเร็จแต่ไม่ต้องแสดง password ที่บันทึกไว้จริง
-        user.password = undefined
-
-        res.status(200).send({
-            success:true,
-            message:'Login successfully',
-            token,
-            user,
-        })
-
-    } catch (error) {
-        console.log(error)
-        return res.status(500).send({
-            success:false,
-            message:'Error in login API',
-            error
-        })
-    }
-}
-
-// check Username or phone number before reset password
-const checkUserResetPasswordController = async (req, res) => {
-    try {
-        const { username } = req.body;
-
-        // Validation
-        if (!username) {
-            return res.status(400).send({
-                success: false,
-                message: 'Username or phone number is required',
-            });
-        }
-
-        // Determine if username is a phone number or regular username
-        let user;
-        if (/^0[689]\d{8}$/.test(username)) {
-            // If it's a Thai phone number
-            user = await userModel.findOne({ phone: username });
-            if (!user) {
-                user = await doctorModel.findOne({ phone: username }); // Check in doctorModel if not found in userModel
-            }
-        } else {
-            // If it's a regular username
-            user = await userModel.findOne({ username });
-            if (!user) {
-                user = await doctorModel.findOne({ username }); // Check in doctorModel if not found in userModel
-            }
-        }
-    
+        // ถ้าไม่พบทั้งใน userModel และ doctorModel
         if (!user) {
-          return res.status(404).send({
-            success: false,
-            message: 'Username or phone number not found',
-          });
+            return { status: 404, message: "User not found in system" };
         }
-        return res.status(200).send({
-            success: true,
-            message: 'Able to change password',
-        });
+
+        // เช็คว่า user มี healthinfo หรือไม่
+        if (user.healthinfo) {
+            return { status: 400, message: `${userType} already has health information` };
+        } else {
+            return { status: 200, message: `${userType} does not have health information` };
+        }
     } catch (error) {
-        console.log(error);
-        return res.status(500).send({
-            success: false,
-            message: 'Error in resetting password',
-            error,
-        });
+        console.error(error);
+        return { status: 500, message: "Error checking health information" };
     }
 };
 
-// Reset password by Username or phone number
-const resetPasswordController = async (req, res) => {
+// ฟังก์ชันบันทึก healthinfo ใหม่ (รองรับทั้ง userModel และ doctorModel)
+const beginnerSetup = async (req, res) => {
     try {
-        const { username, newPassword } = req.body;
+        const { userId, diabetestype, gender, birthdate, height, weight, regularpill } = req.body;
 
-        // Validation
-        if (!username) {
-            return res.status(400).send({
-                success: false,
-                message: 'Username or phone number is required',
-            });
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
         }
 
-        // Determine if username is a phone number or regular username
-        let user;
-        if (/^0[689]\d{8}$/.test(username)) {
-            // If it's a Thai phone number
-            user = await userModel.findOne({ phone: username });
-            if (!user) {
-                user = await doctorModel.findOne({ phone: username }); // Check in doctorModel if not found in userModel
-            }
-        } else {
-            // If it's a regular username
-            user = await userModel.findOne({ username });
-            if (!user) {
-                user = await doctorModel.findOne({ username }); // Check in doctorModel if not found in userModel
-            }
+        // เช็คว่า userId มี healthinfo แล้วหรือยัง
+        const healthInfoCheck = await checkHealthInfoExists(userId);
+        if (healthInfoCheck.status !== 200) {
+            return res.status(healthInfoCheck.status).json({ success: false, message: healthInfoCheck.message });
         }
-    
+
+        // ถ้ายังไม่มี healthinfo ให้สร้างใหม่
+        const newHealthInfo = new healthInfoModel({
+            user: userId,
+            diabetestype,
+            gender,
+            birthdate,
+            height,
+            weight,
+            regularpill,
+        });
+
+        // บันทึก HealthInfo ใหม่
+        const savedHealthInfo = await newHealthInfo.save();
+
+        // ค้นหา user จากทั้ง userModel และ doctorModel
+        let user = await userModel.findById(userId);
         if (!user) {
-          return res.status(500).send({
-            success: false,
-            message: 'Username or phone number not found',
-          });
+            user = await doctorModel.findById(userId);
         }
 
-        // Hash the new password
-        const hashedPassword = await hashPassword(newPassword);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found after saving health info" });
+        }
 
-        // Update the password
-        user.password = hashedPassword;
+        // อัปเดต healthinfo ObjectId ใน user หรือ doctor
+        user.healthinfo = savedHealthInfo._id;
         await user.save();
 
-
-        return res.status(201).send({
-            success: true,
-            message: 'Password updated successfully',
-        });
+        return res.status(201).json({ success: true, message: "Health information saved successfully", healthInfoId: savedHealthInfo._id });
     } catch (error) {
-        console.log(error);
-        return res.status(500).send({
-            success: false,
-            message: 'Error in resetting password',
-            error,
-        });
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Error saving health information", error });
     }
 };
 
-module.exports = { registerController, loginController, checkDuplicateController, resetPasswordController, checkUserResetPasswordController };
+
+module.exports = { beginnerSetup, checkHealthInfoExists };

@@ -8,12 +8,19 @@ import {
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import BackButton from "../../global/components/BackButton";
 import ProfileInputField from "../../components/profile/ProfileInputField";
+import ProfileDropdown from "../../components/profile/ProfileDropdown";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+
+// Define available options
+const GENDER_OPTIONS = ["ชาย", "หญิง"];
+const STATUS_OPTIONS = ["ผู้ป่วยเบาหวาน", "ผู้ใช้ทั่วไป"];
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -33,21 +40,20 @@ export default function EditProfileScreen() {
   // Date Picker States
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date | undefined>(undefined);
+  // Image Picker
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Handle Date Selection
   const handleDateChange = (selectedDate: Date | undefined) => {
     if (selectedDate === undefined) {
-      // User cancelled the picker
       setShowDatePicker(false);
       setTempDate(undefined);
       return;
     }
 
-    // Store the temporary date
     setTempDate(selectedDate);
 
     if (Platform.OS === "android") {
-      // On Android, update immediately due to native OK/Cancel buttons
       const formattedDate = formatDate(selectedDate);
       setFormData({ ...formData, birthDate: formattedDate });
       setShowDatePicker(false);
@@ -79,6 +85,34 @@ export default function EditProfileScreen() {
     return `${day}/${month}/${thaiYear}`;
   };
 
+  const pickImage = async () => {
+    try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "ต้องการการอนุญาต",
+          "แอพต้องการสิทธิ์ในการเข้าถึงคลังรูปภาพของคุณ"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert("ข้อผิดพลาด", "ไม่สามารถเลือกรูปภาพได้");
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
@@ -102,10 +136,17 @@ export default function EditProfileScreen() {
               {/* Profile Image Section */}
               <View className="relative mb-4">
                 <Image
-                  source={formData.profileImage}
+                  source={
+                    selectedImage
+                      ? { uri: selectedImage }
+                      : formData.profileImage
+                  }
                   className="w-[150px] h-[150px] rounded-full"
                 />
-                <TouchableOpacity className="absolute bottom-0 right-0">
+                <TouchableOpacity
+                  className="absolute bottom-0 right-0"
+                  onPress={pickImage}
+                >
                   <Image
                     source={require("../../assets/Profile/edit.png")}
                     className="w-12 h-12"
@@ -127,7 +168,7 @@ export default function EditProfileScreen() {
               <BreakLine />
 
               {/* Profile Input Fields */}
-              <View className="w-full space-y-6 py-2 gap-4">
+              <View className="w-full space-y-6 py-2">
                 <ProfileInputField
                   icon={require("../../assets/Profile/ruler-pen.png")}
                   label="ส่วนสูง"
@@ -152,7 +193,7 @@ export default function EditProfileScreen() {
 
                   {/* iOS Date Picker Controls */}
                   {Platform.OS === "ios" && showDatePicker && (
-                    <View className="flex-row justify-end space-x-2 mt-2">
+                    <View className="flex-row justify-end space-x-2 mt-2 mb-2">
                       <TouchableOpacity
                         className="bg-white rounded-lg px-4 py-2"
                         onPress={handleIOSDateCancel}
@@ -173,21 +214,25 @@ export default function EditProfileScreen() {
                   )}
                 </View>
 
-                <ProfileInputField
+                {/* Gender Dropdown */}
+                <ProfileDropdown
                   icon={require("../../assets/Profile/sex.png")}
                   label="เพศ"
                   value={formData.gender}
-                  onChangeText={(text) =>
-                    setFormData({ ...formData, gender: text })
+                  options={["ชาย", "หญิง"]}
+                  onSelect={(value) =>
+                    setFormData({ ...formData, gender: value })
                   }
                 />
 
-                <ProfileInputField
+                {/* Status Dropdown */}
+                <ProfileDropdown
                   icon={require("../../assets/Profile/heart.png")}
                   label="สถานะ"
                   value={formData.status}
-                  onChangeText={(text) =>
-                    setFormData({ ...formData, status: text })
+                  options={["ผู้ป่วยเบาหวาน", "ผู้ใช้ทั่วไป"]}
+                  onSelect={(value) =>
+                    setFormData({ ...formData, status: value })
                   }
                 />
 

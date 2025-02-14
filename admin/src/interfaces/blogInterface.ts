@@ -1,10 +1,10 @@
 export interface BlogInterface {
-    blog_id: string;
+    _id: string;
     title: string;
-    author: string;
-    publish_date: string;
+    date: string;
     category: string[];
     image: string;
     content: string;
+    ref: string;
   }
   
