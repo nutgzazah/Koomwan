@@ -78,12 +78,25 @@ export default function TrackingScreen() {
   //แก้ Validation
   const validateInput = (name: string, value: string) => {
     const numValue = parseFloat(value);
+  
+    // สร้าง Object สำหรับชื่อของฟิลด์ที่จะใช้ในการแสดงผลการตรวจสอบ
+    const fieldNames: Record<string, string> = {
+      weight: "น้ำหนัก",
+      height: "ส่วนสูง",
+      bloodSugar: "น้ำตาลในเลือด",
+      a1c: "ค่า HbA1c",
+      bloodPressureSystolic: "ความดันตัวบน",
+      bloodPressureDiastolic: "ความดันตัวล่าง"
+    };
+  
     if (!/^\d*\.?\d*$/.test(value) || (ranges[name] && (numValue < ranges[name][0] || numValue > ranges[name][1]))) {
-      return `กรุณากรอก ${name} ให้ถูกต้อง`; //
+      return `กรุณากรอก ${fieldNames[name] || name} ให้ถูกต้อง`; // แสดงชื่อที่ตรงกับฟิลด์แทน
     }
     return "";
   };
 
+  
+  //แก้ Validation
   const handleChange = (field: string, value: string | { systolic: string; diastolic: string }) => {
     if (field === "bloodPressure" && typeof value === "object") {
       const systolicError = validateInput("bloodPressureSystolic", value.systolic);
@@ -270,7 +283,7 @@ export default function TrackingScreen() {
            onPress={handleSubmit}
            disabled={!isFormComplete}
            isCompleted={isFormComplete}
-           customStyle={isFormComplete ? "bg-blue-600" : "bg-gray-400"} 
+           customStyle={isFormComplete ? "bg-blue-600" : "bg-gray"} 
           />
          </View>
 
