@@ -16,7 +16,7 @@ import Emotion from "../../components/home/Emotion";
 import BloodSugarStatus from "../../components/home/GluMeter";
 import EmoteDisplay from "../../components/home/Emote";
 import MedicationStatus from "../../components/home/MedStatus";
-import HealthDashboard from "../../components/home/HealthStat";
+import HealthDashboard from "../../components/home/HealthDashboard";
 
 export default function HomeScreen() {
   const router = useRouter();
