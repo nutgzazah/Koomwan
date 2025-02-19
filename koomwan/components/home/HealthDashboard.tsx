@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React from "react";
 import { View, Text, Dimensions, TouchableOpacity } from "react-native";
 import { LineChart } from "react-native-chart-kit";
@@ -103,6 +104,7 @@ const HealthStatsCard: React.FC<HealthStatsCardProps> = ({
 };
 
 const HealthDashboard: React.FC = () => {
+  const router = useRouter();
   // Sample data arrays
   const bmiData = [21, 22, 21.5, 22.3, 22.1, 22.4, 22.2, 22.39];
   const sugarData = [85, 83, 86, 82, 84, 83, 81, 82];
@@ -114,32 +116,23 @@ const HealthDashboard: React.FC = () => {
       <Text className="text-headline font-regular text-center">
         ข้อมูลสถิติ
       </Text>
-      <View className="flex-row justify-between p-6 gap-4 ">
-        <TouchableOpacity>
+      <View className="flex-row justify-between p-6 gap-4">
+        <TouchableOpacity onPress={() => router.push("/home/stat/0")}>
           <HealthStatsCard title="ดัชนีมวลกาย" data={bmiData} />
         </TouchableOpacity>
-        <TouchableOpacity>
-          <HealthStatsCard
-            title="น้ำตาล"
-            color="#3972F0"
-            /*#FFD444 */ data={sugarData}
-          />
+        <TouchableOpacity onPress={() => router.push("/home/stat/1")}>
+          <HealthStatsCard title="น้ำตาล" color="#3972F0" data={sugarData} />
         </TouchableOpacity>
       </View>
       <View className="flex-row justify-between pt-0 px-6 mb-8 gap-4">
-        <TouchableOpacity>
-          <HealthStatsCard
-            title="น้ำหนัก"
-            color="#3972F0"
-            /*#2ED74D */ data={weightData}
-          />
+        <TouchableOpacity onPress={() => router.push("/home/stat/2")}>
+          <HealthStatsCard title="น้ำหนัก" color="#3972F0" data={weightData} />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/home/stat/3")}>
           <HealthStatsCard
             title="น้ำตาลเฉลี่ยสะสม"
             suffix="%"
             color="#3972F0"
-            /*#FE5757 */
             data={hba1cData}
           />
         </TouchableOpacity>
