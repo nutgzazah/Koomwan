@@ -2,8 +2,10 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import React from "react";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
+import { useRouter } from "expo-router";
 
 const Emotion = () => {
+  const router = useRouter();
   // Function to get emotion image based on mood
   const getEmotionImage = (
     mood: "laugh" | "happy" | "none" | "cried" | "frustrated"
@@ -125,7 +127,10 @@ const Emotion = () => {
       </View>
 
       {/* Calendar Button */}
-      <TouchableOpacity className="w-full bg-primary py-4 rounded-lg flex-row justify-center items-center">
+      <TouchableOpacity
+        className="w-full bg-primary py-4 rounded-lg flex-row justify-center items-center"
+        onPress={() => router.push("/home/calendarView")}
+      >
         <Text className="text-button font-bold text-card mr-2">
           มุมมองปฏิทิน
         </Text>
