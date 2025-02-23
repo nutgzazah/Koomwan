@@ -53,7 +53,7 @@ const getAllBlog = async (req, res) => {
         console.error(error);
         return res.status(500).send({
             success: false,
-            message: "Error fetching users",
+            message: "Error fetching blogs",
             error,
         });
     }
@@ -97,14 +97,11 @@ const editBlog = async (req, res) => {
         { new: true, runValidators: true }
       );
   
-      res.json({ message: 'Update Blog complete!', menu: updatedBlog }); 
+      res.json({ message: 'Update Blog complete!', blog: updatedBlog }); 
     } catch (err) {
       res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
-
-const mongoose = require("mongoose");
-const blogModel = require("../models/blogModel");
 
 const deleteBlog = async (req, res) => { 
     try {
