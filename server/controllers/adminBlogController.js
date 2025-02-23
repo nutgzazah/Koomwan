@@ -103,9 +103,16 @@ const editBlog = async (req, res) => {
     }
 };
 
+const mongoose = require("mongoose");
+const blogModel = require("../models/blogModel");
+
 const deleteBlog = async (req, res) => { 
     try {
         const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid blog ID." });
+        }
       
         const deletedBlog = await blogModel.findByIdAndDelete(id);
       
@@ -120,6 +127,5 @@ const deleteBlog = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error", error: err.message });
     }
 };
-
 
 module.exports = { addBlog, getAllBlog, getBlogById, editBlog, deleteBlog };

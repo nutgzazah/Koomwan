@@ -1,38 +1,32 @@
 import PopupCard from "@/components/PopupCard";
 import React from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 interface DeletePopupProps {
   onClose: () => void;
-  onConfirm: () => void;
   articleId: string;
 }
 
-export default function DeletePopup({ onClose, onConfirm, articleId }: DeletePopupProps) {
+export default function DeletePopup({ onClose, articleId }: DeletePopupProps) {
   
+  const router = useRouter();
+
   const handleConfirm = async () => {
-    console.log("Attempting to delete article with ID:", articleId);
-  
     if (!articleId) {
       console.error("Error: articleId is undefined or empty");
       return;
     }
-  
+
     try {
-      const response = await axios.delete(`http://localhost:8080/api/v1/admin/deleteBlog/${articleId}`);
-      console.log("Delete response:", response.data); 
-  
-      onConfirm();
+      await axios.delete(`http://localhost:8080/api/v1/admin/deleteBlog/${articleId}`);
       onClose();
+      router.push("/articleManagement");
     } catch (error) {
       console.error("Error deleting blog:", error);
-      if (axios.isAxiosError(error)) {
-        console.error("Backend Response:", error.response?.data);
-      }
     }
   };
   
-
   return (
     <PopupCard title="ต้องการลบบทความนี้?" onClose={onClose}>
       <div className="flex flex-col items-center space-y-4">
