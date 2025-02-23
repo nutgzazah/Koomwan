@@ -28,7 +28,7 @@ type HealthLog = {
   blood_sugar_level?: number;
   blood_pressure?: string;
   a1c?: number;
-  mood?: string;
+  mood?: "laugh" | "happy" | "none" | "cried" | "frustrated";
 };
 
 type DayData = {
@@ -108,6 +108,22 @@ const CalendarScreen = () => {
     return weight / (heightInMeters * heightInMeters);
   };
 
+  // Function to get emotion image based on mood
+  const getEmotionImage = (
+    mood: "laugh" | "happy" | "none" | "cried" | "frustrated"
+  ) => {
+    const emotionMap: {
+      [key in "laugh" | "happy" | "none" | "cried" | "frustrated"]: any;
+    } = {
+      laugh: require("../../assets/Home/emotion-laugh.png"),
+      happy: require("../../assets/Home/emotion-happy.png"),
+      none: require("../../assets/Home/emotion-none.png"),
+      cried: require("../../assets/Home/emotion-cried.png"),
+      frustrated: require("../../assets/Home/emotion-frustrated.png"),
+    };
+    return emotionMap[mood] || emotionMap.none;
+  };
+
   const mockDayData: { [key: string]: DayData } = {
     "2025-03-02": {
       medications: [
@@ -129,7 +145,7 @@ const CalendarScreen = () => {
           weight: 58,
           height: 160,
           blood_pressure: "78",
-          mood: "😊",
+          mood: "happy",
           blood_sugar_level: 120,
           a1c: 6.5,
         },
@@ -137,7 +153,7 @@ const CalendarScreen = () => {
           time: "08.17 น.",
           weight: 85,
           height: 180,
-          mood: "😊",
+          mood: "none",
           a1c: 7.1,
         },
       ],
@@ -198,7 +214,13 @@ const CalendarScreen = () => {
           <Text className="text-description text-secondary font-regular ">
             เวลา {log.time}
           </Text>
-          {log.mood && <Text className="text-tag">{log.mood}</Text>}
+          {log.mood && (
+            <Image
+              source={getEmotionImage(log.mood)}
+              className="w-8 h-8"
+              resizeMode="contain"
+            />
+          )}
         </View>
 
         <View className="flex-row flex-wrap gap-4">
