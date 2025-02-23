@@ -23,6 +23,10 @@ const helpRequestSchema = new mongoose.Schema({
         enum: ['pending', 'completed'], // ค่าสถานะสามารถเป็น pending หรือ completed เท่านั้น
         default: 'pending', // กำหนดสถานะเริ่มต้นเป็น pending
     },
+    response: {
+        type: String,
+        default: "", // การตอบกลับผู้ใช้
+    },
     }, {
     timestamps: true, // เก็บข้อมูลเกี่ยวกับเวลาที่สร้างและแก้ไข
 });
