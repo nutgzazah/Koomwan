@@ -34,12 +34,12 @@ export default function FullCardView({ cardData, closeModal }: FullCardViewProps
 
   return (
     <View className="flex-1 justify-center items-center">
-      {/* Button to open Modal /}
+      {/* Button to open Modal */}
       <TouchableOpacity onPress={openModal} className="mb-4">
         <Text className="text-lg text-blue-500">Open Full Card</Text>
       </TouchableOpacity>
 
-      {/ Modal */}
+      {/* Modal */}
       <Modal
         animationType="fade"
         transparent={true}

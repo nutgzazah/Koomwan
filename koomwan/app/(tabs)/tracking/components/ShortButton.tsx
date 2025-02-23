@@ -1,5 +1,9 @@
 import React from "react";
-import { TouchableOpacity, Text, View, Image } from "react-native";
+import { 
+  TouchableOpacity, 
+  Text,  
+  Image 
+} from "react-native";
 
 interface ShortButtonProps {
   title: string; // ข้อความบนปุ่ม
@@ -30,3 +34,6 @@ export const ShortButton: React.FC<ShortButtonProps> = ({
     )}
   </TouchableOpacity>
 );
+
+
+export default ShortButton;
