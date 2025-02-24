@@ -12,10 +12,12 @@ import BackButton from "../../global/components/BackButton";
 import Card from "../../global/components/Card";
 import Checkbox from "expo-checkbox";
 import BreakLine from "../../global/components/BreakLine";
+import { useRouter } from "expo-router";
 
 type MedicationLog = {
   time: string;
   medications: Array<{
+    id: number;
     name: string;
     taken: boolean;
   }>;
@@ -37,6 +39,7 @@ type DayData = {
 };
 
 const CalendarScreen = () => {
+  const router = useRouter();
   // ตั้งค่าภาษาไทย
   LocaleConfig.locales["th"] = {
     monthNames: [
@@ -130,13 +133,13 @@ const CalendarScreen = () => {
         {
           time: "8.30 น.",
           medications: [
-            { name: "Glipizide", taken: true },
-            { name: "Metformin", taken: true },
+            { id: 1, name: "Glipizide", taken: true },
+            { id: 2, name: "Metformin", taken: true },
           ],
         },
         {
           time: "12.30 น.",
-          medications: [{ name: "Glipizide", taken: false }],
+          medications: [{ id: 3, name: "Glipizide", taken: false }],
         },
       ],
       healthLogs: [
@@ -210,20 +213,22 @@ const CalendarScreen = () => {
   const renderHealthLog = (log: HealthLog) => (
     <Card key={log.time}>
       <View className="justify-between">
-        <View className="flex-row justify-between items-center gap-8 mb-4">
-          <Text className="text-description text-secondary font-regular ">
-            เวลา {log.time}
-          </Text>
-          {log.mood && (
-            <Image
-              source={getEmotionImage(log.mood)}
-              className="w-8 h-8"
-              resizeMode="contain"
-            />
-          )}
-        </View>
+        <Card>
+          <View className="flex-row justify-between items-center gap-8 my-[-16px]">
+            <Text className="text-description text-secondary font-regular ">
+              เวลา {log.time}
+            </Text>
+            {log.mood && (
+              <Image
+                source={getEmotionImage(log.mood)}
+                className="w-8 h-8"
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </Card>
 
-        <View className="flex-row flex-wrap gap-4">
+        <View className="flex-row flex-wrap gap-4 my-[-8px]">
           {log.weight && log.height && (
             <View className="flex-row items-center gap-2">
               <Image
@@ -368,7 +373,17 @@ const CalendarScreen = () => {
                               {medication.name}
                             </Text>
                           </View>
-                          <TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() =>
+                              router.push({
+                                pathname: `/home/med/[id]`,
+                                params: {
+                                  pill_id: medication.id,
+                                  pill_name: medication.name,
+                                },
+                              })
+                            }
+                          >
                             <Text className="text-primary text-description font-regular">
                               รายละเอียดยา
                             </Text>
