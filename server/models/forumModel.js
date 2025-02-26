@@ -1,10 +1,20 @@
 const mongoose = require('mongoose');
 
-// Define the comment schema for doctors
+// Define the comment schema
 const commentSchema = new mongoose.Schema({
-    doctor: {
+    commenter: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Doctor',
+        required: true,
+        refPath: 'commenterModel' // อ้างอิงตามค่าใน `commenterModel`
+    },
+    commenterModel: {
+        type: String,
+        required: true,
+        enum: ['User', 'Doctor'] // กำหนดให้รองรับได้แค่ 2 โมเดล
+    },
+    role: {
+        type: String,
+        enum: ['owner', 'doctor'], // ใช้เพื่อระบุว่าคอมเมนต์มาจากเจ้าของโพสต์หรือไม่
         required: true
     },
     answer: {
@@ -15,7 +25,7 @@ const commentSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-},);
+});
 
 // Schema for report reasons
 const reportReasonSchema = new mongoose.Schema({
