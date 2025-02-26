@@ -163,33 +163,41 @@ exports.toggleLikePost = async (req, res) => {
     }
 };
 
-// เพิ่มคอมเม้น
+// เพิ่มคอมเมนต์
 exports.addComment = async (req, res) => {
     try {
         const { postId } = req.params;
         const userId = req.auth._id; 
-        const { answer } = req.body; // รับข้อความคอมเมนต์
+        const { answer } = req.body;
 
         if (!answer || answer.trim() === '') {
             return res.status(400).json({ message: 'Comment cannot be empty' });
         }
 
-        // Find the forum post
+        // ค้นหาโพสต์
         const post = await Forum.findById(postId);
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
         }
 
-        // Add comment to the post
+        // ตรวจสอบว่ามี `postedBy` หรือไม่
+        if (!post.postedBy) {
+            return res.status(500).json({ message: 'Post owner not found' });
+        }
+
+        // ตรวจสอบว่า user เป็นเจ้าของโพสต์หรือไม่
+        const isPostOwner = post.postedBy.toString() === userId;
+
+        // เพิ่มคอมเมนต์
         const newComment = {
-            doctor: userId, // Assuming "doctor" refers to the user adding the comment
+            commenter: userId,
+            commenterModel: isPostOwner ? 'User' : 'Doctor', // เจ้าของโพสต์เป็น 'User'
+            role: isPostOwner ? 'owner' : 'doctor',
             answer,
             date: new Date()
         };
 
         post.comments.push(newComment);
-
-        // Save changes
         await post.save();
 
         res.status(201).json({
@@ -201,20 +209,20 @@ exports.addComment = async (req, res) => {
         res.status(500).json({ message: 'Server error', error });
     }
 };
-//ลบคอมเม้น
-// Delete a comment from a post
+
+// ลบคอมเมนต์
 exports.deleteComment = async (req, res) => {
     try {
         const { postId, commentId } = req.params;
         const userId = req.auth._id; // ใช้ req.auth._id เป็น userId
 
-        // Find the forum post
+        // ค้นหาโพสต์
         const post = await Forum.findById(postId);
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
         }
 
-        // Find the comment
+        // ค้นหาคอมเมนต์
         const commentIndex = post.comments.findIndex(
             (comment) => comment._id.toString() === commentId
         );
@@ -223,13 +231,14 @@ exports.deleteComment = async (req, res) => {
             return res.status(404).json({ message: 'Comment not found' });
         }
 
-        // Check if the user is the comment owner
         const comment = post.comments[commentIndex];
-        if (comment.doctor.toString() !== userId) {
+
+        // ตรวจสอบว่าเป็นเจ้าของคอมเมนต์หรือไม่
+        if (comment.commenter.toString() !== userId) {
             return res.status(403).json({ message: 'Unauthorized to delete this comment' });
         }
 
-        // Remove the comment
+        // ลบคอมเมนต์
         post.comments.splice(commentIndex, 1);
         await post.save();
 
@@ -242,6 +251,7 @@ exports.deleteComment = async (req, res) => {
         res.status(500).json({ message: 'Server error', error });
     }
 };
+
 
 // Report a post
 exports.reportPost = async (req, res) => {
