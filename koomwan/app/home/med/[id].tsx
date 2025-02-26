@@ -69,7 +69,7 @@ export default function MedicationDetail() {
       <ScrollView className="flex-1 px-4">
         <Card>
           <Text className="flex-1 text-headline text-secondary font-bold text-center">
-            ยาประจำ
+            ยา
           </Text>
           <BreakLine />
 
