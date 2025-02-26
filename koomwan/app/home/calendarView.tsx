@@ -24,6 +24,7 @@ type MedicationLog = {
 };
 
 type HealthLog = {
+  id: number;
   time: string;
   height?: number;
   weight?: number;
@@ -144,6 +145,7 @@ const CalendarScreen = () => {
       ],
       healthLogs: [
         {
+          id: 1,
           time: "13.32 น.",
           weight: 58,
           height: 160,
@@ -153,11 +155,20 @@ const CalendarScreen = () => {
           a1c: 6.5,
         },
         {
+          id: 2,
           time: "08.17 น.",
           weight: 85,
           height: 180,
           mood: "none",
           a1c: 7.1,
+        },
+        {
+          id: 3,
+          time: "20.00 น.",
+          weight: 70,
+          height: 170,
+          blood_sugar_level: 150,
+          mood: "cried",
         },
       ],
     },
@@ -211,73 +222,83 @@ const CalendarScreen = () => {
   );
 
   const renderHealthLog = (log: HealthLog) => (
-    <Card key={log.time}>
-      <View className="justify-between">
-        <Card>
-          <View className="flex-row justify-between items-center gap-8 my-[-16px]">
-            <Text className="text-description text-secondary font-regular ">
-              เวลา {log.time}
-            </Text>
-            {log.mood && (
-              <Image
-                source={getEmotionImage(log.mood)}
-                className="w-8 h-8"
-                resizeMode="contain"
-              />
+    <TouchableOpacity
+      key={log.time}
+      onPress={() =>
+        router.push({
+          pathname: "/home/healthinfo/[id]",
+          params: { id: log.id },
+        })
+      }
+    >
+      <Card>
+        <View className="justify-between">
+          <Card>
+            <View className="flex-row justify-between items-center gap-8 my-[-16px]">
+              <Text className="text-description text-secondary font-regular ">
+                เวลา {log.time}
+              </Text>
+              {log.mood && (
+                <Image
+                  source={getEmotionImage(log.mood)}
+                  className="w-8 h-8"
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </Card>
+
+          <View className="flex-row flex-wrap gap-4 my-[-8px]">
+            {log.weight && log.height && (
+              <View className="flex-row items-center gap-2">
+                <Image
+                  source={require("../../assets/Home/body-blue.png")}
+                  className="w-6 h-6"
+                />
+                <Text className="text-description text-secondary font-regular">
+                  {calculateBMI(log.weight, log.height).toFixed(2)}
+                </Text>
+              </View>
+            )}
+            {log.blood_pressure && (
+              <View className="flex-row items-center gap-2">
+                <Image
+                  source={require("../../assets/Home/blood-pressure.png")}
+                  className="w-6 h-6"
+                />
+                <Text className="text-description text-secondary font-regular">
+                  {log.blood_pressure}
+                </Text>
+              </View>
+            )}
+            {log.blood_sugar_level && (
+              <View className="flex-row items-center gap-2">
+                <Image
+                  source={require("../../assets/Home/glucose-blue.png")}
+                  className="w-6 h-6"
+                  resizeMode="contain"
+                />
+                <Text className="text-description text-secondary font-regular">
+                  {log.blood_sugar_level}
+                </Text>
+              </View>
+            )}
+            {log.a1c && (
+              <View className="flex-row items-center gap-2">
+                <Image
+                  source={require("../../assets/Home/a1c.png")}
+                  className="w-6 h-6"
+                  resizeMode="contain"
+                />
+                <Text className="text-description text-secondary font-regular">
+                  {log.a1c}
+                </Text>
+              </View>
             )}
           </View>
-        </Card>
-
-        <View className="flex-row flex-wrap gap-4 my-[-8px]">
-          {log.weight && log.height && (
-            <View className="flex-row items-center gap-2">
-              <Image
-                source={require("../../assets/Home/body-blue.png")}
-                className="w-6 h-6"
-              />
-              <Text className="text-description text-secondary font-regular">
-                {calculateBMI(log.weight, log.height).toFixed(2)}
-              </Text>
-            </View>
-          )}
-          {log.blood_pressure && (
-            <View className="flex-row items-center gap-2">
-              <Image
-                source={require("../../assets/Home/blood-pressure.png")}
-                className="w-6 h-6"
-              />
-              <Text className="text-description text-secondary font-regular">
-                {log.blood_pressure}
-              </Text>
-            </View>
-          )}
-          {log.blood_sugar_level && (
-            <View className="flex-row items-center gap-2">
-              <Image
-                source={require("../../assets/Home/glucose-blue.png")}
-                className="w-6 h-6"
-                resizeMode="contain"
-              />
-              <Text className="text-description text-secondary font-regular">
-                {log.blood_sugar_level}
-              </Text>
-            </View>
-          )}
-          {log.a1c && (
-            <View className="flex-row items-center gap-2">
-              <Image
-                source={require("../../assets/Home/a1c.png")}
-                className="w-6 h-6"
-                resizeMode="contain"
-              />
-              <Text className="text-description text-secondary font-regular">
-                {log.a1c}
-              </Text>
-            </View>
-          )}
         </View>
-      </View>
-    </Card>
+      </Card>
+    </TouchableOpacity>
   );
 
   return (
