@@ -233,22 +233,20 @@ const CalendarScreen = () => {
     >
       <Card>
         <View className="justify-between">
-          <Card>
-            <View className="flex-row justify-between items-center gap-8 my-[-16px]">
-              <Text className="text-description text-secondary font-regular ">
-                เวลา {log.time}
-              </Text>
-              {log.mood && (
-                <Image
-                  source={getEmotionImage(log.mood)}
-                  className="w-8 h-8"
-                  resizeMode="contain"
-                />
-              )}
-            </View>
-          </Card>
+          <View className="flex-row justify-between items-center gap-8 ">
+            <Text className="text-description text-secondary font-regular ">
+              เวลา {log.time}
+            </Text>
+            {log.mood && (
+              <Image
+                source={getEmotionImage(log.mood)}
+                className="w-8 h-8"
+                resizeMode="contain"
+              />
+            )}
+          </View>
 
-          <View className="flex-row flex-wrap gap-4 my-[-8px]">
+          <View className="flex-row gap-4 mt-2">
             {log.weight && log.height && (
               <View className="flex-row items-center gap-2">
                 <Image
@@ -357,6 +355,7 @@ const CalendarScreen = () => {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
+                era: "short",
               })}
             </Text>
 
