@@ -37,6 +37,14 @@ export default function MedicationDetail() {
         "ยาลดระดับน้ำตาลในเลือด ช่วยให้ร่างกายตอบสนองต่ออินซูลินดีขึ้น",
       image: null,
     },
+    พาราเซตามอล: {
+      pill_id: 3,
+      user_id: 1,
+      pill_name: "พาราเซตามอล",
+      pill_type: "ยาสามัญประจำบ้าน",
+      description: "ยาแก้ปวดที่ใช้รักษาอาการปวดต่าง ๆ",
+      image: null,
+    },
   };
 
   const pillData = mockPillDetails[pill_name as string];
