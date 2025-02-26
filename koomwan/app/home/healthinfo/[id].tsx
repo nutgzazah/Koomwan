@@ -23,6 +23,10 @@ type HealthLogData = {
   blood_sugar_level?: number;
   a1c?: number;
   note?: string;
+  medications?: Array<{
+    pill_name: string;
+    pill_id: number;
+  }>;
 };
 
 const CalendarHealthScreen = () => {
@@ -41,6 +45,10 @@ const CalendarHealthScreen = () => {
       blood_sugar_level: 78,
       a1c: 4.8,
       note: "วันนี้รู้สึกสดใส อารมณ์ดี ",
+      medications: [
+        { pill_name: "พาราเซตามอล", pill_id: 3 },
+        { pill_name: "Metformin", pill_id: 2 },
+      ],
     },
     "2": {
       date: "4 ธันวาคม พ.ศ. 2567",
@@ -50,13 +58,14 @@ const CalendarHealthScreen = () => {
       height: 180,
       a1c: 7.1,
       note: "วันนี้รู้สึกธรรมดา ไม่มีอะไรพิเศษ",
+      medications: [{ pill_name: "Glipizide", pill_id: 1 }],
     },
     "3": {
       date: "12 ธันวาคม พ.ศ. 2567",
       time: "18.00 น.",
       mood: "cried",
-
       note: "วันนี้รู้สึกเศร้ามาก อารมณ์ไม่ดี",
+      medications: [],
     },
   };
 
@@ -430,17 +439,43 @@ const CalendarHealthScreen = () => {
               </Text>
             </View>
 
-            <TouchableOpacity
-              className="w-full flex-row justify-between items-center py-2 mb-4"
-              onPress={() => router.push("/home/med/detail")}
-            >
-              <Text className="text-description text-primary font-bold">
-                พาราเซตามอล
-              </Text>
-              <Text className="text-description text-secondary font-regular">
-                รายละเอียดยา
-              </Text>
-            </TouchableOpacity>
+            {healthData.medications && healthData.medications.length > 0 ? (
+              healthData.medications.map((med, index) => (
+                <View
+                  key={index}
+                  className="w-full flex-row justify-between items-center px-4 py-1 mb-2"
+                >
+                  <View className="flex-row items-center">
+                    <Image
+                      source={require("../../../assets/Home/medicine.png")}
+                      className="w-8 h-8"
+                      resizeMode="contain"
+                    />
+                    <Text className="text-description font-regular ml-2">
+                      {med.pill_name}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "/home/med/detail",
+                        params: { pill_name: med.pill_name },
+                      })
+                    }
+                  >
+                    <Text className="text-description text-primary font-bold">
+                      รายละเอียดยา
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            ) : (
+              <View className="items-center py-2 mb-4">
+                <Text className="text-description text-secondary font-regular">
+                  ไม่มีข้อมูลยาเพิ่มเติม
+                </Text>
+              </View>
+            )}
           </View>
         </Card>
       </ScrollView>
