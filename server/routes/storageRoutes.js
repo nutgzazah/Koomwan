@@ -72,4 +72,35 @@ router.get("/getFileUrl", async (req, res) => {
     }
   });
 
+  router.get("/getFileUrlFromPath", async (req, res) => {
+    try {
+        const { path } = req.query;
+
+        if (!path) {
+            return res.status(400).json({ success: false, message: "Path parameter is required" });
+        }
+
+        // หา index ของ "/" สุดท้ายสุด
+        const lastSlashIndex = path.lastIndexOf("/");
+
+        if (lastSlashIndex === -1) {
+            return res.status(400).json({ success: false, message: "Invalid path format" });
+        }
+
+        // แยก folder กับ fileName
+        const folder = path.substring(0, lastSlashIndex);
+        const fileName = path.substring(lastSlashIndex + 1);
+
+        const bucket = process.env.R2_BUCKET_NAME;
+        const fileKey = `${folder}/${fileName}`;
+
+        // สร้าง Signed URL
+        const signedUrl = await generateSignedUrl(bucket, fileKey);
+        res.json({ success: true, url: signedUrl });
+    } catch (error) {
+        console.error("Error generating signed URL:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 module.exports = router;

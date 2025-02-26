@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Forum = require('../models/forumModel'); // นำเข้า Forum Model
 const { uploadToR2v2, deleteFromR2 } = require('../Services/uploadService');
 
@@ -39,6 +40,31 @@ exports.getAllPost = async (req, res) => {
         res.status(200).json(posts);
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error", details: error.message });
+    }
+};
+
+// Get all forums created by the authenticated user
+exports.getMyForum = async (req, res) => {
+    try {
+        
+        const userId = req.auth._id; // ใช้ userId จาก req.auth._id
+        console.log(userId)
+        // ค้นหาโพสต์ที่ถูกโพสต์โดย userId นี้
+        const forums = await Forum.find({ postedBy: userId })
+            .sort({ createdAt: -1 }) // เรียงจากใหม่ไปเก่า
+            .populate('postedBy', 'name') // ดึงชื่อของผู้โพสต์
+
+        if (forums.length === 0) {
+            return res.status(404).json({ message: 'No forums found' });
+        }
+
+        res.status(200).json({
+            message: 'My forums retrieved successfully',
+            forums
+        });
+    } catch (error) {
+        console.error('Error fetching my forums:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
@@ -97,5 +123,200 @@ exports.deletePost = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error", details: error.message });
     }
 };
+
+//กดไลค์/ลบไลค์
+exports.toggleLikePost = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.auth._id;
+
+        // Find the forum post
+        const post = await Forum.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        // Check if user has already liked the post
+        const hasLiked = post.likes.users.includes(userId);
+
+        if (hasLiked) {
+            // Unlike the post
+            post.likes.users = post.likes.users.filter(id => id.toString() !== userId.toString());
+            post.likes.count -= 1;
+        } else {
+            // Like the post
+            post.likes.users.push(userId);
+            post.likes.count += 1;
+        }
+
+        // Save changes
+        await post.save();
+
+        res.status(200).json({
+            message: hasLiked ? 'Like removed' : 'Post liked',
+            likes: post.likes.count,
+            users: post.likes.users
+        });
+    } catch (error) {
+        console.error('Error liking post:', error);
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+
+// เพิ่มคอมเม้น
+exports.addComment = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.auth._id; 
+        const { answer } = req.body; // รับข้อความคอมเมนต์
+
+        if (!answer || answer.trim() === '') {
+            return res.status(400).json({ message: 'Comment cannot be empty' });
+        }
+
+        // Find the forum post
+        const post = await Forum.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        // Add comment to the post
+        const newComment = {
+            doctor: userId, // Assuming "doctor" refers to the user adding the comment
+            answer,
+            date: new Date()
+        };
+
+        post.comments.push(newComment);
+
+        // Save changes
+        await post.save();
+
+        res.status(201).json({
+            message: 'Comment added successfully',
+            comments: post.comments
+        });
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+//ลบคอมเม้น
+// Delete a comment from a post
+exports.deleteComment = async (req, res) => {
+    try {
+        const { postId, commentId } = req.params;
+        const userId = req.auth._id; // ใช้ req.auth._id เป็น userId
+
+        // Find the forum post
+        const post = await Forum.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        // Find the comment
+        const commentIndex = post.comments.findIndex(
+            (comment) => comment._id.toString() === commentId
+        );
+
+        if (commentIndex === -1) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        // Check if the user is the comment owner
+        const comment = post.comments[commentIndex];
+        if (comment.doctor.toString() !== userId) {
+            return res.status(403).json({ message: 'Unauthorized to delete this comment' });
+        }
+
+        // Remove the comment
+        post.comments.splice(commentIndex, 1);
+        await post.save();
+
+        res.status(200).json({
+            message: 'Comment deleted successfully',
+            comments: post.comments
+        });
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+
+// Report a post
+exports.reportPost = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { reason } = req.body;
+        const userId = req.auth._id;
+
+        // ตรวจสอบว่า postId เป็น ObjectId ที่ถูกต้องหรือไม่
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
+            return res.status(400).json({ message: 'Post not found / Invalid post ID format' });
+        }
+
+        // ค้นหาโพสต์
+        const post = await Forum.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        // ตรวจสอบว่าผู้ใช้เคย report โพสต์นี้แล้วหรือไม่
+        if (post.reports.users.includes(userId)) {
+            return res.status(400).json({ message: 'You have already reported this post' });
+        }
+
+        // เพิ่มการ report
+        post.reports.count += 1;
+        post.reports.users.push(userId);
+        post.reports.reasons.push({ user: userId, reason });
+
+        await post.save();
+
+        res.status(200).json({
+            message: 'Post reported successfully',
+            reports: post.reports
+        });
+    } catch (error) {
+        console.error('Error reporting post:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// Remove all reports from a post
+exports.removeReports = async (req, res) => {
+    try {
+        const { postId } = req.params;
+
+        // ตรวจสอบว่า postId เป็น ObjectId ที่ถูกต้องหรือไม่
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
+            return res.status(400).json({ message: 'Post not found / Invalid post ID format' });
+        }
+
+        // ค้นหาโพสต์
+        const post = await Forum.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        // ล้างข้อมูล report ทั้งหมด
+        post.reports = {
+            count: 0,
+            users: [],
+            reasons: []
+        };
+
+        await post.save();
+
+        res.status(200).json({
+            message: 'Reports removed successfully',
+            reports: post.reports
+        });
+    } catch (error) {
+        console.error('Error removing reports:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 
 //เอารูปออกจาก Post
