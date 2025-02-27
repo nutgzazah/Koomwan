@@ -43,7 +43,7 @@ const sentReport = async (req, res) => {
 
 const getAllRequest = async (req, res) => {
     try {
-        const reports = await helpRequestModel.find()
+        const reports = await helpRequestModel.find().populate('user', 'username');
         return res.status(200).send({
             success: true,
             data: reports,
