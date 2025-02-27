@@ -16,13 +16,20 @@ import BreakLine from "../../../global/components/BreakLine";
 type HealthLogData = {
   date: string;
   time: string;
-  mood: "laugh" | "happy" | "none" | "cried" | "sad";
+  mood?:
+    | "laughing"
+    | "happy"
+    | "neutral"
+    | "irritated"
+    | "sick"
+    | "crying"
+    | "angry"
+    | "none";
   weight?: number;
   height?: number;
   blood_pressure?: string;
   blood_sugar_level?: number;
   a1c?: number;
-  note?: string;
   medications?: Array<{
     pill_name: string;
     pill_id: number;
@@ -44,7 +51,6 @@ const CalendarHealthScreen = () => {
       blood_pressure: "120",
       blood_sugar_level: 78,
       a1c: 4.8,
-      note: "วันนี้รู้สึกสดใส อารมณ์ดี ",
       medications: [
         { pill_name: "พาราเซตามอล", pill_id: 3 },
         { pill_name: "Metformin", pill_id: 2 },
@@ -57,34 +63,91 @@ const CalendarHealthScreen = () => {
       weight: 85,
       height: 180,
       a1c: 7.1,
-      note: "วันนี้รู้สึกธรรมดา ไม่มีอะไรพิเศษ",
       medications: [{ pill_name: "Glipizide", pill_id: 1 }],
     },
     "3": {
       date: "12 ธันวาคม พ.ศ. 2567",
       time: "18.00 น.",
-      mood: "cried",
-      note: "วันนี้รู้สึกเศร้ามาก อารมณ์ไม่ดี",
+      mood: "crying",
       medications: [],
     },
   };
 
   const healthData = mockHealthDetails[id as string];
 
+  const EMOTION_DATA: Record<
+    | "laughing"
+    | "happy"
+    | "neutral"
+    | "irritated"
+    | "sick"
+    | "crying"
+    | "angry"
+    | "none",
+    { image: any; label: string }
+  > = {
+    happy: {
+      image: require("../../../assets/Home/emotion-happy.png"),
+      label: "วันนี้ฉันรู้สึกสดใส อารมณ์ดี\nและเต็มไปด้วยพลังบวก!",
+    },
+    angry: {
+      image: require("../../../assets/Home/emotion-angry.png"),
+      label: "วันนี้ฉันรู้สึกหงุดหงิด\nและโมโหกับหลายเรื่อง",
+    },
+    crying: {
+      image: require("../../../assets/Home/emotion-cried.png"),
+      label: "วันนี้ฉันรู้สึกเสียใจมาก\nจนอยากร้องไห้",
+    },
+    sick: {
+      image: require("../../../assets/Home/emotion-frustrated.png"),
+      label: "วันนี้ฉันรู้สึกเศร้า\nและท้อแท้กับชีวิต",
+    },
+    irritated: {
+      image: require("../../../assets/Home/emotion-ill.png"),
+      label: "วันนี้ฉันรู้สึกกังวลใจ\nกับหลายสิ่งรอบตัว",
+    },
+    laughing: {
+      image: require("../../../assets/Home/emotion-laugh.png"),
+      label: "วันนี้ฉันรู้สึกสนุกสนาน\nและมีความสุขกับทุกอย่าง",
+    },
+    neutral: {
+      image: require("../../../assets/Home/emotion-smile.png"),
+      label: "วันนี้ฉันรู้สึกเฉยๆ\nไม่มีอารมณ์อะไรเป็นพิเศษ",
+    },
+    none: {
+      image: require("../../../assets/Home/emotion-none.png"),
+      label: "วันนี้ยังไม่มีข้อมูลอารมณ์เลย",
+    },
+  };
+
   // Function to get emotion image based on mood
   const getEmotionImage = (
-    mood: "laugh" | "happy" | "none" | "cried" | "sad"
+    mood:
+      | "laughing"
+      | "happy"
+      | "neutral"
+      | "irritated"
+      | "sick"
+      | "crying"
+      | "angry"
+      | "none"
   ) => {
-    const emotionMap: {
-      [key in "laugh" | "happy" | "none" | "cried" | "sad"]: any;
-    } = {
-      laugh: require("../../../assets/Home/emotion-laugh.png"),
-      happy: require("../../../assets/Home/emotion-happy.png"),
-      none: require("../../../assets/Home/emotion-none.png"),
-      cried: require("../../../assets/Home/emotion-cried.png"),
-      sad: require("../../../assets/Home/emotion-frustrated.png"),
-    };
-    return emotionMap[mood] || emotionMap.none;
+    return EMOTION_DATA[mood]?.image || EMOTION_DATA.none.image;
+  };
+
+  // Function to get emotion label based on mood
+  const getEmotionLabel = (
+    mood:
+      | "laughing"
+      | "happy"
+      | "neutral"
+      | "irritated"
+      | "sick"
+      | "crying"
+      | "angry"
+      | "none"
+  ) => {
+    return EMOTION_DATA[mood]?.label || EMOTION_DATA.none.label;
   };
 
   // Calculate BMI
@@ -148,13 +211,12 @@ const CalendarHealthScreen = () => {
 
             <View className="flex-row justify-center items-center mb-4">
               <Image
-                source={getEmotionImage(healthData.mood)}
+                source={getEmotionImage(healthData.mood || "none")}
                 className="w-16 h-16"
                 resizeMode="contain"
               />
-              <Text className="text-description text-secondary font-regular ml-2 items-center">
-                {healthData.note ? "" : "ไม่มีข้อมูลการบันทึกอารมณ์"}
-                {healthData.note}
+              <Text className="text-description text-secondary font-regular ml-4 items-center">
+                {getEmotionLabel(healthData.mood || "none")}
               </Text>
             </View>
 
