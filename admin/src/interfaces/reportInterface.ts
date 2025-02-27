@@ -3,6 +3,7 @@ export interface ReportDataInterface {
     user: {
         id: string;
         username: string;
+        role:string;
     };
     role: string; 
     title: string;

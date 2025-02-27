@@ -62,7 +62,7 @@ const getReportById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const report = await helpRequestModel.findById(id)
+        const report = await helpRequestModel.findById(id).populate('user', 'username role');
 
         if (!report) {
             return res.status(404).json({
@@ -88,19 +88,12 @@ const getReportById = async (req, res) => {
 const editReport = async (req, res) => { 
     try {
         const id = req.params.id;
-        const { status, response } = req.body;
+        const { response } = req.body;
 
         if (!id) {
             return res.status(400).json({
                 success: false,
                 message: "Report id is required",
-            });
-        }
-
-        if (!status || !['pending', 'completed'].includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid status. Allowed values: pending, complete",
             });
         }
 
@@ -112,15 +105,17 @@ const editReport = async (req, res) => {
             });
         }
 
-        // Update the status and response (if provided)
-        report.status = status;
-        if (response) report.response = response;
+        // Update the response if provided and adjust status accordingly
+        if (response && response.trim() !== "") {
+            report.response = response;
+            report.status = "completed";
+        }
 
         await report.save();
 
         return res.status(200).json({
             success: true,
-            message: `Report status updated to ${status}`,
+            message: `Report updated successfully` ,
             data: report,
         });
     } catch (error) {
@@ -132,6 +127,7 @@ const editReport = async (req, res) => {
         });
     }
 };
+
 
 
 

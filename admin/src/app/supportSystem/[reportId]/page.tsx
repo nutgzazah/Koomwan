@@ -6,26 +6,25 @@ import { ReportDataInterface } from "@/interfaces/reportInterface";
 import axios from "axios";
 
 const UserReportForm: React.FC = () => {
-  const params = useParams();
+  const { reportId } = useParams();
   const router = useRouter();
-  const reportId = params?.reportId || params?.id;
-
   const [report, setReport] = useState<ReportDataInterface | null>(null);
-  
+
   useEffect(() => {
     const fetchReport = async () => {
-      if (!reportId) return;
-
+      console.log("Fetching report for ID:", reportId);
       try {
         const response = await axios.get(`http://localhost:8080/api/v1/admin/report/${reportId}`);
         console.log("Fetched report data:", response.data);
         setReport(response.data.data || response.data);
       } catch (error) {
-        console.error("Error fetching report data:", error);
+        console.error("Error fetching report:", error);
       }
     };
-
-    fetchReport();
+    
+    if (reportId) {
+      fetchReport();
+    }
   }, [reportId]);
 
   if (!report) {
@@ -38,14 +37,19 @@ const UserReportForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setReport((prevReport) => (prevReport ? { ...prevReport, [name]: value } : null));
+    setReport((prevReport) =>
+      prevReport ? { ...prevReport, [name]: value } : null
+    );
   };
+  
 
   const handleSubmit = async () => {
     if (!reportId || !report) return;
     
     try {
-      await axios.put(`http://localhost:8080/api/v1/admin/editReport/response/${reportId}`, { response: report.response });
+      await axios.put(`http://localhost:8080/api/v1/admin/editReport/response/${reportId}`, {
+        response: report.response
+      });
       console.log("Updated Report:", report);
       router.push("/supportSystem");
     } catch (error) {
@@ -68,17 +72,17 @@ const UserReportForm: React.FC = () => {
             </tr>
             <tr>
               <td className="text-bold_detail py-2 w-56">ชื่อบัญชีผู้ใช้</td>
-              <td className="py-2 text-detail_2">{report.user?.username}</td>
+              <td className="py-2 text-detail_2">{report.user.username}</td>
             </tr>
             <tr>
               <td className="text-bold_detail py-2 w-56">สถานะ</td>
-              <td className="py-2 text-detail_2">{report.role}</td>
+              <td className="py-2 text-detail_2">{report.user.role}</td>
             </tr>
             <tr>
               <td className="text-bold_detail py-2 w-56">เนื้อหาที่แจ้ง</td>
               <td className="py-2 text-detail_2">{report.detail}</td>
             </tr>
-            {report.status && report.response && (
+            {report.status !== "pending" && report.response && (
               <tr>
                 <td className="text-bold_detail py-2 w-56">การตอบกลับไปยังผู้ใช้</td>
                 <td className="py-2 text-detail_2">{report.response}</td>
@@ -88,15 +92,15 @@ const UserReportForm: React.FC = () => {
         </table>
       </div>
 
-      {report.resolved === "pending" && (
+      {report.status === "pending" && (
         <div>
           <div>
-            <label className="text-bold_detail" htmlFor="response">การตอบกลับไปยังผู้ใช้</label>
+            <label className="text-bold_detail" htmlFor="response_to_user">การตอบกลับไปยังผู้ใช้</label>
             <textarea
-              id="response"
+              id="response_to_user"
               name="response"
               placeholder="การตอบกลับไปยังผู้ใช้"
-              value={report.response || ""}
+              value={report.response || ""} // Ensure response is always defined
               onChange={handleChange}
               className="input h-64"
             ></textarea>
