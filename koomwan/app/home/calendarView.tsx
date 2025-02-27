@@ -31,7 +31,15 @@ type HealthLog = {
   blood_sugar_level?: number;
   blood_pressure?: string;
   a1c?: number;
-  mood?: "laugh" | "happy" | "none" | "cried" | "frustrated";
+  mood?:
+    | "laughing"
+    | "happy"
+    | "neutral"
+    | "irritated"
+    | "sick"
+    | "crying"
+    | "angry"
+    | "none";
 };
 
 type DayData = {
@@ -112,20 +120,64 @@ const CalendarScreen = () => {
     return weight / (heightInMeters * heightInMeters);
   };
 
+  const EMOTION_DATA: Record<
+    | "laughing"
+    | "happy"
+    | "neutral"
+    | "irritated"
+    | "sick"
+    | "crying"
+    | "angry"
+    | "none",
+    { image: any; label: string }
+  > = {
+    happy: {
+      image: require("../../assets/Home/emotion-happy.png"),
+      label: "วันนี้ฉันรู้สึกสดใส อารมณ์ดี\nและเต็มไปด้วยพลังบวก!",
+    },
+    angry: {
+      image: require("../../assets/Home/emotion-angry.png"),
+      label: "วันนี้ฉันรู้สึกหงุดหงิด\nและโมโหกับหลายเรื่อง",
+    },
+    crying: {
+      image: require("../../assets/Home/emotion-cried.png"),
+      label: "วันนี้ฉันรู้สึกเสียใจมาก\nจนอยากร้องไห้",
+    },
+    sick: {
+      image: require("../../assets/Home/emotion-frustrated.png"),
+      label: "วันนี้ฉันรู้สึกเศร้า\nและท้อแท้กับชีวิต",
+    },
+    irritated: {
+      image: require("../../assets/Home/emotion-ill.png"),
+      label: "วันนี้ฉันรู้สึกกังวลใจ\nกับหลายสิ่งรอบตัว",
+    },
+    laughing: {
+      image: require("../../assets/Home/emotion-laugh.png"),
+      label: "วันนี้ฉันรู้สึกสนุกสนาน\nและมีความสุขกับทุกอย่าง",
+    },
+    neutral: {
+      image: require("../../assets/Home/emotion-smile.png"),
+      label: "วันนี้ฉันรู้สึกเฉยๆ\nไม่มีอารมณ์อะไรเป็นพิเศษ",
+    },
+    none: {
+      image: require("../../assets/Home/emotion-none.png"),
+      label: "วันนี้ยังไม่มีข้อมูลอารมณ์เลย",
+    },
+  };
+
   // Function to get emotion image based on mood
   const getEmotionImage = (
-    mood: "laugh" | "happy" | "none" | "cried" | "frustrated"
+    mood:
+      | "laughing"
+      | "happy"
+      | "neutral"
+      | "irritated"
+      | "sick"
+      | "crying"
+      | "angry"
+      | "none"
   ) => {
-    const emotionMap: {
-      [key in "laugh" | "happy" | "none" | "cried" | "frustrated"]: any;
-    } = {
-      laugh: require("../../assets/Home/emotion-laugh.png"),
-      happy: require("../../assets/Home/emotion-happy.png"),
-      none: require("../../assets/Home/emotion-none.png"),
-      cried: require("../../assets/Home/emotion-cried.png"),
-      frustrated: require("../../assets/Home/emotion-frustrated.png"),
-    };
-    return emotionMap[mood] || emotionMap.none;
+    return EMOTION_DATA[mood]?.image || EMOTION_DATA.none.image;
   };
 
   const mockDayData: { [key: string]: DayData } = {
@@ -168,7 +220,7 @@ const CalendarScreen = () => {
           weight: 70,
           height: 170,
           blood_sugar_level: 150,
-          mood: "cried",
+          mood: "crying",
         },
       ],
     },
