@@ -32,6 +32,40 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports }) => {
     return row;
   });
 
+  const columnAlignment = isPending
+    ? [
+        "text-center", // ลำดับ
+        "text-left",   // ชื่อบัญชีผู้ใช้
+        "text-center", // หัวข้อที่แจ้ง
+        "text-left",   // เนื้อหาที่แจ้ง
+        "text-center", // วันที่แจ้ง
+      ]
+    : [
+        "text-center", // ลำดับ
+        "text-left",   // ชื่อบัญชีผู้ใช้
+        "text-center", // หัวข้อที่แจ้ง
+        "text-left",   // เนื้อหาที่แจ้ง
+        "text-center", // วันที่แจ้ง
+        "text-left",   // การตอบกลับ
+      ];
+
+  const columnWidths = isPending
+    ? [
+        "w-12",  // ลำดับ
+        "w-24",  // ชื่อบัญชีผู้ใช้
+        "w-20",  // หัวข้อที่แจ้ง
+        "w-32",  // เนื้อหาที่แจ้ง	
+        "w-24",  // วันที่แจ้ง	
+      ]
+    : [
+        "w-12",  // ลำดับ
+        "w-24",  // ชื่อบัญชีผู้ใช้
+        "w-20",  // หัวข้อที่แจ้ง
+        "w-32",  // เนื้อหาที่แจ้ง	
+        "w-24",  // วันที่แจ้ง	
+        "w-32",  // การตอบกลับ
+      ];
+
   const handleRowClick = (rowData: (string | React.ReactNode)[]) => {
     const reportIndex = Number(rowData[0]) - 1;
     if (reportIndex >= 0 && reportIndex < reports.length) {
@@ -50,7 +84,13 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports }) => {
 
   return (
     <div className="w-full">
-      <Table headers={headers} data={data} onRowClick={handleRowClick} />
+      <Table 
+        headers={headers} 
+        data={data} 
+        onRowClick={handleRowClick} 
+        columnAlignment={columnAlignment} 
+        columnWidths={columnWidths} 
+      />
     </div>
   );
 };

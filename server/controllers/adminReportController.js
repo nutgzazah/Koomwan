@@ -105,7 +105,7 @@ const editReport = async (req, res) => {
             });
         }
 
-        // Update the response if provided and adjust status accordingly
+        // ถ้ามี response ที่ไม่ใช่ string เปล่าให้เปลี่ยน status จาก pending เป็น completed
         if (response && response.trim() !== "") {
             report.response = response;
             report.status = "completed";
