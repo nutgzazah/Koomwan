@@ -9,4 +9,5 @@ export interface ForumDataInterface {
   doctor_comment?: string;
   title_report?: string;
   reason_report?: string;
+  report_count?: number;
 }
