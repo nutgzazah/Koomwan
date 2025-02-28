@@ -9,7 +9,8 @@
     "doctor_id": null,
     "doctor_comment": null,
     "title_report": "สแปม",
-    "reason_report": ""
+    "reason_report": "",
+    "report_count": 2
   },
   {
     "forum_id": "2",
@@ -21,7 +22,8 @@
     "doctor_id": null,
     "doctor_comment": null,
     "title_report": "ข้อมูลเท็จ",
-    "reason_report": ""
+    "reason_report": "",
+    "report_count": 0
   },
   {
     "forum_id": "3",
@@ -33,6 +35,7 @@
     "doctor_id": null,
     "doctor_comment": null,
     "title_report": "เนื้อหาไม่เหมาะสม",
-    "reason_report": ""
+    "reason_report": "",
+    "report_count": 0
   }
 ]
