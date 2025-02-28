@@ -6,5 +6,5 @@ export const statusMapping: { [key: string]: string } = {
 
 export const statusReport: { [key: string]: string } = {
     pending: "รอการจัดการ",
-    resolved: "จัดการแล้ว",
+    completed: "จัดการแล้ว",
 };

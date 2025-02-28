@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { BlogInterface } from "@/interfaces/blogInterface";
-import Image from "next/image";
+// import Image from "next/image";
 import axios from "axios";
 import DeletePopup from "./components/DeletePopup";
 
@@ -94,24 +94,6 @@ const EditBlogForm: React.FC = () => {
   const handleDelete = () => {
     setIsDeletePopupOpen(true);
   };
-
-  const handleDeleteConfirm = async () => {
-    if (!articleId) {
-      console.error("Error: articleId is undefined");
-      return;
-    }
-  
-    try {
-      console.log("Deleting blog:", articleId);
-      await axios.delete(`http://localhost:8080/api/v1/admin/deleteBlog/${articleId}`);
-  
-      setIsDeletePopupOpen(false);
-      router.push("/articleManagement"); 
-    } catch (error) {
-      console.error("Error deleting blog:", error);
-    }
-  };
-  
 
   if (loading) {
     return <div className="text-center p-4">Loading...</div>;
@@ -206,7 +188,6 @@ const EditBlogForm: React.FC = () => {
       {isDeletePopupOpen && blog?._id && (
         <DeletePopup 
           onClose={() => setIsDeletePopupOpen(false)} 
-          onConfirm={handleDeleteConfirm} 
           articleId={blog._id} 
         />
       )}

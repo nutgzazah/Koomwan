@@ -53,7 +53,7 @@ const getAllBlog = async (req, res) => {
         console.error(error);
         return res.status(500).send({
             success: false,
-            message: "Error fetching users",
+            message: "Error fetching blogs",
             error,
         });
     }
@@ -97,7 +97,7 @@ const editBlog = async (req, res) => {
         { new: true, runValidators: true }
       );
   
-      res.json({ message: 'Update Blog complete!', menu: updatedBlog }); 
+      res.json({ message: 'Update Blog complete!', blog: updatedBlog }); 
     } catch (err) {
       res.status(500).json({ message: 'Internal server error', error: err.message });
     }
@@ -106,6 +106,10 @@ const editBlog = async (req, res) => {
 const deleteBlog = async (req, res) => { 
     try {
         const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid blog ID." });
+        }
       
         const deletedBlog = await blogModel.findByIdAndDelete(id);
       
@@ -120,6 +124,5 @@ const deleteBlog = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error", error: err.message });
     }
 };
-
 
 module.exports = { addBlog, getAllBlog, getBlogById, editBlog, deleteBlog };

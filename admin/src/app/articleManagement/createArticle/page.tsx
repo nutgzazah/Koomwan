@@ -44,10 +44,10 @@ const CreateArticle: React.FC = () => {
 
   const validate = () => {
     const errors: Record<string, string> = {};
-    if (!blog.title) errors.title = 'Title is required';
-    if (!blog.category || blog.category.length === 0) errors.category = 'Category is required';
-    if (!blog.content) errors.content = 'Content is required';
-    if (!blog.ref) errors.ref = 'Ref is required';
+    if (!blog.title) errors.title = 'กรุณาใส่ชื่อบทความ';
+    if (!blog.category || blog.category.length === 0) errors.category = 'กรุณาเลือกหมวดหมู่';
+    if (!blog.content) errors.content = 'กรุณาใส่เนื้อหา';
+    if (!blog.ref) errors.ref = 'กรุณาใส่แหล่งอ้างอิง';
     return errors;
   };
 
@@ -64,24 +64,16 @@ const CreateArticle: React.FC = () => {
       const blogData = {
         ...blog,
         date: new Date().toISOString(),
-        category: Array.isArray(blog.category) ? blog.category.join(", ") : blog.category, // Ensure correct format
+        category: Array.isArray(blog.category) ? blog.category.join(", ") : blog.category,
       };
   
-      console.log("Sending blog data:", JSON.stringify(blogData, null, 2)); // Debug log
+      await axios.post("http://localhost:8080/api/v1/admin/addBlog", blogData, {
+        headers: { "Content-Type": "application/json" },
+      });
   
-      const response = await axios.post(
-        "http://localhost:8080/api/v1/admin/addBlog",
-        blogData,
-        { headers: { "Content-Type": "application/json" } } 
-      );
-  
-      console.log("Response:", response.data); 
       router.push("/articleManagement");
     } catch (error) {
-      console.error("Error adding blog:", error);
-  
       if (axios.isAxiosError(error) && error.response) {
-        console.error("Backend Response:", error.response.data);
         setServerError(error.response.data.message || "An error occurred");
       } else {
         setServerError("An unexpected error occurred");
@@ -95,30 +87,18 @@ const CreateArticle: React.FC = () => {
 
   return (
     <div className="w-full flex flex-col gap-4">
+      {serverError && <p className="text-red-500">{serverError}</p>}
+      
       <div>
         <label className="text-bold_detail" htmlFor="title">ชื่อบทความ</label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          placeholder="ชื่อบทความ"
-          value={blog.title || ""}
-          onChange={handleChange}
-          className="input"
-        />
+        <input type="text" id="title" name="title" placeholder="ชื่อบทความ" value={blog.title || ""} onChange={handleChange} className="input" />
+        {errors.title && <p className="text-red-500 mt-2">{errors.title}</p>}
       </div>
 
       <div>
         <label className="text-bold_detail" htmlFor="ref">อ้างอิง</label>
-        <input
-          type="text"
-          id="ref"
-          name="ref"
-          placeholder="อ้างอิง"
-          value={blog.ref || ""}
-          onChange={handleChange}
-          className="input"
-        />
+        <input type="text" id="ref" name="ref" placeholder="อ้างอิง" value={blog.ref || ""} onChange={handleChange} className="input" />
+        {errors.ref && <p className="text-red-500 mt-2">{errors.ref}</p>}
       </div>
 
       <div>
@@ -126,16 +106,12 @@ const CreateArticle: React.FC = () => {
         <div className="flex flex-wrap gap-4">
           {categories.map((category) => (
             <label key={category} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={blog.category?.includes(category) || false}
-                onChange={() => handleCategoryChange(category)}
-                className="w-4 h-4"
-              />
+              <input type="checkbox" checked={blog.category?.includes(category) || false} onChange={() => handleCategoryChange(category)} className="w-4 h-4" />
               {category}
             </label>
           ))}
         </div>
+        {errors.category && <p className="text-red-500 mt-2">{errors.category}</p>}
       </div>
 
       <div>
@@ -156,23 +132,13 @@ const CreateArticle: React.FC = () => {
 
       <div>
         <label className="text-bold_detail" htmlFor="content">เนื้อหา</label>
-        <textarea
-          id="content"
-          name="content"
-          placeholder="กรอกเนื้อหา"
-          value={blog.content || ""}
-          onChange={handleChange}
-          className="input h-64"
-        ></textarea>
+        <textarea id="content" name="content" placeholder="กรอกเนื้อหา" value={blog.content || ""} onChange={handleChange} className="input h-64"></textarea>
+        {errors.content && <p className="text-red-500 mt-2">{errors.content}</p>}
       </div>
 
       <div className="flex justify-center space-x-4">
-        <button onClick={handleSubmit} className="btn blue-btn short-btn">
-          ส่งบทความ
-        </button>
-        <button onClick={handleCancel} className="btn white-btn short-btn">
-          ยกเลิก
-        </button>
+        <button onClick={handleSubmit} className="btn blue-btn short-btn">ส่งบทความ</button>
+        <button onClick={handleCancel} className="btn white-btn short-btn">ยกเลิก</button>
       </div>
     </div>
   );
