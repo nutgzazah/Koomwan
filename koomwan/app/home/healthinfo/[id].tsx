@@ -12,6 +12,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import BackButton from "../../../global/components/BackButton";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
+import EmotionDisplay from "../../../components/home/healthinfo/EmotionDisplay";
+import { calculateBMI, getBMICategory } from "../../utils/bmi";
+import BMISection from "../../../components/home/healthinfo/BMISection";
 
 type HealthLogData = {
   date: string;
@@ -75,100 +78,12 @@ const CalendarHealthScreen = () => {
 
   const healthData = mockHealthDetails[id as string];
 
-  const EMOTION_DATA: Record<
-    | "laughing"
-    | "happy"
-    | "neutral"
-    | "irritated"
-    | "sick"
-    | "crying"
-    | "angry"
-    | "none",
-    { image: any; label: string }
-  > = {
-    happy: {
-      image: require("../../../assets/Home/emotion-happy.png"),
-      label: "วันนี้ฉันรู้สึกสดใส อารมณ์ดี\nและเต็มไปด้วยพลังบวก!",
-    },
-    angry: {
-      image: require("../../../assets/Home/emotion-angry.png"),
-      label: "วันนี้ฉันรู้สึกหงุดหงิด\nและโมโหกับหลายเรื่อง",
-    },
-    crying: {
-      image: require("../../../assets/Home/emotion-cried.png"),
-      label: "วันนี้ฉันรู้สึกเสียใจมาก\nจนอยากร้องไห้",
-    },
-    sick: {
-      image: require("../../../assets/Home/emotion-frustrated.png"),
-      label: "วันนี้ฉันรู้สึกเศร้า\nและท้อแท้กับชีวิต",
-    },
-    irritated: {
-      image: require("../../../assets/Home/emotion-ill.png"),
-      label: "วันนี้ฉันรู้สึกกังวลใจ\nกับหลายสิ่งรอบตัว",
-    },
-    laughing: {
-      image: require("../../../assets/Home/emotion-laugh.png"),
-      label: "วันนี้ฉันรู้สึกสนุกสนาน\nและมีความสุขกับทุกอย่าง",
-    },
-    neutral: {
-      image: require("../../../assets/Home/emotion-smile.png"),
-      label: "วันนี้ฉันรู้สึกเฉยๆ\nไม่มีอารมณ์อะไรเป็นพิเศษ",
-    },
-    none: {
-      image: require("../../../assets/Home/emotion-none.png"),
-      label: "วันนี้ยังไม่มีข้อมูลอารมณ์เลย",
-    },
-  };
-
-  // Function to get emotion image based on mood
-  const getEmotionImage = (
-    mood:
-      | "laughing"
-      | "happy"
-      | "neutral"
-      | "irritated"
-      | "sick"
-      | "crying"
-      | "angry"
-      | "none"
-  ) => {
-    return EMOTION_DATA[mood]?.image || EMOTION_DATA.none.image;
-  };
-
-  // Function to get emotion label based on mood
-  const getEmotionLabel = (
-    mood:
-      | "laughing"
-      | "happy"
-      | "neutral"
-      | "irritated"
-      | "sick"
-      | "crying"
-      | "angry"
-      | "none"
-  ) => {
-    return EMOTION_DATA[mood]?.label || EMOTION_DATA.none.label;
-  };
-
   // Calculate BMI
-  const calculateBMI = (weight: number, height: number): number => {
-    // Convert height to meters if it's in centimeters
-    const heightInMeters = height / 100;
-    return weight / (heightInMeters * heightInMeters);
-  };
-
-  // Get BMI category in Thai
-  const getBMICategory = (bmi: number): { text: string; color: string } => {
-    if (bmi < 18.5) {
-      return { text: "ผอม", color: "#FFD444" }; // underweight (yellow)
-    } else if (bmi >= 18.5 && bmi < 25) {
-      return { text: "สมส่วน", color: "#2ED74D" }; // normal (green)
-    } else if (bmi >= 25 && bmi < 30) {
-      return { text: "น้ำหนักเกิน", color: "#FFD444" }; // overweight (yellow)
-    } else {
-      return { text: "อ้วน", color: "#FE5757" }; // obese (red)
-    }
-  };
+  const bmi =
+    healthData.height && healthData.weight
+      ? calculateBMI(healthData.weight, healthData.height)
+      : null;
+  const bmiCategory = bmi ? getBMICategory(bmi) : null;
 
   if (!healthData) {
     return (
@@ -184,14 +99,6 @@ const CalendarHealthScreen = () => {
       </SafeAreaView>
     );
   }
-
-  // Calculate BMI if height and weight are available
-  const bmi =
-    healthData.height && healthData.weight
-      ? calculateBMI(healthData.weight, healthData.height)
-      : null;
-
-  const bmiCategory = bmi ? getBMICategory(bmi) : null;
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -209,16 +116,7 @@ const CalendarHealthScreen = () => {
 
             <BreakLine />
 
-            <View className="flex-row justify-center items-center mb-4">
-              <Image
-                source={getEmotionImage(healthData.mood || "none")}
-                className="w-16 h-16"
-                resizeMode="contain"
-              />
-              <Text className="text-description text-secondary font-regular ml-4 items-center">
-                {getEmotionLabel(healthData.mood || "none")}
-              </Text>
-            </View>
+            <EmotionDisplay mood={healthData.mood || "none"} />
 
             <BreakLine />
             <View className="items-center mt-2">
@@ -403,60 +301,7 @@ const CalendarHealthScreen = () => {
               )}
             </View>
 
-            {bmi && bmiCategory ? (
-              <>
-                <BreakLine />
-                <View className="items-center mt-2">
-                  <Text className="text-headline text-secondary font-medium mb-4">
-                    ดัชนีมวลกายของฉัน
-                  </Text>
-                </View>
-
-                <View className="items-center mb-6 flex-row justify-center">
-                  <Image
-                    source={require("../../../assets/Home/body-blue.png")}
-                    className="w-24 h-24 "
-                    resizeMode="contain"
-                  />
-                  <View className="items-center px-3">
-                    <Text
-                      className="text-display font-bold mt-2"
-                      style={{ color: bmiCategory.color }}
-                    >
-                      {bmiCategory.text}
-                    </Text>
-                    <Text className="text-description text-secondary font-regular">
-                      {bmi.toFixed(2)} กก./ม.²
-                    </Text>
-                  </View>
-                </View>
-              </>
-            ) : (
-              <>
-                <BreakLine />
-                <View className="items-center mt-2">
-                  <Text className="text-headline text-secondary font-medium mb-4">
-                    ดัชนีมวลกายของฉัน
-                  </Text>
-                </View>
-
-                <View className="items-center mb-6 flex-row justify-center">
-                  <Image
-                    source={require("../../../assets/Home/body.png")}
-                    className="w-24 h-24 "
-                    resizeMode="contain"
-                  />
-                  <View className="items-center px-3">
-                    <Text className="text-body font-regular mt-2">
-                      ไม่พบข้อมูล
-                    </Text>
-                    <Text className="text-tag text-secondary font-regular text-center">
-                      ยังไม่มีข้อมูลน้ำหนัก{"\n"}และส่วนสูง
-                    </Text>
-                  </View>
-                </View>
-              </>
-            )}
+            <BMISection bmi={bmi} bmiCategory={bmiCategory} />
 
             <BreakLine />
 
