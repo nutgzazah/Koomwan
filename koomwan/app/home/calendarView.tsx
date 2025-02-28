@@ -13,6 +13,8 @@ import Card from "../../global/components/Card";
 import Checkbox from "expo-checkbox";
 import BreakLine from "../../global/components/BreakLine";
 import { useRouter } from "expo-router";
+import { getEmotionImage } from "../../constant/emotion";
+import { calculateBMI } from "../utils/bmi";
 
 type MedicationLog = {
   time: string;
@@ -112,72 +114,6 @@ const CalendarScreen = () => {
   const mockMarkedDates = {
     "2025-03-02": { marked: true, dotColor: "#3972F0" },
     "2025-03-04": { marked: true, dotColor: "#3972F0" },
-  };
-
-  const calculateBMI = (weight: number, height: number): number => {
-    // Convert height to meters if it's in centimeters
-    const heightInMeters = height > 3 ? height / 100 : height;
-    return weight / (heightInMeters * heightInMeters);
-  };
-
-  const EMOTION_DATA: Record<
-    | "laughing"
-    | "happy"
-    | "neutral"
-    | "irritated"
-    | "sick"
-    | "crying"
-    | "angry"
-    | "none",
-    { image: any; label: string }
-  > = {
-    happy: {
-      image: require("../../assets/Home/emotion-happy.png"),
-      label: "วันนี้ฉันรู้สึกสดใส อารมณ์ดี\nและเต็มไปด้วยพลังบวก!",
-    },
-    angry: {
-      image: require("../../assets/Home/emotion-angry.png"),
-      label: "วันนี้ฉันรู้สึกหงุดหงิด\nและโมโหกับหลายเรื่อง",
-    },
-    crying: {
-      image: require("../../assets/Home/emotion-cried.png"),
-      label: "วันนี้ฉันรู้สึกเสียใจมาก\nจนอยากร้องไห้",
-    },
-    sick: {
-      image: require("../../assets/Home/emotion-frustrated.png"),
-      label: "วันนี้ฉันรู้สึกเศร้า\nและท้อแท้กับชีวิต",
-    },
-    irritated: {
-      image: require("../../assets/Home/emotion-ill.png"),
-      label: "วันนี้ฉันรู้สึกกังวลใจ\nกับหลายสิ่งรอบตัว",
-    },
-    laughing: {
-      image: require("../../assets/Home/emotion-laugh.png"),
-      label: "วันนี้ฉันรู้สึกสนุกสนาน\nและมีความสุขกับทุกอย่าง",
-    },
-    neutral: {
-      image: require("../../assets/Home/emotion-smile.png"),
-      label: "วันนี้ฉันรู้สึกเฉยๆ\nไม่มีอารมณ์อะไรเป็นพิเศษ",
-    },
-    none: {
-      image: require("../../assets/Home/emotion-none.png"),
-      label: "วันนี้ยังไม่มีข้อมูลอารมณ์เลย",
-    },
-  };
-
-  // Function to get emotion image based on mood
-  const getEmotionImage = (
-    mood:
-      | "laughing"
-      | "happy"
-      | "neutral"
-      | "irritated"
-      | "sick"
-      | "crying"
-      | "angry"
-      | "none"
-  ) => {
-    return EMOTION_DATA[mood]?.image || EMOTION_DATA.none.image;
   };
 
   const mockDayData: { [key: string]: DayData } = {
