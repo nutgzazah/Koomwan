@@ -2,82 +2,41 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import React from "react";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
+import { useRouter } from "expo-router";
+import { getEmotionImage } from "../../constant/emotion";
+import { getBMICategory } from "../../app/utils/bmi";
 
 const Emotion = () => {
-  // Function to get emotion image based on mood
-  const getEmotionImage = (
-    mood: "laugh" | "happy" | "none" | "cried" | "frustrated"
-  ) => {
-    const emotionMap: {
-      [key in "laugh" | "happy" | "none" | "cried" | "frustrated"]: any;
-    } = {
-      laugh: require("../../assets/Home/emotion-laugh.png"),
-      happy: require("../../assets/Home/emotion-happy.png"),
-      none: require("../../assets/Home/emotion-none.png"),
-      cried: require("../../assets/Home/emotion-cried.png"),
-      frustrated: require("../../assets/Home/emotion-frustrated.png"),
-    };
-    return emotionMap[mood] || emotionMap.none;
-  };
+  const router = useRouter();
 
   // Function to get text color based on BMI value
   const getBMIColor = (bmi: string) => {
     if (!bmi || bmi === "-") return "text-gray";
     const bmiValue = parseFloat(bmi);
-
-    if (bmiValue < 18.5) return "text-abnormal"; // Underweight
-    if (bmiValue <= 22.9) return "text-primary"; // Normal
-    if (bmiValue <= 24.9) return "text-warning"; // Overweight
-    return "text-abnormal"; // Obese
+    const { color } = getBMICategory(bmiValue);
+    return color;
   };
 
   // Mock data structure - API later
-  type Mood = "laugh" | "happy" | "none" | "cried" | "frustrated";
+  type Mood =
+    | "laughing"
+    | "happy"
+    | "neutral"
+    | "irritated"
+    | "sick"
+    | "crying"
+    | "angry"
+    | "none";
 
   const mockData: { day: string; bmi: string; mood: Mood; hasPill: boolean }[] =
     [
-      {
-        day: "อา.",
-        bmi: "22.14",
-        mood: "laugh",
-        hasPill: true,
-      },
-      {
-        day: "จ.",
-        bmi: "23.14",
-        mood: "happy",
-        hasPill: false,
-      },
-      {
-        day: "อ.",
-        bmi: "-",
-        mood: "none",
-        hasPill: false,
-      },
-      {
-        day: "พ.",
-        bmi: "22.39",
-        mood: "happy",
-        hasPill: true,
-      },
-      {
-        day: "พฤ.",
-        bmi: "22.87",
-        mood: "cried",
-        hasPill: false,
-      },
-      {
-        day: "ศ.",
-        bmi: "23.86",
-        mood: "frustrated",
-        hasPill: true,
-      },
-      {
-        day: "ส.",
-        bmi: "25.61",
-        mood: "cried",
-        hasPill: true,
-      },
+      { day: "อา.", bmi: "22.14", mood: "laughing", hasPill: true },
+      { day: "จ.", bmi: "23.14", mood: "happy", hasPill: false },
+      { day: "อ.", bmi: "-", mood: "none", hasPill: false },
+      { day: "พ.", bmi: "22.39", mood: "happy", hasPill: true },
+      { day: "พฤ.", bmi: "22.87", mood: "crying", hasPill: false },
+      { day: "ศ.", bmi: "23.86", mood: "irritated", hasPill: true },
+      { day: "ส.", bmi: "25.61", mood: "crying", hasPill: true },
     ];
 
   return (
@@ -100,7 +59,8 @@ const Emotion = () => {
 
             {/* BMI Value */}
             <Text
-              className={`text-tag font-regular ${getBMIColor(item.bmi)} mb-2`}
+              className={`text-tag font-regular mb-2`}
+              style={{ color: getBMIColor(item.bmi) }}
             >
               {item.bmi}
             </Text>
@@ -125,7 +85,10 @@ const Emotion = () => {
       </View>
 
       {/* Calendar Button */}
-      <TouchableOpacity className="w-full bg-primary py-4 rounded-lg flex-row justify-center items-center">
+      <TouchableOpacity
+        className="w-full bg-primary py-4 rounded-lg flex-row justify-center items-center"
+        onPress={() => router.push("/home/calendarView")}
+      >
         <Text className="text-button font-bold text-card mr-2">
           มุมมองปฏิทิน
         </Text>
