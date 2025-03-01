@@ -1,12 +1,30 @@
 'use client';
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import ForumTable from "./components/ForumTable";
+import { ForumDataInterface } from "@/interfaces/forumInterface";
 
-export default function MedicalManagement() {
+export default function ForumManagement() {
+  const [forumList, setForumList] = useState<ForumDataInterface[]>([]);
+
+  useEffect(() => {
+    const fetchForums = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/api/v1/admin/forum/reported");
+        console.log("Fetched forum data:", response.data);
+        setForumList(response.data); 
+      } catch (error) {
+        console.error("Error fetching forum data:", error);
+      }
+    };
+
+    fetchForums(); 
+  }, []); 
+
   return (
-    <div>
-      <ForumTable />
+    <div className="w-full">
+      <ForumTable forums={forumList} />
     </div>
   );
 }

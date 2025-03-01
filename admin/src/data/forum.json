@@ -1,41 +1,31 @@
 [
   {
     "forum_id": "1",
-    "user_id": "01",
-    "username": "Popo",
-    "text": "ตัวอย่างเนื้อหาฟอรั่ม เช่น รูปภาพ ข้อความ หรือคอนเทนต์อื่น ๆ ที่ต้องการตรวจสอบ",
-    "date_and_time": "2025-01-21T10:30:00",
-    "like": 0,
-    "doctor_id": null,
-    "doctor_comment": null,
-    "title_report": "สแปม",
-    "reason_report": "",
-    "report_count": 2
-  },
-  {
-    "forum_id": "2",
-    "user_id": "02",
-    "username": "Popo",
-    "text": "คำแนะนำที่เกี่ยวกับการดูแลสุขภาพและการออกกำลังกาย",
-    "date_and_time": "2025-01-21T10:25:00",
-    "like": 2,
-    "doctor_id": null,
-    "doctor_comment": null,
-    "title_report": "ข้อมูลเท็จ",
-    "reason_report": "",
-    "report_count": 0
-  },
-  {
-    "forum_id": "3",
-    "user_id": "03",
-    "username": "Popo",
-    "text": "หัวข้อสนทนาเกี่ยวกับอาหารที่เหมาะสำหรับผู้ป่วยโรคเบาหวาน",
-    "date_and_time": "2025-01-21T10:20:00",
-    "like": 5,
-    "doctor_id": null,
-    "doctor_comment": null,
-    "title_report": "เนื้อหาไม่เหมาะสม",
-    "reason_report": "",
-    "report_count": 0
+    "postedBy": "6796545732edd320d74b9b00",
+    "title": "เป็นคนที่เธอรักต้องทำยังไงหรอครับ",
+    "image": "forumImage/koomwan-user1-1740568711675-a088e4.jpg",
+    "likes": {},
+    "reports": {
+      "count": 2,
+      "users": [
+        "6796545732edd320d74b9b00",
+        "67ad3a2c910f3f748132c730"
+      ],
+      "reasons": [
+        {
+          "user": "6796545732edd320d74b9b00",
+          "reason": "This post contains inappropriate content",
+          "date": "2025-02-26T13:00:05.219+00:00"
+        },
+        {
+          "user": "67ad3a2c910f3f748132c730",
+          "reason": "This post contains inappropriate content",
+          "date": "2025-02-28T14:41:00.932+00:00"
+        }
+      ]
+    },
+    "comments": 5,
+    "createdAt": "2025-02-26T11:18:33.198+00:00",
+    "updatedAt": "2025-02-28T14:41:00.942+00:00"
   }
 ]

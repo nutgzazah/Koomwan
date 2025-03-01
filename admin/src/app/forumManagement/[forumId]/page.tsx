@@ -1,46 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { ForumDataInterface } from "@/interfaces/forumInterface";
-import forums from "@/data/forum.json";
 import DeleteReasonPopup from "../components/deleteReason";
 import ApprovePopup from "../components/ApprovePopup";
-
-const transformData = (data: ForumDataInterface[]) => {
-  if (!Array.isArray(data)) return [];
-  return data.map((item, index) => ({
-    transID: index + 1,
-    forumId: item.forum_id,
-    user_id: item.user_id,
-    username: item.username,
-    text: item.text,
-    date_and_time: item.date_and_time,
-    like: item.like,
-    doctor_id: item.doctor_id ?? undefined,
-    doctor_comment: item.doctor_comment ?? undefined,
-    title_report: item.title_report,
-    reason_report: item.reason_report,
-  }));
-};
+import DetailPopup from "../components/detailPopup";
 
 const ForumID: React.FC = () => {
   const { forumId } = useParams();
-  const transformedForums = transformData(forums);
+  const [forum, setForum] = useState<ForumDataInterface | null>(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [isApprovePopupOpen, setIsApprovePopupOpen] = useState(false);
+  const [isDetailPopupOpen, setIsDetailPopupOpen] = useState(false);
   const router = useRouter();
 
-  const forum = transformedForums.find((f) => String(f.forumId) === forumId);
+  useEffect(() => {
+    const fetchForum = async () => {
+      if (!forumId) return;
 
-  const handleApprove = () => {
-    setIsApprovePopupOpen(true);
-  };
+      try {
+        const response = await axios.get(`http://localhost:8080/api/v1/admin/forum/reported/${forumId}`);
+        console.log("Fetched forum data:", response.data);
 
-  const handleDeleteConfirm = () => {
-    setIsDeletePopupOpen(false);
-    router.push("/forumManagement");
-  };
+        setForum(response.data.data || response.data);
+      } catch (error) {
+        console.error("Error fetching forum data:", error);
+      }
+    };
+
+    fetchForum();
+  }, [forumId]);
 
   if (!forum) {
     return (
@@ -50,64 +41,35 @@ const ForumID: React.FC = () => {
     );
   }
 
+  const handleApprove = () => setIsApprovePopupOpen(true);
+  const handleDeleteConfirm = () => {
+    setIsDeletePopupOpen(false);
+    router.push("/forumManagement");
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-center space-x-2">
-        <p className='text-detail_3 text-secondary'>หมวดหมู่ : </p>
-          <p
-            className="btn lightblue-btn p-2 rounded-md"
-          >
-            {forum.title_report}
-          </p>
+        <p className='text-detail_3 text-secondary'>จำนวนครั้งที่ถูกรายงาน : </p>
+        <p>{forum.reports?.count || 0} ครั้ง</p>
+        <button className="btn lightblue-btn p-2 rounded-md" onClick={() => setIsDetailPopupOpen(true)}>
+          คลิกเพื่อดูรายละเอียด
+        </button>
       </div>
-
-      <h2 className="text-headline_3 text-secondary">{forum.username}</h2>
-      <p className="text-detail_3 text-secondary">เขียนเมื่อ {forum.date_and_time}</p>
-
-      <div>
-        <p className="text-detail_2 text-secondary">
-          {forum.text}
-        </p>
-      </div>
-
-      {/* Image */}
-      <div className="w-full h-auto mb-6">
-        <img
-          src={forum.image}
-          alt="forum image"
-          className="w-full h-auto object-cover rounded-md"
-        />
-      </div>
-
+      <h2 className="text-headline_3 text-secondary">{forum.title}</h2>
+      <p className="text-detail_3 text-secondary">เขียนเมื่อ {new Date(forum.createdAt).toLocaleString()}</p>
+      {forum.image && typeof forum.image === "string" && (
+        <div className="w-full h-auto mb-6">
+          <img src={forum.image} alt="forum image" className="w-full h-auto object-cover rounded-md" />
+        </div>
+      )}
       <div className="flex w-full justify-center space-x-4 mt-4">
-          <button
-            className="btn green-btn short-btn"
-            onClick={handleApprove}
-          >
-            อนุมัติ
-          </button>
-          <button
-            className="btn red-btn short-btn"
-            onClick={() => setIsDeletePopupOpen(true)}
-          >
-            ลบ
-          </button>
+        <button className="btn green-btn short-btn" onClick={handleApprove}>อนุมัติ</button>
+        <button className="btn red-btn short-btn" onClick={() => setIsDeletePopupOpen(true)}>ลบ</button>
       </div>
-
-      {/* Delete Reason Popup */}
-      {isDeletePopupOpen && (
-        <DeleteReasonPopup
-          onClose={() => setIsDeletePopupOpen(false)}
-          onConfirm={handleDeleteConfirm}
-        />
-      )}
-
-      {isApprovePopupOpen && (
-        <ApprovePopup
-          onClose={() => setIsApprovePopupOpen(false)}
-        />
-      )}
-
+      {isDeletePopupOpen && <DeleteReasonPopup onClose={() => setIsDeletePopupOpen(false)} onConfirm={handleDeleteConfirm} />}
+      {isApprovePopupOpen && <ApprovePopup onClose={() => setIsApprovePopupOpen(false)} />}
+      {isDetailPopupOpen && <DetailPopup onClose={() => setIsDetailPopupOpen(false)} forumId={forumId} />}
     </div>
   );
 };
