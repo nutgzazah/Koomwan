@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Forum = require('../models/forumModel');
 
 // ดึงโพสต์ที่ reportCount > 0
@@ -50,4 +51,71 @@ const getReportedPostById = async (req, res) => {
     }
 };
 
-module.exports = { getAllReportedPosts, getReportedPostById };
+// กดอนุมัติแล้ว reportCount จะถูกรีใหม่เป็น 0 และลบข้อมูล users กับ reasons ที่ report ออก
+const ApprovePost = async (req, res) => {
+    try {
+        const { id } = req.body; // รับ id ของโพสต์ที่จะอนุมัติ
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Post ID is required",
+            });
+        }
+
+        // Update post ให้ count = 0 และลบข้อมูล users กับ reasons ที่ report ออก
+        const updatedPost = await Forum.findByIdAndUpdate(
+            id,
+            { 
+                $set: { "reports.count": 0 }, // Reset count = 0
+                $unset: { "reports.reasons": "", "reports.users": "" } // ลบข้อมูล users กับ reasons ที่ report ออก
+            }, 
+            { new: true } 
+        );
+
+        if (!updatedPost) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Post approved successfully",
+            post: updatedPost,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error approving post",
+            error: error.message,
+        });
+    }
+};
+
+
+const deletePost = async (req, res) => { 
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid post ID." });
+        }
+      
+        const deletedPost = await Forum.findByIdAndDelete(id);
+      
+        if (!deletedPost) {
+            return res.status(404).json({ success: false, message: "Post not found." });
+        }
+
+        res.status(200).json({ success: true, message: "Post deleted successfully.", post: deletedPost });
+
+    } catch (err) {
+        console.error("Error in deletePost:", err);
+        res.status(500).json({ success: false, message: "Internal server error", error: err.message });
+    }
+};
+
+module.exports = { getAllReportedPosts, getReportedPostById, ApprovePost, deletePost };
