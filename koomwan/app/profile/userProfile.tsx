@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import BackButton from "../../global/components/BackButton";
 import { router, useRouter } from "expo-router";
+import axios from "axios";
 
 // InfoRow component สำหรับแสดงข้อมูลแต่ละแถว
 interface InfoRowProps {
@@ -50,6 +51,32 @@ const InfoRow: React.FC<InfoRowProps> = ({
 
 export default function ProfileScreen() {
   const router = useRouter();
+  interface ProfileData {
+    profileImage: string;
+    username: string;
+    height: string;
+    age: string;
+    gender: string;
+    role: string;
+    phone: string;
+  }
+
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+
+  useEffect(() => {
+    // Fetch data from the API
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/userProfile"
+        ); // Replace with your actual API endpoint
+        setProfileData(response.data);
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const userInfo = {
     username: "Somchai123",
@@ -61,6 +88,14 @@ export default function ProfileScreen() {
     email: "",
     phone: "0819430552",
   };
+
+  if (!profileData) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <Text>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -77,7 +112,7 @@ export default function ProfileScreen() {
             {/* Profile Image */}
             <View className="relative mb-4">
               <Image
-                source={userInfo.profileImage}
+                source={{ uri: profileData.profileImage }}
                 className="w-[150px] h-[150px] rounded-full"
               />
             </View>
@@ -89,7 +124,7 @@ export default function ProfileScreen() {
                 className="w-6 h-6"
               />
               <Text className="text-headline font-bold text-secondary pl-2">
-                {userInfo.username}
+                {profileData.username}
               </Text>
             </View>
 
@@ -100,25 +135,25 @@ export default function ProfileScreen() {
               <InfoRow
                 icon={require("../../assets/Profile/ruler-pen.png")}
                 label="ส่วนสูง"
-                value={userInfo.height}
+                value={profileData.height}
               />
 
               <InfoRow
                 icon={require("../../assets/Profile/cake.png")}
                 label="วันเกิด"
-                value={userInfo.birthDate}
+                value={profileData.age}
               />
 
               <InfoRow
                 icon={require("../../assets/Profile/sex.png")}
                 label="เพศ"
-                value={userInfo.gender}
+                value={profileData.gender}
               />
 
               <InfoRow
                 icon={require("../../assets/Profile/heart.png")}
                 label="สถานะ"
-                value={userInfo.status}
+                value={profileData.role}
               />
 
               <InfoRow
@@ -131,7 +166,7 @@ export default function ProfileScreen() {
               <InfoRow
                 icon={require("../../assets/Profile/phone.png")}
                 label="เบอร์โทรศัพท์"
-                value={userInfo.phone}
+                value={profileData.phone}
               />
             </View>
           </View>
