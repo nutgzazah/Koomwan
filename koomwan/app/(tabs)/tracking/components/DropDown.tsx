@@ -50,7 +50,7 @@ export default function Dropdown({
                 className="flex flex-row items-center border border-gray bg-background p-2 rounded-lg"
                 style={dropdownStyle}
             >
-                <Text className="text-desciption font-sans flex-1 text-gray">{selectedChoice || "เลือกประเภ"}</Text>
+                <Text className="text-desciption font-sans flex-1 text-gray">{selectedChoice || "เลือกประเภท"}</Text>
                 <Image
                     source={isDropdownOpen ? arrowUpIcon : arrowDownIcon}
                     className="w-6 h-6"

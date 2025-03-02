@@ -4,7 +4,7 @@ import {
   ScrollView, 
   View, 
   TouchableOpacity, 
-  Alert, 
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
@@ -40,8 +40,7 @@ export default function TrackingScreen() {
     bloodPressure: {
       systolic: "",
       diastolic: ""
-    }
-    ,
+    },
     mood: ""
   });
 
@@ -65,7 +64,7 @@ export default function TrackingScreen() {
     (field) => formData[field as keyof typeof formData] !== ""
   );
 
-  //Validation For Input
+  // Validation For Input
   const ranges: Record<string, [number, number]> = {
     weight: [30, 300],
     height: [100, 250],
@@ -75,11 +74,9 @@ export default function TrackingScreen() {
     bloodPressureDiastolic: [30, 200],
   };
 
-  //แก้ Validation
+  // Validate Input
   const validateInput = (name: string, value: string) => {
     const numValue = parseFloat(value);
-  
-    // สร้าง Object สำหรับชื่อของฟิลด์ที่จะใช้ในการแสดงผลการตรวจสอบ
     const fieldNames: Record<string, string> = {
       weight: "น้ำหนัก",
       height: "ส่วนสูง",
@@ -88,20 +85,19 @@ export default function TrackingScreen() {
       bloodPressureSystolic: "ความดันตัวบน",
       bloodPressureDiastolic: "ความดันตัวล่าง"
     };
-  
+
     if (!/^\d*\.?\d*$/.test(value) || (ranges[name] && (numValue < ranges[name][0] || numValue > ranges[name][1]))) {
-      return `กรุณากรอก ${fieldNames[name] || name} ให้ถูกต้อง`; // แสดงชื่อที่ตรงกับฟิลด์แทน
+      return `กรุณากรอก ${fieldNames[name] || name} ให้ถูกต้อง`;
     }
     return "";
   };
 
-  
-  //แก้ Validation
+  // Handle Input Change
   const handleChange = (field: string, value: string | { systolic: string; diastolic: string }) => {
     if (field === "bloodPressure" && typeof value === "object") {
       const systolicError = validateInput("bloodPressureSystolic", value.systolic);
       const diastolicError = validateInput("bloodPressureDiastolic", value.diastolic);
-      
+
       setErrorMessages((prev) => ({
         ...prev,
         bloodPressure: {
@@ -109,25 +105,24 @@ export default function TrackingScreen() {
           diastolic: diastolicError
         }
       }));
-  
+
       setFormData((prev) => ({
         ...prev,
         bloodPressure: { ...prev.bloodPressure, ...value }
       }));
     } else {
       const error = validateInput(field, value as string);
-      
+
       setErrorMessages((prev) => ({
         ...prev,
         [field]: error
       }));
-  
+
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
   };
-  
-    
-  //Validation Before Submit
+
+  // Validation Before Submit
   const handleSubmit = () => {
     const requiredFields = ["date", "time", "weight", "height"];
     if (requiredFields.some((field) => !formData[field as keyof typeof formData])) {
@@ -137,7 +132,7 @@ export default function TrackingScreen() {
     router.push("./medicineCollected");
   };
 
-  //Date And Time Picker Handle
+  // Date And Time Picker Handle
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -159,11 +154,10 @@ export default function TrackingScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 ">
-      <ScrollView className="mb-24 ">
-      
+    <SafeAreaView className="flex-1">
+      <ScrollView className="mb-24">
         {/* Card One - Date And Time Input */}
-        <Card >
+        <Card>
           <Text className="text-display font-bold font-sans text-secondary text-center mt-1">บันทึกข้อมูลสุขภาพ</Text>
 
           {/* Date */}
@@ -195,7 +189,7 @@ export default function TrackingScreen() {
           <BreakLine />
 
           {/* Weight And Height With The Same Line */}
-          <View className="flex-row justify-between ">
+          <View className="flex-row justify-between">
             <View className="w-1/2">
               <InputFieldOne
                 label="น้ำหนัก"
@@ -206,13 +200,13 @@ export default function TrackingScreen() {
                 errorMessage={errorMessages.weight}
               />
             </View>
-            
-            <View className="w-1/2 ">
+
+            <View className="w-1/2">
               <InputFieldOne
                 label="ส่วนสูง"
                 value={formData.height}
                 onChangeText={(value) => handleChange("height", value)}
-                placeholder="เช่น 160 "
+                placeholder="เช่น 160"
                 keyboardType="numeric"
                 errorMessage={errorMessages.height}
               />
@@ -234,7 +228,7 @@ export default function TrackingScreen() {
             label="ค่าเฉลี่ยน้ำตาลในเลือด HbA1c (Optional)"
             value={formData.a1c}
             onChangeText={(value) => handleChange("a1c", value)}
-            placeholder="เช่น 5.6 "
+            placeholder="เช่น 5.6"
             keyboardType="numeric"
             errorMessage={errorMessages.a1c}
           />
@@ -243,28 +237,26 @@ export default function TrackingScreen() {
           <View className="flex-row justify-between">
             <View className="w-1/2">
               <InputFieldOne
-               label="ค่าความดันตัวบน (Optional)"
-               value={formData.bloodPressure.systolic}
-               onChangeText={(value) => handleChange("bloodPressure", { ...formData.bloodPressure, systolic: value })}
-               placeholder="เช่น 120"
-               keyboardType="numeric"
-               errorMessage={errorMessages.bloodPressure.systolic}
-
+                label="ค่าความดันตัวบน (Optional)"
+                value={formData.bloodPressure.systolic}
+                onChangeText={(value) => handleChange("bloodPressure", { ...formData.bloodPressure, systolic: value })}
+                placeholder="เช่น 120"
+                keyboardType="numeric"
+                errorMessage={errorMessages.bloodPressure.systolic}
               />
             </View>
-  
-           <View className="w-1/2">
-            <InputFieldOne
-             label="ค่าความดันตัวล่าง (Optional)"
-             value={formData.bloodPressure.diastolic}
-             onChangeText={(value) => handleChange("bloodPressure", { ...formData.bloodPressure, diastolic: value })}
-             placeholder="เช่น 80"
-             keyboardType="numeric"
-             errorMessage={errorMessages.bloodPressure.diastolic}
-            />
-           </View>
-          </View>
 
+            <View className="w-1/2">
+              <InputFieldOne
+                label="ค่าความดันตัวล่าง (Optional)"
+                value={formData.bloodPressure.diastolic}
+                onChangeText={(value) => handleChange("bloodPressure", { ...formData.bloodPressure, diastolic: value })}
+                placeholder="เช่น 80"
+                keyboardType="numeric"
+                errorMessage={errorMessages.bloodPressure.diastolic}
+              />
+            </View>
+          </View>
         </Card>
 
         {/* Card Three - ข้อมูลอารมณ์ */}
@@ -279,13 +271,13 @@ export default function TrackingScreen() {
         {/* Go To The MedicineCollected */}
         <View className="items-center w-full px-4">
           <LongButton
-           title="ถัดไป"
-           onPress={handleSubmit}
-           disabled={!isFormComplete}
-           isCompleted={isFormComplete}
-           customStyle={isFormComplete ? "bg-blue-600" : "bg-gray"} 
+            title="ถัดไป"
+            onPress={handleSubmit}
+            disabled={!isFormComplete}
+            isCompleted={isFormComplete}
+            customStyle={isFormComplete ? "bg-blue-600" : "bg-gray"}
           />
-         </View>
+        </View>
 
         {/* Date Picker - Replaces Input field with picker */}
         {showDatePicker && (

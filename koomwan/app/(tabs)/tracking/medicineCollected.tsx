@@ -15,14 +15,16 @@ import BreakLine from "../../../global/components/BreakLine";
 import Checkbox from "expo-checkbox";
 import BackButton from "../../../global/components/BackButton";
 
+// Define a Medicine interface for better type-checking
 interface Medicine {
   id: string;
   name: string;
   type: string;
   details: string;
-  image: ImageSourcePropType;
+  image: ImageSourcePropType | string;
 }
 
+// Predefined regular medicines
 const REGULAR_MEDICINES: Medicine[] = [
   {
     id: "1",
@@ -43,12 +45,38 @@ const REGULAR_MEDICINES: Medicine[] = [
 export default function MedicineCollectedScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  
+
   const [additionalMedicines, setAdditionalMedicines] = useState<Medicine[]>([]);
   const [selectedMedicines, setSelectedMedicines] = useState<{ [key: string]: boolean }>({});
-  const [lastAddedId, setLastAddedId] = useState<string | null>(null);
 
-  // Handle viewing medicine details
+  // Load data when params are available
+  useEffect(() => {
+    if (params.name && params.type) {
+      const newMedicine: Medicine = {
+        id: params.id ? String(params.id) : Date.now().toString(), // Generate unique ID for new medicine
+        name: String(params.name),
+        type: String(params.type),
+        details: params.details ? String(params.details) : "",
+        image: params.image ? String(params.image) : require("../../../assets/Tracking/Medicine.png"),
+      };
+
+      // Check if the medicine already exists
+      const exists = additionalMedicines.some((medicine) => medicine.id === newMedicine.id);
+      if (!exists) {
+        // Add new medicine if it doesn't exist
+        setAdditionalMedicines((prev) => [...prev, newMedicine]);
+      } else {
+        // Update existing medicine if it exists
+        setAdditionalMedicines((prev) =>
+          prev.map((medicine) =>
+            medicine.id === newMedicine.id ? newMedicine : medicine
+          )
+        );
+      }
+    }
+  }, [params.name, params.type, params.details, params.image]); // <-- ระบุ dependencies ให้ชัดเจน
+
+  // View medicine details when clicked
   const handleViewDetails = (medicine: Medicine) => {
     router.push({
       pathname: "./medicineDetail",
@@ -56,19 +84,19 @@ export default function MedicineCollectedScreen() {
         name: medicine.name,
         type: medicine.type,
         details: medicine.details,
-        image: typeof medicine.image === 'string' ? medicine.image : undefined,
+        image: typeof medicine.image === "string" ? medicine.image : undefined,
       },
     });
   };
 
-  // Handle adding new medicine
+  // Add a new medicine
   const handleAddMedicine = () => {
     router.push({
       pathname: "./addMedicine",
     });
   };
 
-  // Handle editing medicine
+  // Edit an existing medicine
   const handleEditMedicine = (medicine: Medicine) => {
     router.push({
       pathname: "./addMedicine",
@@ -77,13 +105,13 @@ export default function MedicineCollectedScreen() {
         name: medicine.name,
         type: medicine.type,
         details: medicine.details,
-        image: typeof medicine.image === 'string' ? medicine.image : undefined,
-        isEdit: "true",
+        image: typeof medicine.image === "string" ? medicine.image : undefined,
+        isEdit: "true", // Flag for editing mode
       },
     });
   };
 
-  // Handle deleting medicine
+  // Delete a medicine
   const handleDeleteMedicine = (medicineId: string) => {
     Alert.alert(
       "ยืนยันการลบ",
@@ -96,6 +124,11 @@ export default function MedicineCollectedScreen() {
             setAdditionalMedicines((prev) =>
               prev.filter((medicine) => medicine.id !== medicineId)
             );
+            setSelectedMedicines((prev) => {
+              const updatedState = { ...prev };
+              delete updatedState[medicineId]; // Remove the deleted medicine from selected state
+              return updatedState;
+            });
             Alert.alert("ลบสำเร็จ", "ยาถูกลบเรียบร้อย");
           },
         },
@@ -103,46 +136,19 @@ export default function MedicineCollectedScreen() {
     );
   };
 
-  // Handle checkbox selection
+  // Handle checkbox selection change
   const handleCheckboxChange = (medicineId: string, isChecked: boolean) => {
-    setSelectedMedicines(prev => ({
+    setSelectedMedicines((prev) => ({
       ...prev,
-      [medicineId]: isChecked
+      [medicineId]: isChecked, // Update the checkbox state
     }));
   };
 
-  // Effect for handling new/edited medicine
-  useEffect(() => {
-    if (params.name && params.type && params.id !== lastAddedId) {
-      const newId = Array.isArray(params.id) ? params.id[0] : params.id || Date.now().toString();
-      const name = Array.isArray(params.name) ? params.name[0] : params.name;
-      const type = Array.isArray(params.type) ? params.type[0] : params.type;
-      const details = params.details ? (Array.isArray(params.details) ? params.details[0] : params.details) : "";
-      const image = params.image ? (Array.isArray(params.image) ? params.image[0] : params.image) : require("../../../assets/Tracking/Medicine.png");
-
-      if (params.isEdit === "true") {
-        setAdditionalMedicines(prev =>
-          prev.map(medicine =>
-            medicine.id === newId
-              ? { id: newId, name, type, details, image }
-              : medicine
-          )
-        );
-      } else {
-        setAdditionalMedicines(prev => [
-          ...prev,
-          { id: newId, name, type, details, image }
-        ]);
-      }
-      setLastAddedId(newId);
-    }
-  }, [params, lastAddedId]);
-
   return (
     <SafeAreaView className="flex-1">
-      <BackButton title="ย้อนกลับ" />
+      <BackButton title="ย้อนกลับ" /> {/* Back button */}
       <ScrollView className="mb-24">
-        {/* Regular Medicines */}
+        {/* Regular medicines section */}
         <Card>
           <Text className="text-title font-bold text-secondary text-center mt-2">ยาประจำ</Text>
           <BreakLine />
@@ -157,7 +163,10 @@ export default function MedicineCollectedScreen() {
                 onValueChange={(newValue) => handleCheckboxChange(medicine.id, newValue)}
                 className="mr-2"
               />
-              <Image source={medicine.image} className="w-8 h-8 rounded-lg ml-2" />
+              <Image
+                source={typeof medicine.image === "string" ? { uri: medicine.image } : medicine.image}
+                className="w-8 h-8 rounded-lg ml-2"
+              />
               <View className="ml-2 flex-1">
                 <Text className="font-sans text-description font-semibold">{medicine.name}</Text>
               </View>
@@ -166,7 +175,7 @@ export default function MedicineCollectedScreen() {
           ))}
         </Card>
 
-        {/* Additional Medicines */}
+        {/* Additional medicines section */}
         <Card>
           <Text className="text-title font-bold text-secondary text-center mt-2">ยาเพิ่มเติม</Text>
           <BreakLine />
@@ -175,16 +184,16 @@ export default function MedicineCollectedScreen() {
               <TouchableOpacity
                 key={medicine.id}
                 onPress={() => handleViewDetails(medicine)}
-                className="flex-row items-center border-gray-200 py-2"
+                className="flex-row items-center py-2"
               >
                 <Checkbox
                   value={selectedMedicines[medicine.id] || false}
                   onValueChange={(newValue) => handleCheckboxChange(medicine.id, newValue)}
                   className="mr-2"
                 />
-                <Image 
-                  source={typeof medicine.image === 'string' ? { uri: medicine.image } : medicine.image} 
-                  className="w-8 h-8 rounded-lg ml-2" 
+                <Image
+                  source={typeof medicine.image === "string" ? { uri: medicine.image } : medicine.image}
+                  className="w-8 h-8 rounded-lg ml-2"
                 />
                 <View className="ml-2 flex-1">
                   <Text className="font-sans text-description font-semibold">{medicine.name}</Text>
@@ -194,10 +203,10 @@ export default function MedicineCollectedScreen() {
                     <Text className="font-sans text-description text-primary">แก้ไข</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => handleDeleteMedicine(medicine.id)}>
-                    <Image 
-                      source={require("../../../assets/Tracking/trash.png")} 
-                      className="w-6 h-6" 
-                      style={{ tintColor: "red" }} 
+                    <Image
+                      source={require("../../../assets/Tracking/trash.png")}
+                      className="w-6 h-6"
+                      style={{ tintColor: "red" }}
                     />
                   </TouchableOpacity>
                 </View>
@@ -209,13 +218,8 @@ export default function MedicineCollectedScreen() {
             </Text>
           )}
 
-          <TouchableOpacity 
-            className="bg-primary rounded-xl py-4 px-8 mt-4" 
-            onPress={handleAddMedicine}
-          >
-            <Text className="font-sans text-button font-bold text-card text-center text-white">
-              เพิ่มยาใหม่
-            </Text>
+          <TouchableOpacity className="bg-primary rounded-xl py-4 px-8 mt-4" onPress={handleAddMedicine}>
+            <Text className="font-sans text-button font-bold text-card text-center text-white">เพิ่มยาใหม่</Text>
           </TouchableOpacity>
         </Card>
       </ScrollView>

@@ -6,7 +6,6 @@ import {
   Image,
   Alert,
   ScrollView,
-  ImageSourcePropType,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -21,7 +20,7 @@ interface Medicine {
   name: string;
   type: string;
   details: string;
-  image: string | ImageSourcePropType;
+  image: string;
 }
 
 const AddMedicineScreen: React.FC = () => {
@@ -36,6 +35,7 @@ const AddMedicineScreen: React.FC = () => {
     image: (params.image as string) || "",
   });
 
+  // Permission Required Image From User Gallery
   const pickImage = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) {
@@ -66,14 +66,22 @@ const AddMedicineScreen: React.FC = () => {
       return;
     }
 
+    const newMedicine = {
+      id: medicine.id || Date.now().toString(),
+      name: medicine.name,
+      type: medicine.type,
+      details: medicine.details,
+      image: medicine.image,
+    };
+
     router.push({
       pathname: "./medicineCollected",
       params: {
-        id: medicine.id,
-        name: medicine.name,
-        type: medicine.type,
-        details: medicine.details,
-        image: typeof medicine.image === "string" ? medicine.image : undefined,
+        id: newMedicine.id,
+        name: newMedicine.name,
+        type: newMedicine.type,
+        details: newMedicine.details,
+        image: newMedicine.image,
         isEdit: params.isEdit || "false",
       },
     });
@@ -84,7 +92,7 @@ const AddMedicineScreen: React.FC = () => {
       <ScrollView className="mb-24">
         <Card>
           <Text className="font-sans text-title font-bold text-center mt-2 text-secondary">
-            {params.isEdit === "true" ? "ยาเพิ่มเติม" : "ยาเพิ่มเติม"}
+            {params.isEdit === "true" ? "แก้ไขยาเพิ่มเติม" : "เพิ่มยาเพิ่มเติม"}
           </Text>
           <BreakLine />
 
@@ -95,11 +103,7 @@ const AddMedicineScreen: React.FC = () => {
           >
             {medicine.image ? (
               <Image
-                source={
-                  typeof medicine.image === "string"
-                    ? { uri: medicine.image }
-                    : medicine.image
-                }
+                source={{ uri: medicine.image }}
                 className="w-40 h-40 rounded-lg"
               />
             ) : (
@@ -112,6 +116,7 @@ const AddMedicineScreen: React.FC = () => {
             )}
           </TouchableOpacity>
 
+          {/* For Create Additional Medicine */}
           <InputFieldOne
             label="ชื่อยา"
             value={medicine.name}
@@ -121,8 +126,8 @@ const AddMedicineScreen: React.FC = () => {
             placeholder="ระบุชื่อยา"
           />
 
-          {/* ประเภทของยา */}
-          <Text className="font-sans text-description font-bold text-secondary px-10 mb-2">
+          {/* Medicine Type */}
+          <Text className="font-sans text-description font-bold text-secondary self-start pl-1 mb-1">
             ประเภท
           </Text>
           <Dropdown
@@ -138,11 +143,11 @@ const AddMedicineScreen: React.FC = () => {
             onChoiceChange={(choice) => {
               setMedicine((prev) => ({ ...prev, type: choice }));
             }}
-            dropdownStyle={{ width: "100%", paddingVertical: 10 }} // ปรับขนาด dropdown
-            closeOnSelect={true} // ปิดอัตโนมัติเมื่อเลือก
+            dropdownStyle={{ width: "97%", paddingVertical: 9 }}
+            closeOnSelect={true}
           />
 
-          {/* รายละเอียดของยา */}
+          {/* Medicine Detail */}
           <InputFieldOne
             label="รายละเอียด (Optional)"
             value={medicine.details}
@@ -153,12 +158,13 @@ const AddMedicineScreen: React.FC = () => {
             editable
           />
 
+          {/* Submit Button */}
           <TouchableOpacity
             onPress={handleSubmit}
-            className="bg-primary rounded-lg px-10 py-3"
+            className="bg-primary rounded-lg px-20 py-3.5 mt-5"
           >
-            <Text className="font-sans text-button text-card text-center">
-              {params.isEdit === "true" ? "บันทึกการแก้ไข" : "บันทึก"}
+            <Text className="font-sans font-bold text-button text-card text-center">
+              {params.isEdit === "true" ? "บันทึกการแก้ไข" : "เพิ่มยาเพิ่มเติม"}
             </Text>
           </TouchableOpacity>
         </Card>

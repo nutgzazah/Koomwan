@@ -1,8 +1,8 @@
 import { 
-    View, 
-    Text, 
-    Image, 
-    ScrollView 
+  View, 
+  Text, 
+  Image, 
+  ScrollView 
 } from "react-native";
 import React, { useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -22,49 +22,46 @@ export default function MedicineDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-        <BackButton title="ย้อนกลับ" />
-        <ScrollView className="mb-24">
-            <Card>
-                <Text className="text-title font-bold text-secondary text-center mt-2">ยาประจำ</Text>
-                <BreakLine />
+      <BackButton title="ย้อนกลับ" />
+      <ScrollView className="mb-24">
+        <Card>
+          <Text className="text-title font-bold text-secondary text-center mt-2">ยาประจำ</Text>
+          <BreakLine />
 
-                <View className="bg-background border border-gray px-20 py-5 rounded-lg mb-3 mt-1" style={{ width: 300, height: 200 }}>
-                  <Image
-                    source={require("../../../assets/Tracking/glipizide-med.png")}
-                    style={{ width: '100%', height: '100%' }} // ให้ภาพยืดให้พอดีกับขนาดของกล่อง
-                    resizeMode="contain" // ให้ภาพไม่ถูกบิดเบือน ย่อให้พอดีกับกล่อง
-                  />
-                </View>
+          <View className="bg-background border border-gray px-20 py-5 rounded-lg mb-3 mt-1" style={{ width: 300, height: 200 }}>
+            <Image
+              source={require("../../../assets/Tracking/glipizide-med.png")}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="contain"
+            />
+          </View>
 
+          {/*Show Medicine Name+Type+Detail*/}
+          <InputFieldOne
+            label="ชื่อยา"
+            value={medicineName}
+            placeholder="ชื่อยา"
+            editable={false}
+            onChangeText={setMedicineName}
+          />
 
-                <InputFieldOne
-                 label="ชื่อยา"
-                 value={medicineName}
-                 placeholder="ชื่อยา"
-                 editable={false} 
-                 onChangeText={setMedicineName}
-                />
+          <InputFieldOne
+            label="ประเภท"
+            value={medicineType}
+            placeholder="ประเภทยา"
+            editable={false}
+            onChangeText={setMedicineType}
+          />
 
-                <InputFieldOne
-                 label="ประเภท"
-                 value={medicineType}
-                 placeholder="ชื่อยา"
-                 editable={false} 
-                 onChangeText={setMedicineType}
-                />
-
-                <InputFieldOne
-                 label="รายละเอียด"
-                 value={medicineDetails}
-                 placeholder="ชื่อยา"
-                 editable={false} 
-                 onChangeText={setMedicineDetails}
-                />
-
-            </Card>
-        </ScrollView>
-      
-        
+          <InputFieldOne
+            label="รายละเอียด"
+            value={medicineDetails}
+            placeholder="รายละเอียดยา"
+            editable={false}
+            onChangeText={setMedicineDetails}
+          />
+        </Card>
+      </ScrollView>
     </SafeAreaView>
   );
 }
