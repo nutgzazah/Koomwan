@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,13 +7,45 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
+import axios from "axios";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import BackButton from "../../global/components/BackButton";
 import { useRouter } from "expo-router";
 
+interface ProfileData {
+  profileImage: string;
+  username: string;
+  height: number;
+  age: number;
+  gender: string;
+}
+
 export default function IndexProfileScreen() {
   const router = useRouter();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+
+  useEffect(() => {
+    // Fetch data from the API
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/getRecord"); // Replace with your actual API endpoint
+        setProfileData(response.data);
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (!profileData) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <Text>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -32,7 +64,7 @@ export default function IndexProfileScreen() {
             {/* Profile Image with Edit Button */}
             <View className="relative">
               <Image
-                source={require("../../assets/Profile/images/profile.png")}
+                source={{ uri: profileData.profileImage }}
                 className="w-[150px] h-[150px] rounded-full"
               />
               <TouchableOpacity
@@ -53,7 +85,7 @@ export default function IndexProfileScreen() {
                 className="w-6 h-6"
               />
               <Text className="text-headline font-bold text-secondary pl-2">
-                Somchai123
+                {profileData.username}
               </Text>
             </View>
 
@@ -68,7 +100,7 @@ export default function IndexProfileScreen() {
                   className="w-6 h-6"
                 />
                 <Text className="text-description text-secondary ml-2 font-regular">
-                  168 ซม.
+                  {profileData.height} ซม.
                 </Text>
               </View>
 
@@ -79,7 +111,7 @@ export default function IndexProfileScreen() {
                   className="w-6 h-6"
                 />
                 <Text className="text-description text-secondary ml-2 font-regular">
-                  26 ปี
+                  {profileData.age} ปี
                 </Text>
               </View>
 
@@ -90,7 +122,7 @@ export default function IndexProfileScreen() {
                   className="w-6 h-6"
                 />
                 <Text className="text-description text-secondary ml-2 font-regular">
-                  ชาย
+                  {profileData.gender}
                 </Text>
               </View>
             </View>
