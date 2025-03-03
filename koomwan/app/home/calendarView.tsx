@@ -14,7 +14,7 @@ import Checkbox from "expo-checkbox";
 import BreakLine from "../../global/components/BreakLine";
 import { useRouter } from "expo-router";
 import { getEmotionImage } from "../../constant/emotion";
-import { calculateBMI } from "../utils/bmi";
+import { calculateBMI } from "../util/bmi";
 
 type MedicationLog = {
   time: string;
