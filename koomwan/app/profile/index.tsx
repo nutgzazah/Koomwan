@@ -211,7 +211,7 @@ export default function IndexProfileScreen() {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
           Alert.alert("Session Expired 3", "Please login again", [
-            { text: "OK", onPress: () => router.push("/login") },
+            { text: "OK", onPress: () => router.push("/user/login") },
           ]);
         } else {
           Alert.alert(
