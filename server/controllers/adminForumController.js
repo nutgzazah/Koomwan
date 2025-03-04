@@ -54,7 +54,7 @@ const getReportedPostById = async (req, res) => {
 // กดอนุมัติแล้ว reportCount จะถูกรีใหม่เป็น 0 และลบข้อมูล users กับ reasons ที่ report ออก
 const ApprovePost = async (req, res) => {
     try {
-        const { id } = req.body; // รับ id ของโพสต์ที่จะอนุมัติ
+        const { id } = req.params; // รับ id จาก URL parameter
 
         if (!id) {
             return res.status(400).json({
@@ -63,12 +63,11 @@ const ApprovePost = async (req, res) => {
             });
         }
 
-        // Update post ให้ count = 0 และลบข้อมูล users กับ reasons ที่ report ออก
         const updatedPost = await Forum.findByIdAndUpdate(
             id,
             { 
-                $set: { "reports.count": 0 }, // Reset count = 0
-                $unset: { "reports.reasons": "", "reports.users": "" } // ลบข้อมูล users กับ reasons ที่ report ออก
+                $set: { "reports.count": 0 }, // reportCount จะถูกรีใหม่เป็น 0
+                $unset: { "reports.reasons": "", "reports.users": "" }  // ลบข้อมูล users กับ reasons ที่ report ออก
             }, 
             { new: true } 
         );

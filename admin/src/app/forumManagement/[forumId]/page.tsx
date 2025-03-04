@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ForumDataInterface } from "@/interfaces/forumInterface";
 import DeleteReasonPopup from "../components/deleteReason";
 import ApprovePopup from "../components/ApprovePopup";
@@ -14,11 +14,10 @@ const ForumID: React.FC = () => {
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [isApprovePopupOpen, setIsApprovePopupOpen] = useState(false);
   const [isDetailPopupOpen, setIsDetailPopupOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchForum = async () => {
-      if (!forumId) return;
+      if (!forumId || typeof forumId !== "string") return;
 
       try {
         const response = await axios.get(`http://localhost:8080/api/v1/admin/forum/reported/${forumId}`);
@@ -42,10 +41,6 @@ const ForumID: React.FC = () => {
   }
 
   const handleApprove = () => setIsApprovePopupOpen(true);
-  const handleDeleteConfirm = () => {
-    setIsDeletePopupOpen(false);
-    router.push("/forumManagement");
-  };
 
   return (
     <div className="w-full">
@@ -67,9 +62,18 @@ const ForumID: React.FC = () => {
         <button className="btn green-btn short-btn" onClick={handleApprove}>อนุมัติ</button>
         <button className="btn red-btn short-btn" onClick={() => setIsDeletePopupOpen(true)}>ลบ</button>
       </div>
-      {isDeletePopupOpen && <DeleteReasonPopup onClose={() => setIsDeletePopupOpen(false)} onConfirm={handleDeleteConfirm} />}
-      {isApprovePopupOpen && <ApprovePopup onClose={() => setIsApprovePopupOpen(false)} />}
-      {isDetailPopupOpen && <DetailPopup onClose={() => setIsDetailPopupOpen(false)} forumId={forumId} />}
+
+      {isDeletePopupOpen && typeof forumId === "string" && (
+        <DeleteReasonPopup onClose={() => setIsDeletePopupOpen(false)} postId={forumId} />
+      )}
+
+      {isApprovePopupOpen && typeof forumId === "string" && (
+        <ApprovePopup onClose={() => setIsApprovePopupOpen(false)} postId={forumId} />
+      )}
+
+      {isDetailPopupOpen && typeof forumId === "string" && (
+        <DetailPopup onClose={() => setIsDetailPopupOpen(false)} forumId={forumId} />
+      )}
     </div>
   );
 };
