@@ -102,7 +102,7 @@ export default function IndexProfileScreen() {
 
         if (!authData) {
           Alert.alert("Session Expired 1", "Please login again");
-          router.push("/login");
+          router.push("/user/login");
           return;
         }
 
@@ -115,7 +115,7 @@ export default function IndexProfileScreen() {
 
         if (!userId || !token) {
           Alert.alert("Session Expired 2", "Please login again");
-          router.push("/login");
+          router.push("/user/login");
           return;
         }
 
