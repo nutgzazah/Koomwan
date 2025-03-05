@@ -73,8 +73,9 @@ export default function SummaryTrackingScreen() {
 
   const handleCloseSuccess = () => {
     setShowSuccessModal(false);
-    router.push("./index");
   };
+
+
 
   // เลือกรูปภาพตามอารมณ์ที่เลือก
   const getMoodImage = (mood: string) => {

@@ -95,9 +95,10 @@ const AddMedicineScreen: React.FC = () => {
       <BackButton title="ย้อนกลับ" />
       <ScrollView className="mb-24">
         <Card>
-          <Text className="font-sans text-title font-bold text-center mt-2 text-secondary">
-            {params.isEdit === "true" ? "ยาเพิ่มเติม" : "เพิ่มยาเพิ่มเติม"}
-          </Text>
+        <Text className="font-sans text-title font-bold text-center mt-2 text-secondary">
+          {params.isEdit === "true" ? "ยาเพิ่มเติม" : "เพิ่มยาเพิ่มเติม"}
+        </Text>
+
           <BreakLine />
 
           <TouchableOpacity
