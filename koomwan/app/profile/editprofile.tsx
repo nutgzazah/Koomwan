@@ -432,11 +432,16 @@ export default function EditProfileScreen() {
         /* อัปโหลดรูปภาพเพิ่มในภายหลัง  */
       }
 
-      Alert.alert("สำเร็จ", "บันทึกข้อมูลสำเร็จ");
-      router.dismissTo({
-        pathname: "/profile",
-        params: { refresh: "true", timestamp: Date.now() },
-      });
+      Alert.alert("สำเร็จ", "บันทึกข้อมูลสำเร็จ", [
+        {
+          text: "OK",
+          onPress: () =>
+            router.dismissTo({
+              pathname: "/profile",
+              params: { refresh: "true", timestamp: Date.now() },
+            }),
+        },
+      ]);
     } catch (error) {
       console.error("Error saving profile:", error);
 
