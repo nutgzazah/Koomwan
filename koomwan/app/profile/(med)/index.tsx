@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,42 +6,110 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import BackButton from "../../../global/components/BackButton";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import Checkbox from "expo-checkbox";
 import { useRouter } from "expo-router";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import BASE_URL from "../../../config";
+import Loading from "../../../global/components/Loading";
+
+interface Medication {
+  _id: string;
+  pillName: string;
+  pillType: string;
+  description: string;
+  reminderTimes: string[];
+  checked?: boolean;
+}
+
+interface HealthInfo {
+  _id: string;
+  regularpill: Medication[];
+}
 
 export default function RegularMedScreen() {
   const router = useRouter();
-  // mock data
-  const [medications, setMedications] = useState([
-    {
-      id: 1,
-      name: "ไกลพิไซด์ (Glipizide)",
-      checked: false,
-    },
-    {
-      id: 2,
-      name: "เม็ทฟอร์มิน (Metformin)",
-      checked: false,
-    },
-  ]);
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchMedications();
+  }, []);
+
+  const fetchMedications = async () => {
+    try {
+      setLoading(true);
+      const authData = await AsyncStorage.getItem("@auth");
+
+      if (!authData) {
+        Alert.alert("Session Expired 1", "Please login again");
+        router.push("/user/login");
+        return;
+      }
+      const auth = JSON.parse(authData);
+      // Get the token from AsyncStorage
+      const token = auth.token;
+      // Get the user ID from AsyncStorage
+      const userId = auth.user._id;
+      // Get the healthInfoId from AsyncStorage or from user profile
+      const userResponse = await axios.get(
+        `${BASE_URL}/api/v1/user/profile/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (userResponse.data.success && userResponse.data.user.healthinfo) {
+        const healthInfoId = userResponse.data.user.healthinfo._id;
+
+        // Fetch health info to get regular medication list
+        const response = await axios.get(
+          `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          const healthInfo: HealthInfo = response.data.healthInfo;
+          // Add 'checked' property to each medication for UI state
+          const medsWithCheckState = healthInfo.regularpill.map((med) => ({
+            ...med,
+            checked: false,
+          }));
+          setMedications(medsWithCheckState);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching medications:", err);
+      setError("ไม่สามารถโหลดข้อมูลยาได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const isAnyChecked = medications.some((med) => med.checked);
 
-  const handleCheckboxChange = (id: number) => {
+  const handleCheckboxChange = (id: string) => {
     setMedications(
       medications.map((med) =>
-        med.id === id ? { ...med, checked: !med.checked } : med
+        med._id === id ? { ...med, checked: !med.checked } : med
       )
     );
   };
 
-  // mock handleDelete
   const handleDelete = () => {
-    // หาจำนวนรายการที่ถูกเลือก
+    // Count selected items
     const selectedCount = medications.filter((med) => med.checked).length;
 
     Alert.alert(
@@ -56,7 +124,7 @@ export default function RegularMedScreen() {
           text: "ยืนยัน",
           style: "destructive",
           onPress: () => {
-            // กรองเอาเฉพาะรายการที่ไม่ได้ถูกเลือก ให้แสดง
+            // รอใส่ api
             const remainingMeds = medications.filter((med) => !med.checked);
             setMedications(remainingMeds);
           },
@@ -65,9 +133,13 @@ export default function RegularMedScreen() {
     );
   };
 
-  const handleMedicationDetails = (medId: number) => {
+  const handleMedicationDetails = (medId: string) => {
     router.push(`/profile/(med)/(medDetail)/${medId}`);
   };
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -81,26 +153,34 @@ export default function RegularMedScreen() {
             <BreakLine />
           </View>
 
+          {/* Error Message if any */}
+          {error && (
+            <View className="px-4 py-3 mb-4 bg-opacity-10 rounded-md">
+              <Text className="font-regular text-description">{error}</Text>
+            </View>
+          )}
+
           {/* Medication List */}
           {medications.length > 0 ? (
             medications.map((med, index) => (
-              <View key={med.id}>
+              <View key={med._id}>
                 <View className="flex-row justify-between w-full px-2 items-center">
                   <View className="flex-row items-center">
                     <Checkbox
                       value={med.checked}
-                      onValueChange={() => handleCheckboxChange(med.id)}
+                      onValueChange={() => handleCheckboxChange(med._id)}
                       className="w-5 h-5"
+                      color={med.checked ? "#3972F0" : undefined}
                     />
                     <Text className="pl-4 font-regular text-description text-secondary">
-                      {med.name}
+                      {med.pillName}
                     </Text>
                   </View>
 
                   <TouchableOpacity
-                    onPress={() => handleMedicationDetails(med.id)}
+                    onPress={() => handleMedicationDetails(med._id)}
                   >
-                    <Text className="font-bold text-sub-button text-primary">
+                    <Text className="font-bold text-description text-primary">
                       รายละเอียดยา
                     </Text>
                   </TouchableOpacity>
@@ -109,11 +189,7 @@ export default function RegularMedScreen() {
               </View>
             ))
           ) : (
-            <View className="items-center py-4">
-              <Text className="text-body font-regular text-secondary">
-                ไม่มีรายการยา
-              </Text>
-            </View>
+            <Text></Text>
           )}
           <BreakLine />
 
