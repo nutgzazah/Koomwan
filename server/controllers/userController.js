@@ -204,9 +204,184 @@ const getHealthInfo = async (req, res) => {
   }
 };
 
+// ฟังก์ชันอัปเดตข้อมูลพื้นฐานของ user (อีเมล, เบอร์โทรศัพท์)
+/**
+ * Updates a user's basic information (email, phone).
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.userId - The ID of the user to update.
+ * @param {Object} req.body - The request body.
+ * @param {string} req.body.email - The updated email.
+ * @param {string} req.body.phone - The updated phone number.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves to void.
+ */
+const updateUserBasicInfo = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { email, phone } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    // Find user in either userModel or doctorModel
+    let user = await userModel.findById(userId);
+    let userType = "user";
+
+    if (!user) {
+      user = await doctorModel.findById(userId);
+      userType = "doctor";
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Prepare update object with only valid fields
+    const updateObj = {};
+
+    if (email !== undefined && email !== user.email) {
+      // Check if email is already in use by another user
+      const emailExists =
+        (await userModel.findOne({ email, _id: { $ne: userId } })) ||
+        (await doctorModel.findOne({ email, _id: { $ne: userId } }));
+
+      if (emailExists) {
+        return res.status(400).json({
+          success: false,
+          message: "Email is already in use",
+        });
+      }
+
+      updateObj.email = email;
+    }
+
+    if (phone !== undefined && phone !== user.phone) {
+      // Check if phone is already in use by another user
+      const phoneExists =
+        (await userModel.findOne({ phone, _id: { $ne: userId } })) ||
+        (await doctorModel.findOne({ phone, _id: { $ne: userId } }));
+
+      if (phoneExists) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone number is already in use",
+        });
+      }
+
+      updateObj.phone = phone;
+    }
+
+    // Only update if there are changes
+    if (Object.keys(updateObj).length > 0) {
+      if (userType === "user") {
+        await userModel.findByIdAndUpdate(userId, updateObj);
+      } else {
+        await doctorModel.findByIdAndUpdate(userId, updateObj);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User information updated successfully",
+    });
+  } catch (error) {
+    console.error("Error in updateUserBasicInfo:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error updating user information",
+      error: error.message,
+    });
+  }
+};
+
+// ฟังก์ชันอัปเดตข้อมูล healthinfo ของ user
+/**
+ * Updates a user's health information.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.healthInfoId - The ID of the health information to update.
+ * @param {Object} req.body - The request body containing health information fields to update.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves to void.
+ */
+const updateHealthInfo = async (req, res) => {
+  try {
+    const { healthInfoId } = req.params;
+    const { gender, diabetestype, birthdate, height, weight } = req.body;
+
+    if (!healthInfoId) {
+      return res.status(400).json({
+        success: false,
+        message: "Health Info ID is required",
+      });
+    }
+
+    const healthInfo = await healthInfoModel.findById(healthInfoId);
+
+    if (!healthInfo) {
+      return res.status(404).json({
+        success: false,
+        message: "Health information not found",
+      });
+    }
+
+    // Prepare update object with only provided fields
+    const updateObj = {};
+
+    if (gender !== undefined) {
+      updateObj.gender = gender;
+    }
+
+    if (diabetestype !== undefined) {
+      updateObj.diabetestype = diabetestype;
+    }
+
+    if (birthdate !== undefined) {
+      updateObj.birthdate = birthdate;
+    }
+
+    if (height !== undefined) {
+      updateObj.height = height;
+    }
+
+    if (weight !== undefined) {
+      updateObj.weight = weight;
+    }
+
+    // Only update if there are changes
+    if (Object.keys(updateObj).length > 0) {
+      await healthInfoModel.findByIdAndUpdate(healthInfoId, updateObj);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Health information updated successfully",
+    });
+  } catch (error) {
+    console.error("Error in updateHealthInfo:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error updating health information",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   beginnerSetup,
   checkHealthInfoExists,
   getUserProfile,
   getHealthInfo,
+  updateUserBasicInfo,
+  updateHealthInfo,
 };
