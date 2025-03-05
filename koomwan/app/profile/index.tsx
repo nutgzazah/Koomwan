@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import Loading from "../../global/components/Loading";
 import BASE_URL from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLocalSearchParams } from "expo-router";
 
 interface HealthRecord {
   height: number;
@@ -60,6 +61,7 @@ interface ProfileData {
 
 export default function IndexProfileScreen() {
   const router = useRouter();
+  const { refresh, timestamp } = useLocalSearchParams();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<HealthRecord[]>([]);
@@ -226,7 +228,7 @@ export default function IndexProfileScreen() {
     };
 
     fetchData();
-  }, []);
+  }, [timestamp]);
 
   if (loading || !profileData) {
     return <Loading />;

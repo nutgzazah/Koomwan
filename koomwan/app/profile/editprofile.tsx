@@ -404,11 +404,39 @@ export default function EditProfileScreen() {
           setHealthInfoId(healthCreateResponse.data.healthInfoId);
         }
       }
+      // อัปเดต auth data ใน AsyncStorage เพื่อแสดงข้อมูลที่เปลี่ยน
+      try {
+        const authData = await AsyncStorage.getItem("@auth");
+        if (authData) {
+          const auth = JSON.parse(authData);
 
-      // อัปโหลดรูปภาพเพิ่มในภายหลัง
+          // อัปเดตข้อมูลใน auth object
+          auth.user.email = formData.email;
+          auth.user.phone = formData.phone;
 
-      Alert.alert("สำเร็จ", "บันทึกข้อมูลเรียบร้อยแล้ว");
-      router.replace("/profile/userProfile");
+          // ถ้ามีการอัปเดตข้อมูลสุขภาพ ให้อัปเดตใน auth object ด้วย
+          if (healthInfoId) {
+            if (!auth.user.healthinfo) {
+              auth.user.healthinfo = healthInfoId;
+            }
+          }
+
+          // บันทึกกลับไปยัง AsyncStorage
+          await AsyncStorage.setItem("@auth", JSON.stringify(auth));
+        }
+      } catch (storageError) {
+        console.error("Error updating AsyncStorage:", storageError);
+      }
+
+      {
+        /* อัปโหลดรูปภาพเพิ่มในภายหลัง  */
+      }
+
+      Alert.alert("สำเร็จ", "บันทึกข้อมูลสำเร็จ");
+      router.dismissTo({
+        pathname: "/profile",
+        params: { refresh: "true", timestamp: Date.now() },
+      });
     } catch (error) {
       console.error("Error saving profile:", error);
 
