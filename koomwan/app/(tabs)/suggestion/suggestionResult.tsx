@@ -148,28 +148,10 @@ export default function SuggestionResult() {
               category={item.category}
               tags={item.tags}
               imageSrc={item.imageSrc}
-              onPress={() => openFullCard(item)}
             />
           ))}
         </ScrollView>
       </ScrollView>
-
-      {/* Modal for Full View */}
-      {modalVisible && (
-        <Modal
-          transparent={true}
-          animationType="slide"
-          visible={modalVisible}
-          onRequestClose={closeModal}
-        >
-          <View className="flex-1 justify-center items-center bg-black opacity-50">
-            <FullCardView
-              cardData={selectedCard}
-              closeModal={closeModal}
-            />
-          </View>
-        </Modal>
-      )}
     </SafeAreaView>
   );
 }

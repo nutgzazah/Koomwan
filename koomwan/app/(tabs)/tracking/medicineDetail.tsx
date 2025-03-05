@@ -11,6 +11,7 @@ import BackButton from "../../../global/components/BackButton";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import InputFieldOne from "./components/InputFieldOne";
+import InputFieldLong from "./components/InputFieldLong";
 
 export default function MedicineDetailScreen() {
   const router = useRouter();
@@ -25,17 +26,16 @@ export default function MedicineDetailScreen() {
       <BackButton title="ย้อนกลับ" />
       <ScrollView className="mb-24">
         <Card>
-          <Text className="text-title font-bold text-secondary text-center mt-2">ยาประจำ</Text>
+          <Text className="text-title font-bold text-secondary text-center mt-2 ">ยาประจำ</Text>
           <BreakLine />
-
-          <View className="bg-background border border-gray px-20 py-5 rounded-lg mb-3 mt-1" style={{ width: 300, height: 200 }}>
+          <View className="bg-background border border-gray rounded-lg mb-2 mt-1 w-full h-60  ">
             <Image
               source={require("../../../assets/Tracking/glipizide-med.png")}
               style={{ width: '100%', height: '100%' }}
               resizeMode="contain"
             />
           </View>
-
+          
           {/*Show Medicine Name+Type+Detail*/}
           <InputFieldOne
             label="ชื่อยา"
@@ -43,6 +43,7 @@ export default function MedicineDetailScreen() {
             placeholder="ชื่อยา"
             editable={false}
             onChangeText={setMedicineName}
+            className="mb-0.5"       
           />
 
           <InputFieldOne
@@ -51,9 +52,10 @@ export default function MedicineDetailScreen() {
             placeholder="ประเภทยา"
             editable={false}
             onChangeText={setMedicineType}
+            className="mb-0.5" 
           />
 
-          <InputFieldOne
+          <InputFieldLong
             label="รายละเอียด"
             value={medicineDetails}
             placeholder="รายละเอียดยา"

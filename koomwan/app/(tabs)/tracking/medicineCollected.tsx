@@ -14,6 +14,7 @@ import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import Checkbox from "expo-checkbox";
 import BackButton from "../../../global/components/BackButton";
+import { LongButton } from "./components/LongButton";
 
 // Define a Medicine interface for better type-checking
 interface Medicine {
@@ -61,23 +62,19 @@ export default function MedicineCollectedScreen() {
       };
 
       // Check if the medicine already exists
-      const exists = additionalMedicines.some((medicine) => medicine.id === newMedicine.id);
+      const exists = additionalMedicines.some((med) => med.id === newMedicine.id);
       if (!exists) {
-        // Add new medicine if it doesn't exist
-        setAdditionalMedicines((prev) => [...prev, newMedicine]);
+        setAdditionalMedicines((prev) => [...prev, newMedicine]); // Add new medicine
       } else {
-        // Update existing medicine if it exists
         setAdditionalMedicines((prev) =>
-          prev.map((medicine) =>
-            medicine.id === newMedicine.id ? newMedicine : medicine
-          )
+          prev.map((med) => (med.id === newMedicine.id ? newMedicine : med)) // Update existing medicine
         );
       }
     }
-  }, [params.name, params.type, params.details, params.image]); // <-- ระบุ dependencies ให้ชัดเจน
+  }, [params.name, params.type, params.details, params.image]);
 
   // View medicine details when clicked
-  const handleViewDetails = (medicine: Medicine) => {
+  const handleViewDetails = (medicine: Medicine, isRegular: boolean) => {
     router.push({
       pathname: "./medicineDetail",
       params: {
@@ -85,6 +82,7 @@ export default function MedicineCollectedScreen() {
         type: medicine.type,
         details: medicine.details,
         image: typeof medicine.image === "string" ? medicine.image : undefined,
+        isRegular: isRegular ? "true" : "false", // Pass whether it's a regular medicine
       },
     });
   };
@@ -144,6 +142,24 @@ export default function MedicineCollectedScreen() {
     }));
   };
 
+  // Handle next button click
+  const handleNext = () => {
+  // Combine selected regular and additional medicines
+    const selectedMedicinesWithDetails = {
+      ...REGULAR_MEDICINES.filter(med => selectedMedicines[med.id])
+        .reduce((acc, med) => ({ ...acc, [med.id]: med }), {}),
+      ...additionalMedicines.filter(med => selectedMedicines[med.id])
+        .reduce((acc, med) => ({ ...acc, [med.id]: med }), {})
+    };
+
+    router.push({
+      pathname: "./summaryTracking",
+      params: {
+        selectedMedicines: JSON.stringify(selectedMedicinesWithDetails),
+      }
+    });
+  };
+
   return (
     <SafeAreaView className="flex-1">
       <BackButton title="ย้อนกลับ" /> {/* Back button */}
@@ -155,7 +171,7 @@ export default function MedicineCollectedScreen() {
           {REGULAR_MEDICINES.map((medicine) => (
             <TouchableOpacity
               key={medicine.id}
-              onPress={() => handleViewDetails(medicine)}
+              onPress={() => handleViewDetails(medicine, true)} // Pass true for regular medicine
               className="flex-row items-center py-2"
             >
               <Checkbox
@@ -183,7 +199,7 @@ export default function MedicineCollectedScreen() {
             additionalMedicines.map((medicine) => (
               <TouchableOpacity
                 key={medicine.id}
-                onPress={() => handleViewDetails(medicine)}
+                onPress={() => handleViewDetails(medicine, false)} // Pass false for additional medicine
                 className="flex-row items-center py-2"
               >
                 <Checkbox
@@ -222,6 +238,17 @@ export default function MedicineCollectedScreen() {
             <Text className="font-sans text-button font-bold text-card text-center text-white">เพิ่มยาใหม่</Text>
           </TouchableOpacity>
         </Card>
+
+      {/* Next button outside the card */}
+      <View className="items-center w-full px-6 mb-6">
+        <LongButton
+          title="ถัดไป"
+          onPress={handleNext}
+          disabled={!Object.keys(selectedMedicines).length}
+          isCompleted={Object.keys(selectedMedicines).length > 0}
+          customStyle={Object.keys(selectedMedicines).length > 0 ? "bg-blue-600" : "bg-gray"}
+        />
+      </View>
       </ScrollView>
     </SafeAreaView>
   );
