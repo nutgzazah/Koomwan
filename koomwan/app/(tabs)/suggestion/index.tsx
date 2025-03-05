@@ -1,9 +1,14 @@
+import { 
+  SafeAreaView, 
+  Text, 
+  View, 
+  Image
+} from "react-native";
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, Text, View, Image } from "react-native";
 import { useRouter } from "expo-router";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
-import ProgressBar from "./(components)/ProgressBar";
+import ProgressBar from "./components/ProgressBar";
 import { ShortButton } from "../tracking/components/ShortButton";
 
 export default function SuggestionScreen() {
@@ -20,14 +25,17 @@ export default function SuggestionScreen() {
             return prev + 1;
           } else {
             clearInterval(interval);
-            router.push("./suggestion/suggestionResult");
+            // Wrap the router.push in a separate call
+            setTimeout(() => {
+              router.push("./suggestion/suggestionResult");
+            }, 0);
             return 100;
           }
         });
       }, 100);
     }
     return () => clearInterval(interval);
-  }, [showFirstCard]);
+  }, [showFirstCard, router]);
 
   return (
     <SafeAreaView>
@@ -46,7 +54,7 @@ export default function SuggestionScreen() {
 function FirstCard({ setShowFirstCard }: { setShowFirstCard: (value: boolean) => void }) {
   return (
     <>
-      <Text className="text-2xl font-sans text-secondary">
+      <Text className="text-title font-bold font-sans text-secondary">
         ประเมินสุขภาพ
       </Text>
       <BreakLine />
@@ -55,14 +63,14 @@ function FirstCard({ setShowFirstCard }: { setShowFirstCard: (value: boolean) =>
         className="w-50 h-25"
       />
       <BreakLine />
-      <Text className="text-xl font-sans text-secondary text-center mt-1">
+      <Text className="text-body font-sans text-secondary text-center mt-1">
         ยังไม่มีการประเมินสุขภาพ
       </Text>
-      <Text className="text-l font-sans text-secondary text-center mt-1">
+      <Text className="text-description font-sans text-secondary text-center mt-1">
         เริ่มต้นสร้างการประเมินสุขภาพ เพื่อรับการวิเคราะห์ {"\n"} และข้อเสนอต่างๆ
       </Text>
       <ShortButton
-        title="เริ่มสร้างการประเมิน"
+          title="เริ่มสร้างการประเมิน"
           onPress={() => setShowFirstCard(false)}
           iconSrc={require("../../../assets/Suggestion/shield-line.png")} 
           iconPosition="left" 
@@ -76,7 +84,7 @@ function FirstCard({ setShowFirstCard }: { setShowFirstCard: (value: boolean) =>
 function SecondCard({ progress }: { progress: number }) {
   return (
     <>
-      <Text className="text-2xl font-sans text-secondary text-center mt-2">
+      <Text className="text-title font-bold font-sans text-secondary text-center mt-2">
         ประเมินสุขภาพ
       </Text>
       <BreakLine />

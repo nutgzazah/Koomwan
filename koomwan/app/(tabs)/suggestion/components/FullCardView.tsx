@@ -1,4 +1,10 @@
-import { Text, View, Image, Modal, TouchableOpacity } from "react-native";
+import { 
+  Text, 
+  View, 
+  Image, 
+  Modal, 
+  TouchableOpacity 
+} from "react-native";
 import React, { useState } from "react";
 
 interface FullCardData {
