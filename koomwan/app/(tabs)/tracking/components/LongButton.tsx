@@ -24,7 +24,7 @@ export const LongButton: React.FC<LongButtonProps> = ({
       onPress={onPress}
       activeOpacity={0.7}
       disabled={disabled}
-      className={`w-80 h-16 rounded-lg flex-row items-center justify-center mt-1
+      className={`w-full h-14 rounded-lg flex-row items-center justify-center mt-1
         ${isCompleted ? "bg-blue-600" : "bg-gray-300"}
         ${disabled ? "opacity-50" : ""}
         ${customStyle}`}

@@ -13,7 +13,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import InputFieldOne from "./components/InputFieldOne";
+import InputFieldLong from "./components/InputFieldLong";
 import Dropdown from "./components/DropDown";
+import BackButton from "../../../global/components/BackButton";
+
 
 interface Medicine {
   id: string;
@@ -37,8 +40,8 @@ const AddMedicineScreen: React.FC = () => {
 
   // Permission Required Image From User Gallery
   const pickImage = async () => {
-    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!granted) {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status == "granted") {
       Alert.alert("Permission required", "กรุณาอนุญาตให้เข้าถึงรูปภาพ");
       return;
     }
@@ -89,17 +92,18 @@ const AddMedicineScreen: React.FC = () => {
 
   return (
     <SafeAreaView className="flex-1">
+      <BackButton title="ย้อนกลับ" />
       <ScrollView className="mb-24">
         <Card>
           <Text className="font-sans text-title font-bold text-center mt-2 text-secondary">
-            {params.isEdit === "true" ? "แก้ไขยาเพิ่มเติม" : "เพิ่มยาเพิ่มเติม"}
+            {params.isEdit === "true" ? "ยาเพิ่มเติม" : "เพิ่มยาเพิ่มเติม"}
           </Text>
           <BreakLine />
 
           <TouchableOpacity
             onPress={pickImage}
-            className="bg-background border border-gray rounded-lg px-20 py-5 items-center justify-center mb-4"
-            style={{ width: 300, height: 200 }}
+            className="bg-background border border-gray rounded-lg items-center justify-center mb-3 py-5 px-5"
+            style={{ width: "100%", height: 200 }}
           >
             {medicine.image ? (
               <Image
@@ -143,12 +147,12 @@ const AddMedicineScreen: React.FC = () => {
             onChoiceChange={(choice) => {
               setMedicine((prev) => ({ ...prev, type: choice }));
             }}
-            dropdownStyle={{ width: "97%", paddingVertical: 9 }}
+            dropdownStyle={{ width: "99%"}}
             closeOnSelect={true}
           />
 
           {/* Medicine Detail */}
-          <InputFieldOne
+          <InputFieldLong
             label="รายละเอียด (Optional)"
             value={medicine.details}
             onChangeText={(text) =>

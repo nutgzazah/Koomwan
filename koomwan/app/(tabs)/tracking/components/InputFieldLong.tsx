@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import DropdownChoice from "./DropDown";
 
-interface InputFieldOneProps {
+interface InputFieldLongProps {
   label: string;
   value: string;
   onChangeText?: (text: string) => void;
@@ -22,10 +22,9 @@ interface InputFieldOneProps {
   selectedChoice?: string;
   onChoiceChange?: (choice: string) => void;
   onOtherTextChange?: (text: string) => void;
-  className?: string;
 }
 
-const InputFieldOne: React.FC<InputFieldOneProps> = ({
+const InputFieldLong: React.FC<InputFieldLongProps> = ({
   label,
   value,
   onChangeText,
@@ -38,13 +37,11 @@ const InputFieldOne: React.FC<InputFieldOneProps> = ({
   choices,
   selectedChoice,
   onChoiceChange,
-  onOtherTextChange,
-  className = ""
-  
+  onOtherTextChange
 }) => {
   return (
-    <View className={`mb-2 px-1 py-1 w-full ${className}`}>
-      <Text className="text-description font-bold font-sans text-secondary mb-2 w-full ">{label}</Text>
+    <View className="mb-2 px-1 w-full ">
+      <Text className="text-description font-bold font-sans text-secondary mb-1 w-full ">{label}</Text>
 
       {choices ? (
         <DropdownChoice
@@ -63,9 +60,15 @@ const InputFieldOne: React.FC<InputFieldOneProps> = ({
            keyboardType={keyboardType}
            maxLength={maxLength}
            editable={editable}
-           className={`font-sans text-description flex-1 mx-1 w-full ${className}`}
+           multiline={true}
+           className="font-sans text-description flex-1 mx-1 w-full"
            style={{
-            height: 38,
+            height: 135,
+            textAlignVertical: "top", 
+            paddingTop: 2, 
+            paddingLeft: 1, 
+            marginTop: 0, 
+            flex: 0, 
            }}
            />
      {rightIcon && (
@@ -86,4 +89,4 @@ const InputFieldOne: React.FC<InputFieldOneProps> = ({
   );
 };
 
-export default InputFieldOne;
+export default InputFieldLong

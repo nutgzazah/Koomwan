@@ -22,7 +22,7 @@ export default function SlideCardImg({ title, description, imageSrc }: SlideCard
       <Text className="text-description font-bold font-sans text-primary text-center mt-2">
         {description}
       </Text>
-      <View className="bg-card h-10 rounded-b-xl"/>
+      <View className="bg-card h-10 rounded-xl"/>
     </View>
   );
 }
