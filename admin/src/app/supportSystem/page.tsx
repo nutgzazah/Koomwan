@@ -1,20 +1,34 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReportTable from "./components/ReportTable";
-import reports from "../../data/report.json";
+import axios from "axios";
 import { ReportDataInterface } from "@/interfaces/reportInterface";
 import { statusReport } from "@/utils/statusMapping";
 
 export default function SupportSystem() {
-  const reportList = reports as ReportDataInterface[];
+  const [reportList, setReportList] = useState<ReportDataInterface[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>(statusReport.pending);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/api/v1/admin/report");
+        console.log("Fetched report data:", response.data.data);
+        setReportList(response.data.data);
+      } catch (error) {
+        console.error("Error fetching report data:", error);
+      }
+    };
+
+    fetchReports();
+  }, []);
 
   const filteredReport = reportList.filter((report) => {
     const statusKey = Object.keys(statusReport).find(
       (key) => statusReport[key] === filterStatus
     );
-    return report.resolved === statusKey;
+    return report.status === statusKey;
   });
 
   return (

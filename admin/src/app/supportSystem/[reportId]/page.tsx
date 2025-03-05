@@ -3,34 +3,27 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ReportDataInterface } from "@/interfaces/reportInterface";
-import reports from "../../../data/report.json";
-
-const transformData = (data: ReportDataInterface[]) => {
-  if (!Array.isArray(data)) return [];
-  return data.map((item, index) => ({
-    transID: index + 1,
-    reportId: item.report_id,
-    username: item.username,
-    role: item.role,
-    date_and_time: item.report_date,
-    response_to_user: item.response_to_user || "",
-    resolved: item.resolved,
-    title: item.title || "ไม่ระบุ",
-    problem_details: item.problem_details || ""
-  }));
-};
+import axios from "axios";
 
 const UserReportForm: React.FC = () => {
   const { reportId } = useParams();
-  const transformedReport = transformData(reports);
-  const reportData = transformedReport.find((r) => String(r.reportId) === reportId);
   const router = useRouter();
-
-  const [report, setReport] = useState(reportData || null);
+  const [report, setReport] = useState<ReportDataInterface | null>(null);
 
   useEffect(() => {
-    if (reportData) {
-      setReport(reportData);
+    const fetchReport = async () => {
+      console.log("Fetching report for ID:", reportId);
+      try {
+        const response = await axios.get(`http://localhost:8080/api/v1/admin/report/${reportId}`);
+        console.log("Fetched report data:", response.data);
+        setReport(response.data.data || response.data);
+      } catch (error) {
+        console.error("Error fetching report:", error);
+      }
+    };
+    
+    if (reportId) {
+      fetchReport();
     }
   }, [reportId]);
 
@@ -44,17 +37,29 @@ const UserReportForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setReport((prevReport) => (prevReport ? { ...prevReport, [name]: value } : null));
+    setReport((prevReport) =>
+      prevReport ? { ...prevReport, [name]: value } : null
+    );
   };
+  
 
-  const handleSubmit = () => {
-    console.log("Updated Report:", report);
-    router.push("/supportSystem")
+  const handleSubmit = async () => {
+    if (!reportId || !report) return;
+    
+    try {
+      await axios.put(`http://localhost:8080/api/v1/admin/editReport/response/${reportId}`, {
+        response: report.response
+      });
+      console.log("Updated Report:", report);
+      router.push("/supportSystem");
+    } catch (error) {
+      console.error("Error updating report:", error);
+    }
   };
 
   return (
     <div className="w-full flex flex-col gap-4 text-secondary">
-      <p className="text-detail_3">แจ้งเมื่อ {report.date_and_time}</p>
+      <p className="text-detail_3">แจ้งเมื่อ {report.date}</p>
 
       <div className="flex justify-start items-center w-full">
         <table className="w-full text-left">
@@ -67,52 +72,42 @@ const UserReportForm: React.FC = () => {
             </tr>
             <tr>
               <td className="text-bold_detail py-2 w-56">ชื่อบัญชีผู้ใช้</td>
-              <td className="py-2 text-detail_2">{report.username}</td>
+              <td className="py-2 text-detail_2">{report.user.username}</td>
             </tr>
             <tr>
               <td className="text-bold_detail py-2 w-56">สถานะ</td>
-              <td className="py-2 text-detail_2">{report.role}</td>
+              <td className="py-2 text-detail_2">{report.user.role}</td>
             </tr>
             <tr>
               <td className="text-bold_detail py-2 w-56">เนื้อหาที่แจ้ง</td>
-              <td className="py-2 text-detail_2">{report.problem_details}</td>
+              <td className="py-2 text-detail_2">{report.detail}</td>
             </tr>
-            {report.resolved && report.response_to_user && (
+            {report.status !== "pending" && report.response && (
               <tr>
                 <td className="text-bold_detail py-2 w-56">การตอบกลับไปยังผู้ใช้</td>
-                <td className="py-2 text-detail_2">{report.response_to_user}</td>
+                <td className="py-2 text-detail_2">{report.response}</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {report.resolved === "pending" && (
+      {report.status === "pending" && (
         <div>
           <div>
             <label className="text-bold_detail" htmlFor="response_to_user">การตอบกลับไปยังผู้ใช้</label>
             <textarea
               id="response_to_user"
-              name="response_to_user"
+              name="response"
               placeholder="การตอบกลับไปยังผู้ใช้"
-              value={report.response_to_user}
+              value={report.response || ""} // Ensure response is always defined
               onChange={handleChange}
               className="input h-64"
             ></textarea>
           </div>
           <div className="flex justify-center space-x-4">
-            <button
-              onClick={handleSubmit}
-              className="btn blue-btn short-btn"
-            >
-              ส่งบทความ
-            </button>
-            <button 
-              onClick={() => router.back()}
-              className="btn white-btn short-btn"
-            >
-              ยกเลิก
-            </button>
+            <button onClick={handleSubmit} className="btn blue-btn short-btn">ส่งบทความ</button>
+            <button onClick={() => router.back()} className="btn white-btn short-btn">ยกเลิก</button>
           </div>
         </div>
       )}

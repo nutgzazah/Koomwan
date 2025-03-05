@@ -1,12 +1,23 @@
 export interface ForumDataInterface {
-  forum_id: string;
-  user_id: string; 
-  username: string; 
-  text: string;
-  date_and_time: string;
-  like: number;
-  doctor_id?: string;
-  doctor_comment?: string;
-  title_report?: string;
-  reason_report?: string;
+  _id: string;
+  postedBy: {
+    _id: string;
+    username: string;
+  };
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  image: string;
+  reports: {
+    count: number;
+    reasons: {
+      date: string;
+      reason: string;
+      user: {
+        _id: string | null;
+        username?: string;
+      } | null;
+    }[];
+    users: string[];
+  };
 }

@@ -6,5 +6,14 @@ export const statusMapping: { [key: string]: string } = {
 
 export const statusReport: { [key: string]: string } = {
     pending: "รอการจัดการ",
-    resolved: "จัดการแล้ว",
+    completed: "จัดการแล้ว",
+};
+
+export const ForumReportTitle: { [key: string]: string } = {
+  Spam: "สแปม",
+  HateSpeech: "คำพูดรุนแรง",
+  Misinformation: "ข้อมูลเท็จ",
+  Harassment: "การคุกคาม",
+  InappropriateContent: "เนื้อหาไม่เหมาะสม",
+  Other: "อื่นๆ",
 };

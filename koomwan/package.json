@@ -32,6 +32,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "^0.76.6",
+    "react-native-calendars": "^1.1309.1",
     "react-native-chart-kit": "^6.12.0",
     "react-native-charts-wrapper": "^0.6.0",
     "react-native-document-picker": "^9.3.1",

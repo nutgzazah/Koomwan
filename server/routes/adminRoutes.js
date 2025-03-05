@@ -1,6 +1,8 @@
 const express = require('express')
-const { getUserByUsername, getAllUser, getAllDoctor, getDoctorById, editStatusDoctor } = require('../controllers/adminController')
-const { addBlog, getAllBlog, getBlogById, editBlog, deleteBlog } = require('../controllers/adminBlogController')
+const { getUserByUsername, getAllUser, getAllDoctor, getDoctorById, editStatusDoctor } = require('../controllers/adminController');
+const { addBlog, getAllBlog, getBlogById, editBlog, deleteBlog } = require('../controllers/adminBlogController');
+const { sentReport, getAllRequest, getReportById, editReport } = require('../controllers/adminReportController');
+const { getAllReportedPosts, getReportedPostById, ApprovePost, deletePost } = require('../controllers/adminForumController');
 
 //router object
 const router = express.Router()
@@ -21,6 +23,17 @@ router.get("/blog/:id", getBlogById);
 router.put("/editBlog/:id", editBlog);
 router.delete("/deleteBlog/:id", deleteBlog);
 
+// Forum
+router.get("/forum/reported", getAllReportedPosts);
+router.get("/forum/reported/:id", getReportedPostById);
+router.put("/forum/approve/:id", ApprovePost);
+router.delete("/forum/deletePost/:id", deletePost);
+
+// report
+router.post("/addReport", sentReport);
+router.get("/report", getAllRequest);
+router.get("/report/:id", getReportById);
+router.put("/editReport/response/:id", editReport);
 
 //export
 module.exports = router
