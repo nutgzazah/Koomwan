@@ -103,7 +103,7 @@ export default function IndexProfileScreen() {
         const authData = await AsyncStorage.getItem("@auth");
 
         if (!authData) {
-          Alert.alert("Session Expired 1", "Please login again");
+          Alert.alert("Session Expired ", "Please login again");
           router.push("/user/login");
           return;
         }
