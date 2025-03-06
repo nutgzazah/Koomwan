@@ -6,6 +6,7 @@ const {
   getUserProfile,
   updateHealthInfo,
   updateUserBasicInfo,
+  removeRegularPills,
 } = require("../controllers/userController");
 const {
   addRecord,
@@ -18,15 +19,22 @@ const {
 const router = express.Router();
 
 //ROUTES
+
+//PROFILE
 // PROFILE || GET
 router.get("/profile/:userId", requireSignIn, getUserProfile);
 // HEALTHINFO || GET
 router.get("/healthinfo/:healthInfoId", requireSignIn, getHealthInfo);
-
 // UPDATE USER BASIC INFO (email, phone) || PUT
 router.put("/update/:userId", requireSignIn, updateUserBasicInfo);
 // UPDATE HEALTH INFO || PUT
 router.put("/healthinfo/:healthInfoId", requireSignIn, updateHealthInfo);
+// REMOVE REGULAR PILLS || PUT
+router.put(
+  "/healthinfo/:healthInfoId/remove-pills",
+  requireSignIn,
+  removeRegularPills
+);
 
 //BEGGINER SETUP|| POST
 router.post("/beginnerSetup" /*,requireSignIn*/, beginnerSetup);

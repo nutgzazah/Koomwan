@@ -326,7 +326,7 @@ const updateHealthInfo = async (req, res) => {
       });
     }
 
-    const healthInfo = await healthInfoModel.findById(healthInfoId);
+    const healthInfo = await healthInfoModel.findById(healthInfoId).lean();
 
     if (!healthInfo) {
       return res.status(404).json({
@@ -377,6 +377,69 @@ const updateHealthInfo = async (req, res) => {
   }
 };
 
+// ฟังก์ชันลบยาประจำจาก healthinfo
+/**
+ * Removes selected medications from user's health information.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.healthInfoId - The ID of the health information to update.
+ * @param {Object} req.body - The request body.
+ * @param {Array<string>} req.body.removePills - Array of pill IDs to remove.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves to void.
+ */
+const removeRegularPills = async (req, res) => {
+  try {
+    const { healthInfoId } = req.params;
+    const { removePills } = req.body;
+
+    if (!healthInfoId) {
+      return res.status(400).json({
+        success: false,
+        message: "Health Info ID is required",
+      });
+    }
+
+    if (!Array.isArray(removePills) || removePills.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "removePills array is required and cannot be empty",
+      });
+    }
+
+    const healthInfo = await healthInfoModel.findById(healthInfoId);
+
+    if (!healthInfo) {
+      return res.status(404).json({
+        success: false,
+        message: "Health information not found",
+      });
+    }
+
+    // Filter out the pills that should be removed
+    const updatedPills = healthInfo.regularpill.filter(
+      (pill) => pill._id && !removePills.includes(pill._id.toString())
+    );
+
+    // Update the health info with the filtered pills
+    healthInfo.regularpill = updatedPills;
+    await healthInfo.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Medications removed successfully",
+    });
+  } catch (error) {
+    console.error("Error in removeRegularPills:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error removing medications",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   beginnerSetup,
   checkHealthInfoExists,
@@ -384,4 +447,5 @@ module.exports = {
   getHealthInfo,
   updateUserBasicInfo,
   updateHealthInfo,
+  removeRegularPills,
 };
