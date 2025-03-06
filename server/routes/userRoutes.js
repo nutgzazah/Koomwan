@@ -7,6 +7,7 @@ const {
   updateHealthInfo,
   updateUserBasicInfo,
   removeRegularPills,
+  addRegularPill,
 } = require("../controllers/userController");
 const {
   addRecord,
@@ -34,6 +35,12 @@ router.put(
   "/healthinfo/:healthInfoId/remove-pills",
   requireSignIn,
   removeRegularPills
+);
+// ADD REGULAR PILL || POST
+router.post(
+  "/healthinfo/:healthInfoId/add-pill",
+  requireSignIn,
+  addRegularPill
 );
 
 //BEGGINER SETUP|| POST
