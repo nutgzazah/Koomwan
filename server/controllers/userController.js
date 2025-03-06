@@ -440,6 +440,79 @@ const removeRegularPills = async (req, res) => {
   }
 };
 
+// ฟังก์ชันสำหรับเพิ่มยาประจำใน healthinfo
+/**
+ * Adds a new regular medication to user's health information.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.healthInfoId - The ID of the health information to update.
+ * @param {Object} req.body - The request body.
+ * @param {string} req.body.pillName - The name of the medication.
+ * @param {string} req.body.pillType - The type of the medication.
+ * @param {string} req.body.description - The description of the medication.
+ * @param {string} req.body.pillImage - The image URL of the medication.
+ * @param {Array<string>} req.body.reminderTimes - Array of reminder times for the medication.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves to void.
+ */
+const addRegularPill = async (req, res) => {
+  try {
+    const { healthInfoId } = req.params;
+    const { pillName, pillType, description, pillImage, reminderTimes } =
+      req.body;
+
+    if (!healthInfoId) {
+      return res.status(400).json({
+        success: false,
+        message: "Health Info ID is required",
+      });
+    }
+
+    if (!pillName) {
+      return res.status(400).json({
+        success: false,
+        message: "Pill name is required",
+      });
+    }
+
+    const healthInfo = await healthInfoModel.findById(healthInfoId);
+
+    if (!healthInfo) {
+      return res.status(404).json({
+        success: false,
+        message: "Health information not found",
+      });
+    }
+
+    // Create a new pill object
+    const newPill = {
+      pillName,
+      pillType: pillType || "",
+      description: description || "",
+      pillImage: pillImage || null,
+      reminderTimes: reminderTimes || [],
+    };
+
+    // Add the new pill to the regularpill array
+    healthInfo.regularpill.push(newPill);
+    await healthInfo.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Medication added successfully",
+      pill: newPill,
+    });
+  } catch (error) {
+    console.error("Error in addRegularPill:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error adding medication",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   beginnerSetup,
   checkHealthInfoExists,
@@ -448,4 +521,5 @@ module.exports = {
   updateUserBasicInfo,
   updateHealthInfo,
   removeRegularPills,
+  addRegularPill,
 };
