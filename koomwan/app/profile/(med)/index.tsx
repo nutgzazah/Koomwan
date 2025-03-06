@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import BackButton from "../../../global/components/BackButton";
 import Card from "../../../global/components/Card";
@@ -48,7 +47,7 @@ export default function RegularMedScreen() {
       const authData = await AsyncStorage.getItem("@auth");
 
       if (!authData) {
-        Alert.alert("Session Expired 1", "Please login again");
+        Alert.alert("Session Expired", "Please login again");
         router.push("/user/login");
         return;
       }
@@ -123,10 +122,72 @@ export default function RegularMedScreen() {
         {
           text: "ยืนยัน",
           style: "destructive",
-          onPress: () => {
-            // รอใส่ api
-            const remainingMeds = medications.filter((med) => !med.checked);
-            setMedications(remainingMeds);
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const authData = await AsyncStorage.getItem("@auth");
+              if (!authData) {
+                Alert.alert("Session Expired", "Please login again");
+                router.push("/user/login");
+                return;
+              }
+
+              const auth = JSON.parse(authData);
+              const token = auth.token;
+              const userId = auth.user._id;
+
+              // Get the healthInfoId first from user profile
+              const userResponse = await axios.get(
+                `${BASE_URL}/api/v1/user/profile/${userId}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+
+              if (
+                userResponse.data.success &&
+                userResponse.data.user.healthinfo
+              ) {
+                const healthInfoId = userResponse.data.user.healthinfo._id;
+
+                // Get selected pill IDs to delete
+                const pillsToDelete = medications
+                  .filter((med) => med.checked)
+                  .map((med) => med._id);
+
+                // Update the healthinfo by removing selected pills
+                await axios.put(
+                  `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}/remove-pills`,
+                  {
+                    removePills: pillsToDelete,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+
+                // Update the UI after successful deletion
+                const remainingMeds = medications.filter((med) => !med.checked);
+                setMedications(remainingMeds);
+
+                Alert.alert("สำเร็จ", "ลบรายการยาเรียบร้อยแล้ว");
+              } else {
+                console.error("ไม่พบข้อมูลสุขภาพของผู้ใช้");
+                Alert.alert("เกิดข้อผิดพลาด", "ไม่พบข้อมูลสุขภาพของผู้ใช้");
+              }
+            } catch (err) {
+              console.error("Error deleting medication:", err);
+              Alert.alert(
+                "เกิดข้อผิดพลาด",
+                "ไม่สามารถลบรายการยาได้ กรุณาลองใหม่อีกครั้ง"
+              );
+            } finally {
+              setLoading(false);
+            }
           },
         },
       ]
@@ -154,11 +215,11 @@ export default function RegularMedScreen() {
           </View>
 
           {/* Error Message if any */}
-          {error && (
-            <View className="px-4 py-3 mb-4 bg-opacity-10 rounded-md">
+          {/* {error && (
+            <View className="px-4 py-3 mb-4 ">
               <Text className="font-regular text-description">{error}</Text>
             </View>
-          )}
+          )} */}
 
           {/* Medication List */}
           {medications.length > 0 ? (
@@ -189,7 +250,11 @@ export default function RegularMedScreen() {
               </View>
             ))
           ) : (
-            <Text></Text>
+            <View className="items-center py-4">
+              <Text className="text-description font-regular text-secondary">
+                ไม่มีรายการยา
+              </Text>
+            </View>
           )}
           <BreakLine />
 
