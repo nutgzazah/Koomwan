@@ -198,7 +198,7 @@ export default function IndexProfileScreen() {
         const formattedData = {
           profileImage: basicUserData.profileImage
             ? `${BASE_URL}/uploads/${basicUserData.profileImage}`
-            : `${BASE_URL}/uploads/koomwanAvatar01.png`,
+            : "koomwan/assets/koomwan-profile.png",
           username: basicUserData.username,
           height: height,
           age: age,
