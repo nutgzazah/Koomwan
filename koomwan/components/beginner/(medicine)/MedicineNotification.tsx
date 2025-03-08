@@ -24,19 +24,22 @@ const MedicineNotification = () => {
   const [showDayPicker, setShowDayPicker] = useState<boolean>(false);
 
   const dayMap: Record<string, string> = {
-    "วันจันทร์": "Mon",
-    "วันอังคาร": "Tue",
-    "วันพุธ": "Wed",
-    "วันพฤหัสบดี": "Thu",
-    "วันศุกร์": "Fri",
-    "วันเสาร์": "Sat",
-    "วันอาทิตย์": "Sun",
-    "ทุกวัน": "Everyday",
+    วันจันทร์: "Mon",
+    วันอังคาร: "Tue",
+    วันพุธ: "Wed",
+    วันพฤหัสบดี: "Thu",
+    วันศุกร์: "Fri",
+    วันเสาร์: "Sat",
+    วันอาทิตย์: "Sun",
+    ทุกวัน: "Everyday",
   };
 
   const days = Object.keys(dayMap); // ["วันจันทร์", "วันอังคาร", ..., "ทุกวัน"]
 
-  const handleTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleTimeChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
     setShowTimePicker(false);
     if (selectedDate) {
       setSelectedTime(selectedDate);
@@ -65,10 +68,12 @@ const MedicineNotification = () => {
     const formattedDay = dayMap[selectedDay] || "Everyday"; // แปลงวันภาษาไทย -> อังกฤษ
     const formattedTime = formatTime(selectedTime); // "08:00"
     const reminderFormat = `${formattedDay}/${formattedTime}`; // "Mon/08:00"
-    
-    console.log("Reminder:", reminderFormat); // ใช้ reminderFormat ต่อในหน้าอื่น
-    router.push({
-      pathname: 'user/medForm',
+
+    console.log("Reminder:", reminderFormat);
+
+    // ส่งค่ากลับไปยังหน้า MedicationForm
+    router.dismissTo({
+      pathname: "/user/medForm",
       params: { reminderFormat },
     });
   };
