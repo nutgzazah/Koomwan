@@ -11,6 +11,7 @@ import {
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import BackButton from "../../global/components/BackButton";
+import ProfileImage from "../../components/profile/ProfileImage";
 import { useRouter } from "expo-router";
 import Loading from "../../global/components/Loading";
 import BASE_URL from "../../config";
@@ -155,7 +156,6 @@ export default function UserProfileScreen() {
         let birthdate = new Date().toISOString();
         let gender = "-";
         let status = "ผู้ใช้ทั่วไป";
-        /* let userRole = auth.user.role || "user"; */
 
         // Fetch health info using the API endpoint
         if (healthInfoId) {
@@ -207,9 +207,8 @@ export default function UserProfileScreen() {
         const formattedBirthdate = formatDate(birthdate);
 
         const formattedData = {
-          profileImage: basicUserData.profileImage
-            ? `${BASE_URL}/uploads/${basicUserData.profileImage}`
-            : `${BASE_URL}/uploads/koomwanAvatar01.png`,
+          // เก็บแค่ชื่อไฟล์ไม่ใช่ URL เต็ม (เพื่อใช้กับ ProfileImage component)
+          profileImage: basicUserData.profileImage || "koomwanAvatar01.png",
           username: basicUserData.username,
           height: height,
           birthdate: formattedBirthdate,
@@ -261,12 +260,12 @@ export default function UserProfileScreen() {
             </Text>
             <BreakLine />
 
-            {/* Profile Image */}
+            {/* Profile Image - ใช้ ProfileImage component แทนการใช้ Image โดยตรง */}
             <View className="relative mb-4">
-              <Image
-                source={{ uri: profileData.profileImage }}
-                className="w-36 h-36 rounded-full"
-                resizeMode="contain"
+              <ProfileImage
+                imageFileName={profileData.profileImage}
+                size="large"
+                style={{ width: 144, height: 144 }}
               />
             </View>
 
