@@ -16,16 +16,24 @@ import BreakLine from "../../global/components/BreakLine";
 import BackButton from "../../global/components/BackButton";
 import ProfileInputField from "../../components/profile/ProfileInputField";
 import ProfileDropdown from "../../components/profile/ProfileDropdown";
+import ProfileImage from "../../components/profile/ProfileImage";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import Loading from "../../global/components/Loading";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../config";
+import ProfileImageHandler from "../util/ProfileImageHandler";
 
 // Define available options
 const GENDER_OPTIONS = ["ชาย", "หญิง"];
 const STATUS_OPTIONS = ["ผู้ป่วยเบาหวาน", "ผู้ใช้ทั่วไป"];
+
+interface UserUpdateData {
+  email: string;
+  phone: string;
+  image?: string;
+}
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -35,7 +43,7 @@ export default function EditProfileScreen() {
   // Form Data State
   const [formData, setFormData] = useState({
     username: "",
-    profileImage: require("../../assets/Profile/images/profile.png"),
+    profileImage: "",
     height: "",
     birthDate: "",
     gender: GENDER_OPTIONS[0],
@@ -47,8 +55,10 @@ export default function EditProfileScreen() {
   // Date Picker States
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date | undefined>(undefined);
+
   // Image Picker
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<any>(null); // สำหรับเก็บไฟล์รูปภาพที่เลือก
   const [userId, setUserId] = useState<string | null>(null);
   const [healthInfoId, setHealthInfoId] = useState<string | null>(null);
   const [userToken, setUserToken] = useState<string | null>(null);
@@ -58,7 +68,7 @@ export default function EditProfileScreen() {
     fetchUserData();
   }, []);
 
-  // Fetch user data from API using the same approach as index.tsx
+  // Fetch user data from API
   const fetchUserData = async () => {
     try {
       setLoading(true);
@@ -96,9 +106,7 @@ export default function EditProfileScreen() {
       const username = user.username || "";
       const email = user.email || "";
       const phone = user.phone || "";
-      const profileImage = user.image
-        ? { uri: `${BASE_URL}/uploads/${user.image}` }
-        : require("../../assets/Profile/images/profile.png");
+      const profileImage = user.image || "koomwanAvatar01.png";
 
       // Default values for health info
       let height = "";
@@ -166,6 +174,7 @@ export default function EditProfileScreen() {
 
       console.log("Form data set:", {
         username,
+        profileImage,
         height,
         birthDate: formattedBirthDate,
         gender: uiGender,
@@ -215,19 +224,31 @@ export default function EditProfileScreen() {
 
   // Handle Date Selection
   const handleDateChange = (selectedDate: Date | undefined) => {
+    console.log("handleDateChange called with:", selectedDate);
+
     if (selectedDate === undefined) {
+      console.log("Date selection canceled or dismissed");
       setShowDatePicker(false);
       setTempDate(undefined);
       return;
     }
 
+    // Set tempDate for both platforms
     setTempDate(selectedDate);
 
     if (Platform.OS === "android") {
+      // Android จะอัพเดตค่าและปิด picker ทันที
       const formattedDate = formatDate(selectedDate);
+      console.log("Android setting formatted date:", formattedDate);
       setFormData({ ...formData, birthDate: formattedDate });
       setShowDatePicker(false);
-      setTempDate(undefined);
+    } else {
+      // iOS (compact mode) จะเก็บค่าที่เลือกไว้ใน tempDate และไม่ปิด picker
+      // แต่จะอัพเดตค่าและปิด picker ทันทีสำหรับโหมด compact
+      const formattedDate = formatDate(selectedDate);
+      console.log("iOS setting formatted date:", formattedDate);
+      setFormData({ ...formData, birthDate: formattedDate });
+      setShowDatePicker(false);
     }
   };
 
@@ -269,7 +290,7 @@ export default function EditProfileScreen() {
         return "";
       }
 
-      // สร้างวันที่แบบ UTC เวลา 00:00:00 เพื่อให้ตรงกับรูปแบบที่ MongoDB คาดหวัง
+      // สร้างวันที่แบบ UTC เวลา 00:00:00 เพื่อให้ตรงกับรูปแบบ MongoDB
       const date = new Date(Date.UTC(year, parseInt(month) - 1, parseInt(day)));
 
       // ตรวจสอบว่าวันที่ถูกต้องหรือไม่
@@ -285,6 +306,7 @@ export default function EditProfileScreen() {
     }
   };
 
+  // เลือกรูปภาพจากคลังรูปภาพ
   const pickImage = async () => {
     try {
       const { status } =
@@ -302,13 +324,24 @@ export default function EditProfileScreen() {
         mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.8,
+        quality: 0.6,
       });
 
-      if (!result.canceled) {
-        setSelectedImage(result.assets[0].uri);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedAsset = result.assets[0];
+
+        // แสดงรูปภาพที่เลือกในหน้าจอ (UI preview)
+        setSelectedImage(selectedAsset.uri);
+
+        // เก็บข้อมูลไฟล์รูปภาพไว้สำหรับการอัพโหลดเมื่อกดบันทึก
+        setSelectedImageFile({
+          uri: selectedAsset.uri,
+          type: selectedAsset.mimeType || "image/jpeg",
+          name: selectedAsset.uri.split("/").pop() || "profile.jpg",
+        });
       }
     } catch (error) {
+      console.error("Error picking image:", error);
       Alert.alert("ข้อผิดพลาด", "ไม่สามารถเลือกรูปภาพได้");
     }
   };
@@ -324,15 +357,33 @@ export default function EditProfileScreen() {
 
       setUpdating(true);
 
-      // Prepare basic user data
-      const userData = {
+      // Handle profile image change if a new image was selected
+      let newImageFileName = null;
+      if (selectedImageFile) {
+        const result = await ProfileImageHandler.changeProfileImage(
+          userId,
+          selectedImageFile,
+          userToken
+        );
+
+        if (result.success) {
+          newImageFileName = result.newImageFileName;
+          console.log("Profile image updated successfully:", newImageFileName);
+        } else {
+          console.error("Failed to update profile image");
+          // Continue with the rest of the profile update even if image update failed
+        }
+      }
+
+      // Prepare user data (email and phone)
+      const userData: UserUpdateData = {
         email: formData.email,
         phone: formData.phone,
       };
 
       console.log("Updating user data:", userData);
 
-      // Update user basic info
+      // Update basic user data
       const userUpdateResponse = await axios.put(
         `${BASE_URL}/api/v1/user/update/${userId}`,
         userData,
@@ -345,9 +396,9 @@ export default function EditProfileScreen() {
 
       console.log("User update response:", userUpdateResponse.data);
 
-      // Check if health info needs to be updated
+      // Update health info if needed
       if (healthInfoId) {
-        // Prepare health info data
+        // Prepare health data
         const birthdate = parseThaiDateToISO(formData.birthDate);
         console.log("Sending birthdate to API:", birthdate);
 
@@ -374,14 +425,13 @@ export default function EditProfileScreen() {
 
         console.log("Health info update response:", healthUpdateResponse.data);
       } else {
-        // If no health info exists, create new one
+        // If no health info exists, create new
         const newHealthData = {
           userId: userId,
           gender: formData.gender === "ชาย" ? "male" : "female",
           diabetestype:
             formData.status === "ผู้ป่วยเบาหวาน" ? "diabetes" : "none",
           height: parseFloat(formData.height),
-
           birthdate: parseThaiDateToISO(formData.birthDate),
         };
 
@@ -404,32 +454,29 @@ export default function EditProfileScreen() {
           setHealthInfoId(healthCreateResponse.data.healthInfoId);
         }
       }
-      // อัปเดต auth data ใน AsyncStorage เพื่อแสดงข้อมูลที่เปลี่ยน
+
+      // Update data in AsyncStorage (but skip the image update since that's already handled)
       try {
         const authData = await AsyncStorage.getItem("@auth");
         if (authData) {
           const auth = JSON.parse(authData);
 
-          // อัปเดตข้อมูลใน auth object
+          // Update basic info
           auth.user.email = formData.email;
           auth.user.phone = formData.phone;
 
-          // ถ้ามีการอัปเดตข้อมูลสุขภาพ ให้อัปเดตใน auth object ด้วย
+          // Health info ID update
           if (healthInfoId) {
             if (!auth.user.healthinfo) {
               auth.user.healthinfo = healthInfoId;
             }
           }
 
-          // บันทึกกลับไปยัง AsyncStorage
+          // Save back to AsyncStorage
           await AsyncStorage.setItem("@auth", JSON.stringify(auth));
         }
       } catch (storageError) {
         console.error("Error updating AsyncStorage:", storageError);
-      }
-
-      {
-        /* อัปโหลดรูปภาพเพิ่มในภายหลัง  */
       }
 
       Alert.alert("สำเร็จ", "บันทึกข้อมูลสำเร็จ", [
@@ -482,16 +529,22 @@ export default function EditProfileScreen() {
               </Text>
               <BreakLine />
 
-              {/* Profile Image Section */}
+              {/* Profile Image Section - ใช้ ProfileImage Component */}
               <View className="relative mb-4">
-                <Image
-                  source={
-                    selectedImage
-                      ? { uri: selectedImage }
-                      : formData.profileImage
-                  }
-                  className="w-[150px] h-[150px] rounded-full"
-                />
+                {selectedImage ? (
+                  // ถ้ามีการเลือกรูปภาพใหม่ ให้แสดงรูปภาพนั้น
+                  <Image
+                    source={{ uri: selectedImage }}
+                    className="w-[150px] h-[150px] rounded-full"
+                  />
+                ) : (
+                  // ถ้าไม่มีการเลือกรูปภาพใหม่ ให้ใช้ ProfileImage Component
+                  <ProfileImage
+                    imageFileName={formData.profileImage}
+                    size="large"
+                    style={{ width: 150, height: 150 }}
+                  />
+                )}
                 <TouchableOpacity
                   className="absolute bottom-0 right-0"
                   onPress={pickImage}
