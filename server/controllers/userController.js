@@ -220,7 +220,7 @@ const getHealthInfo = async (req, res) => {
 const updateUserBasicInfo = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { email, phone } = req.body;
+    const { email, phone, image } = req.body;
 
     if (!userId) {
       return res.status(400).json({
@@ -278,6 +278,10 @@ const updateUserBasicInfo = async (req, res) => {
       }
 
       updateObj.phone = phone;
+    }
+
+    if (image !== undefined && image !== user.image) {
+      updateObj.image = image;
     }
 
     // Only update if there are changes
