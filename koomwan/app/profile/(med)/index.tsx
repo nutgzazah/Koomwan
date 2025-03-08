@@ -11,7 +11,7 @@ import BackButton from "../../../global/components/BackButton";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import Checkbox from "expo-checkbox";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../../config";
@@ -37,10 +37,11 @@ export default function RegularMedScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchMedications();
-  }, []);
-
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchMedications();
+    }, [])
+  ); // แสดงหน้าที่อัพเดทแล้ว
   const fetchMedications = async () => {
     try {
       setLoading(true);
