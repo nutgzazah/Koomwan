@@ -12,6 +12,7 @@ import axios from "axios";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import BackButton from "../../global/components/BackButton";
+import ProfileImage from "../../components/profile/ProfileImage";
 import { useRouter } from "expo-router";
 import Loading from "../../global/components/Loading";
 import BASE_URL from "../../config";
@@ -37,18 +38,6 @@ interface HealthRecord {
   }>;
   recordtime: string;
   _id: string;
-}
-
-interface UserData {
-  _id: string;
-  username: string;
-  profileImage?: string;
-  healthinfo: {
-    height: number;
-    weight: number;
-    dateOfBirth: string;
-    gender: string;
-  };
 }
 
 interface ProfileData {
@@ -114,9 +103,8 @@ export default function IndexProfileScreen() {
         const healthInfoId = auth.user.healthinfo;
 
         console.log("Health Info ID:", healthInfoId);
-
         if (!userId || !token) {
-          Alert.alert("Session Expired 2", "Please login again");
+          Alert.alert("Session Expired", "Please login again");
           router.push("/user/login");
           return;
         }
@@ -143,11 +131,6 @@ export default function IndexProfileScreen() {
                   Authorization: `Bearer ${token}`,
                 },
               }
-            );
-
-            console.log(
-              "Health info response:",
-              healthInfoResponse.data.success
             );
 
             if (healthInfoResponse.data.success) {
@@ -193,12 +176,9 @@ export default function IndexProfileScreen() {
 
         // Calculate age from birthdate
         const age = calculateAge(birthdate);
-        console.log("Calculated age:", age);
 
         const formattedData = {
-          profileImage: basicUserData.profileImage
-            ? `${BASE_URL}/uploads/${basicUserData.profileImage}`
-            : "koomwan/assets/koomwan-profile.png",
+          profileImage: basicUserData.profileImage || "koomwanAvatar01.png",
           username: basicUserData.username,
           height: height,
           age: age,
@@ -212,7 +192,7 @@ export default function IndexProfileScreen() {
 
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
-          Alert.alert("Session Expired 3", "Please login again", [
+          Alert.alert("Session Expired", "Please login again", [
             { text: "OK", onPress: () => router.push("/user/login") },
           ]);
         } else {
@@ -248,11 +228,11 @@ export default function IndexProfileScreen() {
             </Text>
             <BreakLine />
 
-            {/* Profile Image with Edit Button */}
+            {/* Profile Image with Edit Button - Using new component */}
             <View className="relative">
-              <Image
-                source={{ uri: profileData.profileImage }}
-                className="w-[150px] h-[150px] rounded-full"
+              <ProfileImage
+                imageFileName={profileData.profileImage}
+                size="large"
               />
               <TouchableOpacity
                 className="absolute bottom-0 right-0"
