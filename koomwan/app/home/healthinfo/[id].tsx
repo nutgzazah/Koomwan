@@ -13,7 +13,7 @@ import BackButton from "../../../global/components/BackButton";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import EmotionDisplay from "../../../components/home/healthinfo/EmotionDisplay";
-import { calculateBMI, getBMICategory } from "../../util/bmi";
+import { calculateBMI, getBMICategory } from "../../../util/bmi";
 import BMISection from "../../../components/home/healthinfo/BMISection";
 
 type HealthLogData = {

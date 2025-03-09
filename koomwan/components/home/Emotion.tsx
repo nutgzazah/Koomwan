@@ -4,7 +4,7 @@ import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import { useRouter } from "expo-router";
 import { getEmotionImage } from "../../constant/emotion";
-import { getBMICategory } from "../../app/util/bmi";
+import { getBMICategory } from "../../util/bmi";
 
 const Emotion = () => {
   const router = useRouter();

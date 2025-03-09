@@ -1,6 +1,6 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import BASE_URL from "../../config";
+import BASE_URL from "../config";
 
 /**
  * Service to handle profile image operations including uploading and deleting

@@ -23,7 +23,7 @@ import Loading from "../../global/components/Loading";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../config";
-import ProfileImageHandler from "../util/ProfileImageHandler";
+import ProfileImageHandler from "../../util/ProfileImageHandler";
 
 // Define available options
 const GENDER_OPTIONS = ["ชาย", "หญิง"];
