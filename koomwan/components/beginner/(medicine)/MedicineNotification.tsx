@@ -73,7 +73,7 @@ const MedicineNotification = () => {
 
     // ส่งค่ากลับไปยังหน้า MedicationForm
     router.dismissTo({
-      pathname: "/user/medForm",
+      pathname: "/profile/addMed",
       params: { reminderFormat },
     });
   };
