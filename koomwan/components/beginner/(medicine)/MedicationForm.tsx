@@ -23,6 +23,8 @@ import { MEDICATION_TYPES } from "../../../constant/medication";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../../config";
+import ImageUploader from "../../../global/components/ImageUploader";
+import ImageUploaderWithPreview from "../../../global/components/ImageUploader";
 
 type ImagePickerResult = {
   canceled: boolean;
@@ -38,6 +40,7 @@ export default function MedicationForm() {
   const [pillDescription, setPillDescription] = useState("");
   const [pillImage, setPillImage] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [localImageUri, setLocalImageUri] = useState<string | null>(null);
   const [reminderTimes, setReminderTimes] = useState<string[]>(
     reminderFormat ? [reminderFormat as string] : []
   );
@@ -131,7 +134,7 @@ export default function MedicationForm() {
         mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [2, 1],
-        quality: 0.8,
+        quality: 0.6,
       })) as ImagePickerResult;
 
       if (!result.canceled && result.assets[0]) {
@@ -166,7 +169,7 @@ export default function MedicationForm() {
         mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [2, 1],
-        quality: 0.8,
+        quality: 0.6,
       })) as ImagePickerResult;
 
       if (!result.canceled && result.assets[0]) {
@@ -267,43 +270,57 @@ export default function MedicationForm() {
         }
       );
 
-      if (userResponse.data.success && userResponse.data.user.healthinfo) {
-        const healthInfoId = userResponse.data.user.healthinfo._id;
-
-        // เตรียมข้อมูล
-        const medicationData = {
-          pillName: pillName.trim(),
-          pillType: pillType || "",
-          description: pillDescription.trim() || "",
-          pillImage: pillImage || null,
-          reminderTimes: reminderTimes,
-        };
-
-        // ส่งข้อมูลไปยัง API
-        const response = await axios.post(
-          `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}/add-pill`,
-          medicationData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.data.success) {
-          // แสดงข้อความสำเร็จ
-          Alert.alert("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", [
-            {
-              text: "ตกลง",
-              onPress: () => router.back(),
-            },
-          ]);
-        } else {
-          throw new Error(response.data.message || "ไม่สามารถเพิ่มข้อมูลยาได้");
-        }
-      } else {
+      if (!userResponse.data.success || !userResponse.data.user.healthinfo) {
         throw new Error("ไม่พบข้อมูลสุขภาพของผู้ใช้");
+      }
+
+      const healthInfoId = userResponse.data.user.healthinfo._id;
+
+      // Check if there's a local image to upload
+      let finalImagePath = pillImage;
+
+      if (localImageUri) {
+        // upload the image
+        const uploadedImagePath = await uploadImageToServer(localImageUri);
+        if (uploadedImagePath) {
+          finalImagePath = uploadedImagePath;
+        } else {
+          // Only show warning, don't block submission
+          console.warn("Failed to upload image, proceeding without image");
+        }
+      }
+
+      // เตรียมข้อมูล
+      const medicationData = {
+        pillName: pillName.trim(),
+        pillType: pillType || "",
+        description: pillDescription.trim() || "",
+        pillImage: finalImagePath || null,
+        reminderTimes: reminderTimes,
+      };
+
+      // ส่งข้อมูลไปยัง API
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}/add-pill`,
+        medicationData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // แสดงข้อความสำเร็จ
+        Alert.alert("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", [
+          {
+            text: "ตกลง",
+            onPress: () => router.back(),
+          },
+        ]);
+      } else {
+        throw new Error(response.data.message || "ไม่สามารถเพิ่มข้อมูลยาได้");
       }
     } catch (error) {
       console.error("Error adding medication:", error);
@@ -339,46 +356,13 @@ export default function MedicationForm() {
             <BreakLine />
 
             {/* Image Upload */}
-            <TouchableOpacity
-              onPress={pillImage ? handleRemoveImage : showImageOptions}
-              disabled={isUploadingImage}
-              className="w-full h-[150px] aspect-[2/1] bg-background rounded-lg items-center justify-center border border-gray relative"
-            >
-              {isUploadingImage ? (
-                <View className="items-center">
-                  <ActivityIndicator size="large" color="#3972F0" />
-                  <Text className="text-description text-gray font-regular mt-2">
-                    กำลังอัพโหลด...
-                  </Text>
-                </View>
-              ) : pillImage ? (
-                <>
-                  <Image
-                    source={{ uri: pillImage }}
-                    className="w-full h-[150px] p-1 "
-                    resizeMode="contain"
-                  />
-                  <View className="absolute top-4 right-4 bg-black bg-opacity-50 rounded-full p-2">
-                    <Image
-                      source={require("../../../assets/BeginnerSetup/trash.png")}
-                      className="w-5 h-5"
-                      resizeMode="contain"
-                    />
-                  </View>
-                </>
-              ) : (
-                <View className="items-center">
-                  <Image
-                    source={require("../../../assets/BeginnerSetup/add-image.png")}
-                    className="w-16 h-16 mb-2"
-                    resizeMode="contain"
-                  />
-                  <Text className="text-description text-gray font-regular">
-                    เพิ่มรูปภาพ
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
+            <ImageUploaderWithPreview
+              imageUrl={pillImage}
+              setImageUrl={setPillImage}
+              localImage={localImageUri}
+              setLocalImage={setLocalImageUri}
+              disabled={isSubmitting}
+            />
 
             {/* Name Input */}
             <View className="mt-4 w-full">
