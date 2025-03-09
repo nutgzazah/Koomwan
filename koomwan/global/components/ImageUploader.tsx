@@ -81,7 +81,7 @@ const ImageUploaderWithPreview: React.FC<ImageUploaderWithPreviewProps> = ({
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
-        aspect: [2, 1],
+        aspect: [1, 1],
         quality: 0.6,
       });
 
