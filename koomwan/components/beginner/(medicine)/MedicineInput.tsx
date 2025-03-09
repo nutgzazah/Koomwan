@@ -12,7 +12,7 @@ export const MedicineInput = () => (
     <View className="w-full">
       <TouchableOpacity
         className="w-full flex-row items-center justify-between bg-background rounded p-4"
-        onPress={() => router.push("/user/medForm")}
+        onPress={() => router.push("/profile/addMed")}
       >
         <Text className="text-gray pr-12 text-description font-regular">
           เพิ่มยาประจำของคุณ
