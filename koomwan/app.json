@@ -14,13 +14,22 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "แอปนี้ต้องการใช้กล้องของคุณเพื่อถ่ายรูปยา",
+        "NSPhotoLibraryUsageDescription": "แอปนี้ต้องการเข้าถึงคลังรูปภาพของคุณเพื่อเลือกรูปภาพยา"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +45,22 @@
             "./assets/fonts/K2D-Bold.ttf",
             "./assets/fonts/K2D-Medium.ttf"
           ]
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "แอปนี้ต้องการเข้าถึงคลังรูปภาพของคุณเพื่อเลือกรูปภาพยา",
+          "cameraPermission": "แอปนี้ต้องการใช้กล้องของคุณเพื่อถ่ายรูปยา"
+        }
+      ],
+      [
+        "expo-file-system",
+        {
+          "fileSystemPermissions": {
+            "ios": "The app needs to access your files to check image sizes",
+            "android": "The app needs to access your files to check image sizes"
+          }
         }
       ]
     ]
