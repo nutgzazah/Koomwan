@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Card from "../../../../global/components/Card";
@@ -38,10 +39,60 @@ export default function PillDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [pillDetails, setPillDetails] = useState<Medication | null>(null);
   const [errorShown, setErrorShown] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loadingImage, setLoadingImage] = useState(false);
 
   useEffect(() => {
     fetchPillDetails();
   }, [pillId]);
+
+  // Function to fetch signed URL for the pill image
+  const fetchImageUrl = async (pillImagePath: string) => {
+    try {
+      setLoadingImage(true);
+
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) return null;
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // Extract folder and filename from the path
+      const pathParts = pillImagePath.split("/");
+      if (pathParts.length < 2) return null;
+
+      const fileName = pathParts.pop();
+      const folder = pathParts.pop();
+
+      if (!fileName || !folder) return null;
+
+      // Request a signed URL from the server
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/storage/getFileUrl`,
+        {
+          params: {
+            fileName,
+            folder,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success && response.data.url) {
+        console.log("Image URL fetched successfully:", response.data.url);
+        return response.data.url;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error fetching image URL:", error);
+      return null;
+    } finally {
+      setLoadingImage(false);
+    }
+  };
 
   const fetchPillDetails = async () => {
     try {
@@ -91,6 +142,12 @@ export default function PillDetailScreen() {
 
           if (medication) {
             setPillDetails(medication);
+
+            // If medication has an image, fetch the signed URL
+            if (medication.pillImage) {
+              const url = await fetchImageUrl(medication.pillImage);
+              setImageUrl(url);
+            }
           } else {
             console.error("ไม่พบข้อมูลยาที่ต้องการ");
             if (!errorShown) {
@@ -152,9 +209,16 @@ export default function PillDetailScreen() {
 
           {/* Pill Image */}
           <View className="w-full h-[150px] aspect-[2/1] bg-background rounded-lg items-center justify-center border border-gray">
-            {pillData.pillImage ? (
+            {loadingImage ? (
+              <View className="items-center">
+                <ActivityIndicator size="large" color="#3972F0" />
+                <Text className="text-description text-gray font-regular mt-2">
+                  กำลังโหลดรูปภาพ...
+                </Text>
+              </View>
+            ) : imageUrl ? (
               <Image
-                source={{ uri: pillData.pillImage }}
+                source={{ uri: imageUrl }}
                 className="w-full h-[150px] p-1"
                 resizeMode="contain"
               />
@@ -191,7 +255,7 @@ export default function PillDetailScreen() {
             </Text>
             <View className="w-full bg-background border border-gray rounded p-2 px-4 text-description font-regular h-12 justify-center">
               <Text className="text-description text-secondary font-regular">
-                {pillData.pillType}
+                {pillData.pillType || "-"}
               </Text>
             </View>
           </View>
@@ -203,7 +267,7 @@ export default function PillDetailScreen() {
             </Text>
             <View className="w-full bg-background border border-gray rounded p-2 px-4 text-description font-regular min-h-[96px]">
               <Text className="text-description text-secondary font-regular">
-                {pillData.description}
+                {pillData.description || "ไม่มีข้อมูลรายละเอียด"}
               </Text>
             </View>
           </View>
@@ -216,7 +280,14 @@ export default function PillDetailScreen() {
               </Text>
               <View className="w-full bg-background border border-gray rounded p-2 px-4 text-description font-regular min-h-[48px] justify-center">
                 <Text className="text-description text-secondary font-regular">
-                  {pillData.reminderTimes.join(" น., ")} น.
+                  {pillData.reminderTimes
+                    .map((time) => {
+                      const formattedTime = time.includes("/")
+                        ? time.replace("/", " เวลา ") + " น."
+                        : time + " น.";
+                      return formattedTime;
+                    })
+                    .join("\n")}
                 </Text>
               </View>
             </View>
