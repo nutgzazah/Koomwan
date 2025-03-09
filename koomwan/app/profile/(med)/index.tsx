@@ -22,6 +22,7 @@ interface Medication {
   pillName: string;
   pillType: string;
   description: string;
+  pillImage?: string;
   reminderTimes: string[];
   checked?: boolean;
 }
@@ -108,6 +109,41 @@ export default function RegularMedScreen() {
     );
   };
 
+  // Function to delete an image from R2 storage
+  const deleteImageFromR2 = async (imagePath: string, token: string) => {
+    try {
+      if (!imagePath) return true; // Skip if no image
+
+      // Extract folder and filename from the path
+      const parts = imagePath.split("/");
+      if (parts.length < 2) return false;
+
+      const fileName = parts.pop();
+      const folder = parts.pop();
+
+      if (!fileName || !folder) return false;
+
+      // Send delete request to API
+      await axios.delete(`${BASE_URL}/api/v1/storage/deleteFile`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          folder,
+          fileName,
+        },
+      });
+
+      console.log(`Successfully deleted image: ${imagePath}`);
+      return true;
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      // Don't block the medication deletion if image deletion fails
+      return false;
+    }
+  };
+
   const handleDelete = () => {
     // Count selected items
     const selectedCount = medications.filter((med) => med.checked).length;
@@ -153,16 +189,22 @@ export default function RegularMedScreen() {
               ) {
                 const healthInfoId = userResponse.data.user.healthinfo._id;
 
-                // Get selected pill IDs to delete
-                const pillsToDelete = medications
-                  .filter((med) => med.checked)
-                  .map((med) => med._id);
+                // Get selected medications to delete
+                const medsToDelete = medications.filter((med) => med.checked);
+                const pillIdsToDelete = medsToDelete.map((med) => med._id);
+
+                // Delete images from R2 storage
+                for (const med of medsToDelete) {
+                  if (med.pillImage) {
+                    await deleteImageFromR2(med.pillImage, token);
+                  }
+                }
 
                 // Update the healthinfo by removing selected pills
                 await axios.put(
                   `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}/remove-pills`,
                   {
-                    removePills: pillsToDelete,
+                    removePills: pillIdsToDelete,
                   },
                   {
                     headers: {
