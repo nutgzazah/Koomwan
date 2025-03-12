@@ -14,7 +14,7 @@ import PopupScreen from "../../../../global/components/PopupScreen";
 import DoctorIcon from "./DoctorIcon";
 
 interface forumCardProps {
-    imageContent: ImageSourcePropType
+    imageContent: string | ImageSourcePropType; // รองรับทั้ง URL หรือไฟล์ท้องถิ่น
     like: number
     comments: number
     userimage: ImageSourcePropType
@@ -102,7 +102,7 @@ export default function ForumCard({
                         <View className="w-auto h-auto mt-6">
                             <Image
                                 className="max-w-[21rem] max-h-[21rem]"
-                                source={imageContent}
+                                source={{ uri: imageContent }}
                             />
                         </View>
                         :
