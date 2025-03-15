@@ -1,22 +1,208 @@
-import React from "react";
-import { View, Text, Dimensions } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, Dimensions, Alert } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter, useFocusEffect } from "expo-router";
+import BASE_URL from "../../config";
+import Loading from "../../global/components/Loading";
 
-const data = {
-  labels: [""],
-  datasets: [
-    {
-      data: [65, 82, 78, 75, 85, 78, 82],
-      color: (opacity = 1) => `rgba(57, 114, 240, ${opacity})`,
-      strokeWidth: 2,
-    },
-  ],
+// Define the API response type for blood sugar records
+interface BloodSugarRecord {
+  _id: string;
+  recordtime: string;
+  bloodsugar: number;
+}
+
+// Format date to Thai format
+const formatThaiDate = (dateString: string): string => {
+  const date = new Date(dateString);
+
+  // Thai day names
+  const thaiDays = [
+    "อาทิตย์",
+    "จันทร์",
+    "อังคาร",
+    "พุธ",
+    "พฤหัสบดี",
+    "ศุกร์",
+    "เสาร์",
+  ];
+
+  // Thai month names
+  const thaiMonths = [
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
+  ];
+
+  const day = thaiDays[date.getDay()];
+  const dayNum = date.getDate();
+  const month = thaiMonths[date.getMonth()];
+
+  return `วัน${day}ที่ ${dayNum} ${month}`;
 };
 
-const HealthChart = () => {
+interface BloodSugarChartProps {
+  healthInfoId?: string; // Optional healthInfoId prop
+}
+
+const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [bloodSugarData, setBloodSugarData] = useState<BloodSugarRecord[]>([]);
+  const [chartData, setChartData] = useState({
+    labels: [""],
+    datasets: [
+      {
+        data: [0],
+        color: (opacity = 1) => `rgba(57, 114, 240, ${opacity})`,
+        strokeWidth: 2,
+      },
+    ],
+  });
+  const [lastRecordDate, setLastRecordDate] = useState<string>("");
+  const [lastBloodSugarValue, setLastBloodSugarValue] = useState<number>(0);
+
   const screenWidth = Dimensions.get("window").width - 48; // Full width minus padding
+
+  const fetchBloodSugarData = async () => {
+    try {
+      setLoading(true);
+
+      // Get auth data from local storage
+      const authData = await AsyncStorage.getItem("@auth");
+
+      if (!authData) {
+        Alert.alert("Session Expired", "Please login again");
+        /*  router.push("/user/login"); */
+        return;
+      }
+
+      // Parse auth data
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+      const userId = auth.user._id;
+      const userHealthInfoId = healthInfoId || auth.user.healthinfo;
+
+      if (!userHealthInfoId) {
+        throw new Error("Health information not found");
+      }
+
+      // Use the getRecord endpoint from your API
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/user/getRecord/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Check if the API request was successful
+      if (!response.data.success) {
+        throw new Error(
+          response.data.message || "Failed to fetch blood sugar data"
+        );
+      }
+
+      // Filter records that have bloodsugar field and sort by date
+      const allRecords = response.data.records;
+      const bloodSugarRecords = allRecords
+        .filter(
+          (record: BloodSugarRecord) =>
+            record.bloodsugar !== undefined && record.bloodsugar !== null
+        )
+        .sort(
+          (a: BloodSugarRecord, b: BloodSugarRecord) =>
+            new Date(b.recordtime).getTime() - new Date(a.recordtime).getTime()
+        ); // Sort by date (newest first)
+
+      // Get only the 5 most recent records
+      const records = bloodSugarRecords.slice(0, 5);
+
+      if (records.length > 0) {
+        // Sort records by date (oldest first) for proper chart display
+        const sortedRecords = [...records].sort(
+          (a, b) =>
+            new Date(a.recordtime).getTime() - new Date(b.recordtime).getTime()
+        );
+
+        setBloodSugarData(sortedRecords);
+
+        // Prepare chart data
+        const labels = sortedRecords.map((record) => {
+          const date = new Date(record.recordtime);
+          return `${date.getDate()}/${date.getMonth() + 1}`;
+        });
+
+        const values = sortedRecords.map((record) => record.bloodsugar);
+
+        setChartData({
+          labels,
+          datasets: [
+            {
+              data: values,
+              color: (opacity = 1) => `rgba(57, 114, 240, ${opacity})`,
+              strokeWidth: 2,
+            },
+          ],
+        });
+
+        // Set the most recent record data
+        const latestRecord = sortedRecords[sortedRecords.length - 1];
+        setLastRecordDate(formatThaiDate(latestRecord.recordtime));
+        setLastBloodSugarValue(latestRecord.bloodsugar);
+      } else {
+        // When no records found, reset data
+        setBloodSugarData([]);
+        setChartData({
+          labels: [""],
+          datasets: [
+            {
+              data: [0],
+              color: (opacity = 1) => `rgba(57, 114, 240, ${opacity})`,
+              strokeWidth: 2,
+            },
+          ],
+        });
+        setLastRecordDate("");
+        setLastBloodSugarValue(0);
+      }
+    } catch (err) {
+      console.error("Error fetching blood sugar data:", err);
+      setError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial data loading
+  useEffect(() => {
+    fetchBloodSugarData();
+  }, [healthInfoId]);
+
+  // Refresh data whenever the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchBloodSugarData();
+      return () => {
+        // Optional cleanup if needed
+      };
+    }, [healthInfoId])
+  );
 
   const chartConfig = {
     backgroundColor: "#FFFFFF",
@@ -27,58 +213,110 @@ const HealthChart = () => {
     labelColor: () => "#3E3B5B",
     style: {
       borderRadius: 16,
+      fontFamily: "K2D-Regular",
+      fontSize: 8,
     },
     propsForDots: {
       r: "4",
-      strokeWidth: "2",
+      strokeWidth: "0",
       stroke: "#3972F0",
     },
   };
 
+  // Function to determine blood sugar status
+  const getBloodSugarStatus = (value: number): string => {
+    if (value < 70) return "ต่ำกว่าเกณฑ์";
+    if (value <= 130) return "ปกติ";
+    return "สูงกว่าเกณฑ์";
+  };
+
+  // Function to determine text color based on status
+  const getStatusColor = (value: number): string => {
+    if (value < 70) return "text-warning";
+    if (value <= 130) return "text-normal";
+    return "text-abnormal";
+  };
+
   return (
     <Card>
-      <View className="w-full justify-center items-center ">
-        <Text className="text-title font-bold text-secondary ">
+      <View className="w-full justify-center items-center">
+        <Text className="text-title font-bold text-secondary">
           สุขภาพโดยรวม
         </Text>
         <BreakLine />
 
-        <Text className="text-headline font-regular text-secondary mb-2">
-          ระดับน้ำตาลในเลือดของฉัน
-        </Text>
+        {loading ? (
+          <Loading />
+        ) : error ? (
+          <View className="py-16">
+            <Text className="text-description text-secondary font-regular text-center">
+              {error}
+            </Text>
+          </View>
+        ) : bloodSugarData.length === 0 ? (
+          <View className="py-16">
+            <Text className="text-description text-secondary text-center">
+              ไม่พบข้อมูลระดับน้ำตาลในเลือด
+            </Text>
+          </View>
+        ) : (
+          <>
+            <Text className="text-headline font-regular text-secondary mb-2">
+              ระดับน้ำตาลในเลือดของฉัน
+            </Text>
 
-        <Text className="text-tag font-regular text-secondary mb-2">
-          บันทึกล่าสุด ณ วันจันทร์ที่ 2 ธันวาคม
-        </Text>
+            <Text className="text-tag font-regular text-secondary mb-2">
+              บันทึกล่าสุด ณ {lastRecordDate}
+            </Text>
 
-        <Text className="text-tag font-regular text-secondary mb-4">
-          {data.datasets[0].data[data.datasets[0].data.length - 1]} มก./ดล.
-        </Text>
+            <View className="flex-row items-center mb-4 justify-center">
+              <Text className="text-description font-regular text-secondary">
+                {lastBloodSugarValue}
+              </Text>
+              <Text className="text-description font-regular text-secondary ml-1">
+                มก./ดล.
+              </Text>
+              <Text
+                className={`text-description font-medium ml-2 ${getStatusColor(
+                  lastBloodSugarValue
+                )}`}
+              >
+                ({getBloodSugarStatus(lastBloodSugarValue)})
+              </Text>
+            </View>
 
-        <View className="w-full justify-center items-center p-1">
-          <LineChart
-            data={data}
-            width={screenWidth}
-            height={220}
-            chartConfig={chartConfig}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
-            withInnerLines={true}
-            withOuterLines={true}
-            withDots={true}
-            withShadow={true}
-            yAxisSuffix=""
-            yAxisInterval={20}
-            fromZero={false}
-            segments={4}
-          />
-        </View>
+            <View className="w-full justify-center items-center p-1">
+              <LineChart
+                data={chartData}
+                width={screenWidth}
+                height={220}
+                chartConfig={chartConfig}
+                bezier
+                style={{
+                  marginVertical: 8,
+                  borderRadius: 16,
+                }}
+                withInnerLines={true}
+                withOuterLines={true}
+                withDots={true}
+                withShadow={true}
+                yAxisLabel=""
+                yAxisInterval={20}
+                fromZero={false}
+                segments={5}
+              />
+            </View>
+
+            <View className="w-full mt-2 items-center justify-center">
+              <Text className="text-tag font-medium text-secondary">
+                ช่วงปกติ: 70 - 130 มก./ดล.
+              </Text>
+            </View>
+          </>
+        )}
       </View>
     </Card>
   );
 };
 
-export default HealthChart;
+export default BloodSugarChart;
