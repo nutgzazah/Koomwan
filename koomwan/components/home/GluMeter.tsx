@@ -209,7 +209,11 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
   const currentStatus = statusConfig[status];
 
   if (loading) {
-    return <Loading />;
+    return (
+      <Card>
+        <Loading />
+      </Card>
+    );
   }
 
   if (error) {
