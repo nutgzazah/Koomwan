@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import { LineChart } from "react-native-chart-kit";
 import BackButton from "../../../global/components/BackButton";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import BASE_URL from "../../../config";
@@ -226,6 +226,15 @@ export default function HealthStats() {
   useEffect(() => {
     fetchHealthData();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchHealthData();
+      return () => {
+        // Optional cleanup if needed
+      };
+    }, [])
+  );
 
   const handlePrevious = () => {
     const newIndex =

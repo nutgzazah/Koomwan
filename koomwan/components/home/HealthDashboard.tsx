@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Dimensions, TouchableOpacity, Alert } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import axios from "axios";
@@ -262,6 +262,15 @@ const HealthDashboard: React.FC = () => {
   useEffect(() => {
     fetchHealthData();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchHealthData();
+      return () => {
+        // Optional cleanup if needed
+      };
+    }, [])
+  );
 
   return (
     <View className="flex-1 bg-background">

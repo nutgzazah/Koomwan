@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, Image, Alert, TouchableOpacity } from "react-native";
 import Card from "../../global/components/Card";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../config";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import Loading from "../../global/components/Loading";
 import { calculateBMI, getBMICategory } from "../../util/bmi";
 
@@ -258,6 +258,15 @@ export default function BMI() {
   useEffect(() => {
     fetchUserData();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+      return () => {
+        // Optional cleanup if needed
+      };
+    }, [])
+  );
 
   if (loading) {
     return (
