@@ -139,7 +139,7 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
         AsyncStorage.removeItem("@auth");
         router.push("/user/login");
       } else {
-        setError("ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+        setError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
       }
 
       setLoading(false);
@@ -220,10 +220,10 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
     return (
       <Card>
         <View className="items-center justify-center py-12">
-          <Text className="text-title text-secondary font-bold mb-2">
-            เกิดข้อผิดพลาด
+          <Text className="text-body text-secondary text-center font-regular pt-4">
+            ระดับน้ำตาลในเลือดล่าสุดของฉัน
           </Text>
-          <Text className="text-description text-secondary text-center">
+          <Text className="text-description text-secondary font-regular text-center">
             {error}
           </Text>
         </View>

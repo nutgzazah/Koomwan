@@ -275,15 +275,13 @@ export default function BMI() {
             ดัชนีมวลกายของฉัน
           </Text>
           <Text className="text-description text-secondary font-regular mb-4">
-            {error}
+            ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง
           </Text>
           <TouchableOpacity
             onPress={fetchUserData}
             className="bg-primary py-2 px-4 rounded-[5px]"
           >
-            <Text className="text-card font-bold font-regular">
-              ลองอีกครั้ง
-            </Text>
+            <Text className="text-card font-regular">ลองอีกครั้ง</Text>
           </TouchableOpacity>
         </View>
       </Card>
