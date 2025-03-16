@@ -48,8 +48,8 @@ export default function HomeScreen() {
         <A1Cchart />
         <BMI />
         <Emotion />
-        <BloodSugarStatus date="วันจันทร์ที่ 2 ธันวาคม" status="risk" />
-        <EmoteDisplay mood="happy" />
+        <BloodSugarStatus />
+        <EmoteDisplay />
         <MedicationStatus hasTakenMeds={true} />
         <HealthDashboard />
       </ScrollView>
