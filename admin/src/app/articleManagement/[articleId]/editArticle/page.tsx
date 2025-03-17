@@ -199,6 +199,10 @@ const EditBlogForm: React.FC = () => {
         <textarea id="content" name="content" value={blog.content} onChange={handleChange} className="input h-64"></textarea>
       </div>
 
+      <div className="w-full flex justify-end">
+        <button onClick={handleDelete} className="w-fit text-abnormal hover:underline">ลบบทความ</button>
+      </div>
+
       <div className="flex justify-center space-x-4">
         <button onClick={handleSubmit} className="px-4 py-2 bg-blue-500 text-white rounded">ส่งบทความ</button>
         <button onClick={() => router.back()} className="px-4 py-2 bg-gray-300 rounded">ยกเลิก</button>
