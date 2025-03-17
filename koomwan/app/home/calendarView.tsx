@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  RefreshControl,
+  Alert,
 } from "react-native";
 import { Calendar, LocaleConfig } from "react-native-calendars";
 import { Image } from "react-native";
@@ -15,42 +17,21 @@ import BreakLine from "../../global/components/BreakLine";
 import { useRouter } from "expo-router";
 import { getEmotionImage } from "../../constant/emotion";
 import { calculateBMI } from "../../util/bmi";
+import { useCalendarData, HealthLog } from "../../hooks/useCalendar";
+import Loading from "../../global/components/Loading";
 
-type MedicationLog = {
-  time: string;
-  medications: Array<{
-    id: number;
-    name: string;
-    taken: boolean;
-  }>;
-};
-
-type HealthLog = {
-  id: number;
-  time: string;
-  height?: number;
-  weight?: number;
-  blood_sugar_level?: number;
-  blood_pressure?: string;
-  a1c?: number;
-  mood?:
-    | "laughing"
-    | "happy"
-    | "neutral"
-    | "irritated"
-    | "sick"
-    | "crying"
-    | "angry"
-    | "none";
-};
-
-type DayData = {
-  medications: MedicationLog[];
-  healthLogs: HealthLog[];
+// เช็คว่าวันที่ที่ส่งมาอยู่ในอดีตหรือไม่
+const isDateInPast = (dateStr: string): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const compareDate = new Date(dateStr);
+  compareDate.setHours(0, 0, 0, 0);
+  return compareDate < today;
 };
 
 const CalendarScreen = () => {
   const router = useRouter();
+
   // ตั้งค่าภาษาไทย
   LocaleConfig.locales["th"] = {
     monthNames: [
@@ -94,124 +75,133 @@ const CalendarScreen = () => {
   };
   LocaleConfig.defaultLocale = "th";
 
+  // ใช้ hook ที่สร้างขึ้นเพื่อจัดการข้อมูลปฏิทิน
+  const {
+    loading,
+    refreshing,
+    markedDates,
+    dayData,
+    error,
+    refreshCalendarData,
+    handlePillStatusChange,
+  } = useCalendarData();
+
+  // วันที่เลือกในปฏิทิน
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [markedDates, setMarkedDates] = useState<{
-    [key: string]: {
-      marked?: boolean;
-      dotColor?: string;
-      selected?: boolean;
-      selectedColor?: string;
-    };
-  }>({});
-  const [dayData, setDayData] = useState<DayData>({
-    medications: [],
-    healthLogs: [],
-  });
 
-  // Mock data
-  const mockMarkedDates = {
-    "2025-03-02": { marked: true, dotColor: "#3972F0" },
-    "2025-03-04": { marked: true, dotColor: "#3972F0" },
-  };
+  // แสดงข้อผิดพลาด (ถ้ามี)
+  if (error) {
+    Alert.alert("ข้อผิดพลาด", error);
+  }
 
-  const mockDayData: { [key: string]: DayData } = {
-    "2025-03-02": {
-      medications: [
-        {
-          time: "8.30 น.",
-          medications: [
-            { id: 1, name: "Glipizide", taken: true },
-            { id: 2, name: "Metformin", taken: true },
-          ],
-        },
-        {
-          time: "12.30 น.",
-          medications: [{ id: 3, name: "Glipizide", taken: false }],
-        },
-      ],
-      healthLogs: [
-        {
-          id: 1,
-          time: "13.32 น.",
-          weight: 58,
-          height: 160,
-          blood_pressure: "78",
-          mood: "happy",
-          blood_sugar_level: 120,
-          a1c: 6.5,
-        },
-        {
-          id: 2,
-          time: "08.17 น.",
-          weight: 85,
-          height: 180,
-          mood: "none",
-          a1c: 7.1,
-        },
-        {
-          id: 3,
-          time: "20.00 น.",
-          weight: 70,
-          height: 170,
-          blood_sugar_level: 150,
-          mood: "crying",
-        },
-      ],
-    },
-  };
-
-  useEffect(() => {
-    setMarkedDates(mockMarkedDates);
-  }, []);
-
+  // เมื่อกดเลือกวันในปฏิทิน
   const onDayPress = (day: { dateString: string }) => {
     setSelectedDate(day.dateString);
-    setDayData(
-      mockDayData[day.dateString] || { medications: [], healthLogs: [] }
+  };
+
+  // ดึงข้อมูลของวันที่เลือก
+  const getSelectedDayData = () => {
+    return dayData[selectedDate] || { medications: [], healthLogs: [] };
+  };
+
+  // ไปยังหน้ารายละเอียดยา
+  const navigateToPillDetail = (pillId: string, pillName: string) => {
+    router.push({
+      pathname: "/profile/(med)/(medDetail)/[id]",
+      params: { id: pillId, pill_name: pillName },
+    });
+  };
+
+  // แสดงรายการยาประจำ
+  const renderMedicationLogs = () => {
+    const selectedDayData = getSelectedDayData();
+    const isPastDate = isDateInPast(selectedDate);
+
+    if (
+      !selectedDayData.medications ||
+      selectedDayData.medications.length === 0
+    ) {
+      return null;
+    }
+
+    return (
+      <View className="mt-4">
+        <Card>
+          <Text className="text-headline font-medium text-secondary">
+            ยาประจำ
+          </Text>
+          <BreakLine />
+          {selectedDayData.medications.map((medicationLog, timeIndex) => (
+            <View
+              key={`medication-time-${selectedDate}-${medicationLog.time}-${timeIndex}`}
+              className="mb-4 justify-between"
+            >
+              <Text className="text-description text-secondary mb-2 font-regular">
+                เวลา {medicationLog.time}
+              </Text>
+              {medicationLog.medications.map((medication, medIndex) => (
+                <View
+                  key={`${selectedDate}-${medicationLog.time}-${medication.id}-${medIndex}`}
+                  className="flex-row items-center justify-between mt-2 gap-8"
+                >
+                  <View className="flex-row items-center">
+                    <Checkbox
+                      value={medication.taken}
+                      disabled={isPastDate || medication.isPastMedication}
+                      className={`w-6 h-6 rounded border ${
+                        isPastDate || medication.isPastMedication
+                          ? "opacity-60"
+                          : ""
+                      }`}
+                      color={medication.taken ? "#3972F0" : "#F8F8F8"}
+                      onValueChange={(newValue) =>
+                        !isPastDate && !medication.isPastMedication
+                          ? handlePillStatusChange(
+                              medication.id,
+                              selectedDate,
+                              medicationLog.time,
+                              newValue
+                            )
+                          : null
+                      }
+                    />
+                    <Image
+                      source={require("../../assets/Home/medicine.png")}
+                      className="w-6 h-6 ml-2"
+                    />
+                    <Text className="text-description text-secondary font-regular ml-2">
+                      {medication.name}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigateToPillDetail(medication.id, medication.name)
+                    }
+                  >
+                    <Text className="text-primary text-description font-regular">
+                      รายละเอียดยา
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          ))}
+          {isPastDate && (
+            <Text className="text-tag font-regular text-secondary opacity-60 text-center mt-2">
+              *ไม่สามารถเปลี่ยนแปลงสถานะยาของวันที่ผ่านมาได้
+            </Text>
+          )}
+        </Card>
+      </View>
     );
   };
 
-  const renderMedicationGroup = (medicationLog: MedicationLog) => (
-    <Card key={medicationLog.time}>
-      <View className="space-y-2">
-        <Text className="text-description text-secondary font-regular px-2">
-          เวลา {medicationLog.time}
-        </Text>
-        {medicationLog.medications.map((medication) => (
-          <View
-            key={`${medicationLog.time}-${medication.name}`}
-            className="flex-row items-center justify-between mt-2"
-          >
-            <View className="flex-row items-center gap-2">
-              <Checkbox
-                value={medication.taken}
-                className="w-6 h-6 rounded border"
-                color={medication.taken ? "#3972F0" : "#CBCBCB"}
-              />
-              <Image
-                source={require("../../assets/Home/medicine.png")}
-                className="w-6 h-6"
-              />
-              <Text className="text-description text-secondary font-regular">
-                {medication.name}
-              </Text>
-            </View>
-            <TouchableOpacity>
-              <Text className="text-primary text-description font-regular">
-                รายละเอียดยา
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-      </View>
-    </Card>
-  );
-
-  const renderHealthLog = (log: HealthLog) => (
+  // แสดงรายการบันทึกสุขภาพ
+  const renderHealthLog = (log: HealthLog, index: number) => (
     <TouchableOpacity
-      key={log.time}
+      key={`health-log-${log.id}-${index}`}
       onPress={() =>
         router.push({
           pathname: "/home/healthinfo/[id]",
@@ -221,11 +211,11 @@ const CalendarScreen = () => {
     >
       <Card>
         <View className="justify-between">
-          <View className="flex-row justify-between items-center gap-8 ">
-            <Text className="text-description text-secondary font-regular ">
+          <View className="flex-row justify-between items-center">
+            <Text className="text-description text-secondary font-regular">
               เวลา {log.time}
             </Text>
-            {log.mood && (
+            {log.mood && log.mood !== "none" && (
               <Image
                 source={getEmotionImage(log.mood)}
                 className="w-8 h-8"
@@ -234,51 +224,60 @@ const CalendarScreen = () => {
             )}
           </View>
 
-          <View className="flex-row gap-4 mt-2">
+          <View className="flex-row flex-wrap gap-4 mt-4">
             {log.weight && log.height && (
-              <View className="flex-row items-center gap-2">
+              <View className="flex-row items-center">
                 <Image
                   source={require("../../assets/Home/body-blue.png")}
                   className="w-6 h-6"
                 />
-                <Text className="text-description text-secondary font-regular">
+                <Text className="text-description text-secondary font-regular ml-1">
                   {calculateBMI(log.weight, log.height).toFixed(2)}
                 </Text>
               </View>
             )}
             {log.blood_pressure && (
-              <View className="flex-row items-center gap-2">
+              <View className="flex-row items-center">
                 <Image
                   source={require("../../assets/Home/blood-pressure.png")}
                   className="w-6 h-6"
                 />
-                <Text className="text-description text-secondary font-regular">
-                  {log.blood_pressure}
+                <Text className="text-description text-secondary font-regular ml-1">
+                  {log.blood_pressure.systolic}/{log.blood_pressure.diastolic}
                 </Text>
               </View>
             )}
             {log.blood_sugar_level && (
-              <View className="flex-row items-center gap-2">
+              <View className="flex-row items-center">
                 <Image
                   source={require("../../assets/Home/glucose-blue.png")}
                   className="w-6 h-6"
                   resizeMode="contain"
                 />
-                <Text className="text-description text-secondary font-regular">
+                <Text className="text-description text-secondary font-regular ml-1">
                   {log.blood_sugar_level}
                 </Text>
               </View>
             )}
             {log.a1c && (
-              <View className="flex-row items-center gap-2">
+              <View className="flex-row items-center">
                 <Image
                   source={require("../../assets/Home/a1c.png")}
                   className="w-6 h-6"
                   resizeMode="contain"
                 />
-                <Text className="text-description text-secondary font-regular">
+                <Text className="text-description text-secondary font-regular ml-1">
                   {log.a1c}
                 </Text>
+              </View>
+            )}
+            {/* แสดงไอคอนยาเพิ่มเติม (additional pills) ถ้ามี */}
+            {log.additionalPills && log.additionalPills.length > 0 && (
+              <View className="flex-row items-center">
+                <Image
+                  source={require("../../assets/Home/medicine.png")}
+                  className="w-6 h-6"
+                />
               </View>
             )}
           </View>
@@ -287,12 +286,33 @@ const CalendarScreen = () => {
     </TouchableOpacity>
   );
 
+  // แสดงข้อความเมื่อไม่มีข้อมูล
+  const renderEmptyState = () => (
+    <View className="justify-center items-center mt-8">
+      <Image
+        source={require("../../assets/Home/none.png")}
+        className="w-16 h-16"
+      />
+      <Text className="text-body text-secondary font-bold text-center mt-4">
+        ไม่มีการบันทึกในวันนี้
+      </Text>
+    </View>
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refreshCalendarData}
+          />
+        }
+      >
         <BackButton title="หน้าหลัก" />
-        <View className=" mx-2 py-2">
-          <View className="rounded-[10px] overflow-hidden ">
+        <View className="mx-2 py-2">
+          <View className="rounded-[10px] overflow-hidden">
             <Calendar
               current={selectedDate}
               onDayPress={onDayPress}
@@ -301,7 +321,7 @@ const CalendarScreen = () => {
                 [selectedDate]: {
                   selected: true,
                   selectedColor: "#3972F0",
-                  ...markedDates[selectedDate],
+                  ...(markedDates[selectedDate] || {}),
                 },
               }}
               theme={{
@@ -320,9 +340,9 @@ const CalendarScreen = () => {
                 textDayFontFamily: "K2D-Regular",
                 textMonthFontFamily: "K2D-Bold",
                 textDayHeaderFontFamily: "K2D-Medium",
-                textDayFontSize: 16, // เพิ่มขนาดตัวอักษรวันที่
-                textMonthFontSize: 20, // เพิ่มขนาดตัวอักษรเดือน
-                textDayHeaderFontSize: 14, // เพิ่มขนาดตัวอักษรหัวข้อวัน
+                textDayFontSize: 16,
+                textMonthFontSize: 20,
+                textDayHeaderFontSize: 14,
                 borderRadius: 10,
               }}
               enableSwipeMonths={true}
@@ -336,88 +356,32 @@ const CalendarScreen = () => {
               }}
             />
           </View>
-          <View className="mt-4">
-            <Text className="text-headline font-regular text-secondary px-4">
-              {new Date(selectedDate).toLocaleDateString("th-TH", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                era: "short",
-              })}
-            </Text>
 
-            {dayData.medications.length > 0 ? (
-              <View className="mt-4">
-                <Card>
-                  <Text className="text-headline font-medium text-secondary ">
-                    ยาประจำ
-                  </Text>
-                  <BreakLine />
-                  {dayData.medications.map((medicationLog) => (
-                    <View
-                      key={medicationLog.time}
-                      className="mb-4 justify-between"
-                    >
-                      <Text className="text-description text-secondary mb-2 font-regular">
-                        เวลา {medicationLog.time}
-                      </Text>
-                      {medicationLog.medications.map((medication) => (
-                        <View
-                          key={`${medicationLog.time}-${medication.name}`}
-                          className="flex-row items-center justify-between mt-2 gap-8"
-                        >
-                          <View className="flex-row items-center gap-2 justify-between">
-                            <Checkbox
-                              value={medication.taken}
-                              className="w-6 h-6 rounded border"
-                              color={medication.taken ? "#3972F0" : "#F8F8F8"}
-                            />
-                            <Image
-                              source={require("../../assets/Home/medicine.png")}
-                              className="w-6 h-6"
-                            />
-                            <Text className="text-description text-secondary font-regular">
-                              {medication.name}
-                            </Text>
-                          </View>
-                          <TouchableOpacity
-                            onPress={() =>
-                              router.push({
-                                pathname: `/home/med/[id]`,
-                                params: {
-                                  pill_id: medication.id,
-                                  pill_name: medication.name,
-                                },
-                              })
-                            }
-                          >
-                            <Text className="text-primary text-description font-regular">
-                              รายละเอียดยา
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      ))}
-                    </View>
-                  ))}
-                </Card>
-              </View>
-            ) : null}
+          {loading ? (
+            <Loading />
+          ) : (
+            <View className="mt-4">
+              <Text className="text-headline font-regular text-secondary px-4">
+                {new Date(selectedDate).toLocaleDateString("th-TH", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  era: "short",
+                })}
+              </Text>
 
-            {dayData.healthLogs.length > 0 ? (
-              dayData.healthLogs.map(renderHealthLog)
-            ) : (
-              <View className="justify-center items-center mt-8">
-                <Image
-                  source={require("../../assets/Home/none.png")}
-                  className="w-16 h-16"
-                />
-                <Text className="text-description text-secondary font-bold text-center mt-4">
-                  ไม่มีการบันทึก
-                </Text>
-              </View>
-            )}
-          </View>
+              {renderMedicationLogs()}
+
+              {getSelectedDayData().healthLogs &&
+              getSelectedDayData().healthLogs.length > 0
+                ? getSelectedDayData().healthLogs.map((log, index) =>
+                    renderHealthLog(log, index)
+                  )
+                : !getSelectedDayData().medications?.length &&
+                  renderEmptyState()}
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
