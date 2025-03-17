@@ -29,6 +29,7 @@ type WeeklyDataItem = {
   bmi: string | number;
   mood: Mood | string; // Allow any string to accommodate API responses
   hasPill: boolean;
+  isToday: boolean; // เพิ่ม property isToday เพื่อบ่งบอกว่าเป็นวันนี้
 };
 
 // ฟังก์ชันเพื่อรับวันที่ปัจจุบันแบบไทย (GMT+7)
@@ -62,12 +63,18 @@ const Overview = () => {
     const weekData: WeeklyDataItem[] = [];
     for (let i = 0; i < 7; i++) {
       const dayIndex = (dayOfWeek - i + 7) % 7; // Calculate the day of week (wrapping around)
+      const currentDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+
+      // ตรวจสอบว่าเป็นวันนี้หรือไม่
+      const isToday = i === 0;
+
       weekData.unshift({
         day: days[dayIndex],
-        date: new Date(today.getTime() - i * 24 * 60 * 60 * 1000),
+        date: currentDate,
         bmi: "-",
         mood: "none" as Mood,
         hasPill: false,
+        isToday: isToday, // เพิ่ม property isToday
       });
     }
 
@@ -206,7 +213,13 @@ const Overview = () => {
             </Text>
 
             {/* Day */}
-            <Text className="text-description font-regular text-secondary mb-2">
+            <Text
+              className={`text-description font-regular ${
+                item.isToday
+                  ? "text-primary text-body font-regular"
+                  : "text-secondary"
+              } mb-2`}
+            >
               {item.day}
             </Text>
 
