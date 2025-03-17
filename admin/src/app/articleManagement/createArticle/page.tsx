@@ -14,8 +14,12 @@ const CreateArticle: React.FC = () => {
     content: "",
     ref: "",
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(blog.image || null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const router = useRouter();
 
   const categories = [
@@ -28,66 +32,107 @@ const CreateArticle: React.FC = () => {
     "อื่นๆ",
   ];
 
+  // Handles text input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setBlog((prev) => ({ ...prev, [name]: value }));
+    setBlog({ ...blog, [e.target.name]: e.target.value });
   };
 
+  // Handles category selection
   const handleCategoryChange = (category: string) => {
-    setBlog((prev) => {
-      const updatedCategories = prev.category?.includes(category)
-        ? prev.category.filter((cat) => cat !== category)
-        : [...(prev.category || []), category];
-      return { ...prev, category: updatedCategories };
-    });
+    setBlog((prev) => ({
+      ...prev,
+      category: prev.category?.includes(category)
+        ? prev.category.filter((c) => c !== category)
+        : [...(prev.category || []), category],
+    }));
   };
 
+  // Handles file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  // Validates input fields
   const validate = () => {
     const errors: Record<string, string> = {};
-    if (!blog.title) errors.title = 'กรุณาใส่ชื่อบทความ';
-    if (!blog.category || blog.category.length === 0) errors.category = 'กรุณาเลือกหมวดหมู่';
-    if (!blog.content) errors.content = 'กรุณาใส่เนื้อหา';
-    if (!blog.ref) errors.ref = 'กรุณาใส่แหล่งอ้างอิง';
+    if (!blog.title) errors.title = "กรุณาใส่ชื่อบทความ";
+    if (!croppedImage && !imageFile && !blog.image) errors.image = "กรุณาเพิ่มรูปภาพ";
+    if (!blog.category || blog.category.length === 0) errors.category = "กรุณาเลือกหมวดหมู่";
+    if (!blog.content) errors.content = "กรุณาใส่เนื้อหา";
+    if (!blog.ref) errors.ref = "กรุณาใส่แหล่งอ้างอิง";
     return errors;
   };
 
+  // Handles form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-  
+
     try {
-      const blogData = {
-        ...blog,
-        date: new Date().toISOString(),
-        category: Array.isArray(blog.category) ? blog.category.join(", ") : blog.category,
-      };
-  
-      await axios.post("http://localhost:8080/api/v1/admin/addBlog", blogData, {
-        headers: { "Content-Type": "application/json" },
+      const formData = new FormData();
+      formData.append("title", blog.title || "");
+      formData.append("content", blog.content || "");
+      formData.append("category", Array.isArray(blog.category) ? blog.category.join(", ") : blog.category || "");
+      formData.append("ref", blog.ref || "");
+
+      if (croppedImage) {
+        const response = await fetch(croppedImage);
+        const blob = await response.blob();
+        formData.append("image", new File([blob], "cropped-image.png", { type: "image/png" }));
+      } else if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      await axios.post("http://localhost:8080/api/v1/admin/addBlog", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-  
+
       router.push("/articleManagement");
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        setServerError(error.response.data.message || "An error occurred");
-      } else {
-        setServerError("An unexpected error occurred");
-      }
+      setServerError(
+        axios.isAxiosError(error) && error.response
+          ? error.response.data.message || "เกิดข้อผิดพลาด"
+          : "เกิดข้อผิดพลาดที่ไม่คาดคิด"
+      );
     }
-  };  
+  };
 
+  // Handles cancel button click
   const handleCancel = () => {
     router.back();
   };
 
+
   return (
     <div className="w-full flex flex-col gap-4">
       {serverError && <p className="text-red-500">{serverError}</p>}
+
+      {/* อัปโหลดรูปภาพ */}
+      <div className="relative w-full h-64 flex justify-center items-center border border-gray-300 rounded-lg overflow-hidden">
+        <input
+          type="file"
+          accept="image/*"
+          className="absolute inset-0 opacity-0 cursor-pointer"
+          onChange={handleFileChange}
+        />
+        {previewImage ? (
+          <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex justify-center items-center bg-gray-200 text-gray-500 text-sm">
+            คลิกเพื่ออัปโหลดรูปภาพ
+          </div>
+        )}
+      </div>
+      {errors.image && <p className="text-red-500">{errors.image}</p>}
       
       <div>
         <label className="text-bold_detail" htmlFor="title">ชื่อบทความ</label>
@@ -112,22 +157,6 @@ const CreateArticle: React.FC = () => {
           ))}
         </div>
         {errors.category && <p className="text-red-500 mt-2">{errors.category}</p>}
-      </div>
-
-      <div>
-        <label className="text-bold_detail" htmlFor="image">รูปภาพ</label>
-        <input
-          type="text"
-          id="image"
-          name="image"
-          placeholder="URL ของรูปภาพ"
-          value={blog.image || ""}
-          onChange={handleChange}
-          className="input"
-        />
-        <div className="mt-4 w-full h-48 border-dashed border-2 rounded-md flex items-center justify-center">
-          <span className="text-gray-500">เพิ่มรูปภาพ</span>
-        </div>
       </div>
 
       <div>
