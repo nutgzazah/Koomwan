@@ -8,10 +8,15 @@ import Image from "next/image";
 import StatusBadge from "../components/StatusBadge";
 import DisapproveReasonPopup from "../components/DisapproveReason";
 import ApprovePopup from "../components/ApprovePopup";
+import DoctorImageHandler from "@/utils/doctorImageHandler";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
 const DoctorID: React.FC = () => {
   const params = useParams();
   const doctorId = params?.doctorId || params?.id;
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [doctor, setDoctor] = useState<DoctorInterface | null>(null);
   const [isDisapprovePopupOpen, setIsDisapprovePopupOpen] = useState(false);
@@ -22,9 +27,8 @@ const DoctorID: React.FC = () => {
       if (!doctorId) return;
 
       try {
-        const response = await axios.get(`http://localhost:8080/api/v1/admin/doctor/${doctorId}`);
+        const response = await axios.get(`${BASE_URL}/api/v1/admin/doctor/${doctorId}`);
         console.log("Fetched doctor data:", response.data);
-
         setDoctor(response.data.data || response.data);
       } catch (error) {
         console.error("Error fetching doctor data:", error);
@@ -34,6 +38,71 @@ const DoctorID: React.FC = () => {
     fetchDoctor();
   }, [doctorId]);
 
+  useEffect(() => {
+    const loadImageUrl = async () => {
+      if (!doctor?.image) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log(`Fetching doctor image using getCurrentDoctorImage: ${doctor.image}`);
+        const fetchedImageUrl = await DoctorImageHandler.getCurrentDoctorImage(doctor.image);
+        setImageUrl(fetchedImageUrl || `${BASE_URL}/uploads/${doctor.image}`);
+      } catch (error) {
+        console.error("Error fetching image URL:", error);
+        setImageUrl(`${BASE_URL}/uploads/${doctor.image}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (doctor?.image) {
+      loadImageUrl();
+    }
+  }, [doctor]);
+
+  const handleApprove = async () => {
+    if (!doctorId) return;
+
+    try {
+      const response = await axios.put(`${BASE_URL}/api/v1/admin/doctor/status/${doctorId}`, {
+        status: "approve",
+      });
+
+      console.log("Doctor approved:", response.data);
+      setDoctor((prev) =>
+        prev ? { ...prev, approval: { ...prev.approval, status: "approve" } } : prev
+      );
+      setIsApprovePopupOpen(false);
+    } catch (error) {
+      console.error("Error approving doctor:", error);
+    }
+  };
+
+  const handleDisapprove = () => {
+    setIsDisapprovePopupOpen(true);
+  };
+
+  const handleDisapproveConfirm = async (reason: string) => {
+    if (!doctorId) return;
+
+    try {
+      const response = await axios.put(`${BASE_URL}/api/v1/admin/doctor/status/${doctorId}`, {
+        status: "disapprove",
+        reason: reason,
+      });
+
+      console.log("Doctor disapproved:", response.data);
+      setDoctor((prev) =>
+        prev ? { ...prev, approval: { status: "disapprove", reason: reason } } : prev
+      );
+      setIsDisapprovePopupOpen(false);
+    } catch (error) {
+      console.error("Error disapproving doctor:", error);
+    }
+  };
+
   if (!doctor) {
     return (
       <div className="text-center p-4">
@@ -42,76 +111,20 @@ const DoctorID: React.FC = () => {
     );
   }
 
-  const handleApprove = async () => {
-    if (!doctorId) return;
-  
-    try {
-      const response = await axios.put(`http://localhost:8080/api/v1/admin/doctor/status/${doctorId}`, {
-        status: "approve",
-      });
-  
-      console.log("Doctor approved:", response.data);
-      setDoctor((prev) => prev ? { ...prev, approval: { ...prev.approval, status: "approve" } } : prev);
-      setIsApprovePopupOpen(false);
-    } catch (error) {
-      console.error("Error approving doctor:", error);
-    }
-  };  
-
-  const handleDisapprove = () => {
-    setIsDisapprovePopupOpen(true);
-  };
-
-  const handleDisapproveConfirm = async (reason: string) => {
-    if (!doctorId) return;
-  
-    try {
-      const response = await axios.put(`http://localhost:8080/api/v1/admin/doctor/status/${doctorId}`, {
-        status: "disapprove",
-        reason: reason,
-      });
-  
-      console.log("Doctor disapproved:", response.data);
-      setDoctor((prev) => prev ? { ...prev, approval: { status: "disapprove", reason: reason } } : prev);
-      setIsDisapprovePopupOpen(false);
-    } catch (error) {
-      console.error("Error disapproving doctor:", error);
-    }
-  };
-  
-
   return (
     <div className="w-full">
       <div className="flex justify-between w-full py-2 px-10 gap-20">
         {/* Image Section */}
         <div className="w-2/5 h-96 flex justify-center items-center">
+          {!loading && (
             <Image
-              src="/assets/doctor-default.jpg"
-              alt="Default profile"
+              src={imageUrl || "/assets/doctor-default.jpg"}
+              alt={`${doctor.firstname} ${doctor.lastname}'s profile`}
               width={300}
               height={300}
               className="rounded-full"
             />
-        
-        {/* {doctor.image ? (
-          <Image
-            src={doctor.image}
-            alt={`${doctor.firstname} ${doctor.lastname}'s profile`}
-            width={300}
-            height={300}
-            className="rounded-full"
-          />
-          ) : (
-            <Image
-              src="/assets/doctor-default.jpg"
-              alt="Default profile"
-              width={300}
-              height={300}
-              className="rounded-full"
-            />
-          )
-        } */}
-
+          )}
         </div>
 
         {/* Details Section */}
@@ -120,7 +133,9 @@ const DoctorID: React.FC = () => {
             <tbody>
               <tr>
                 <td className="text-bold_detail py-2">ชื่อ-นามสกุล</td>
-                <td className="py-2 text-detail_2">{doctor.firstname} {doctor.lastname}</td>
+                <td className="py-2 text-detail_2">
+                  {doctor.firstname} {doctor.lastname}
+                </td>
               </tr>
               <tr>
                 <td className="text-bold_detail py-2">อาชีพ</td>
@@ -160,7 +175,9 @@ const DoctorID: React.FC = () => {
               {doctor.approval.status === "disapprove" && doctor.approval.reason && (
                 <tr>
                   <td className="font-bold py-2">เหตุผล</td>
-                  <td className="py-2 text-detail_2 text-abnormal">{doctor.approval.reason}</td>
+                  <td className="py-2 text-detail_2 text-abnormal">
+                    {doctor.approval.reason}
+                  </td>
                 </tr>
               )}
               <tr>
@@ -169,35 +186,23 @@ const DoctorID: React.FC = () => {
                   <div className="flex flex-row gap-5">
                     {doctor.approval.status === "pending" && (
                       <>
-                        <button
-                          className="btn green-btn short-btn"
-                          onClick={handleApprove}
-                        >
+                        <button className="btn green-btn short-btn" onClick={handleApprove}>
                           อนุมัติ
                         </button>
-                        <button
-                          className="btn red-btn short-btn"
-                          onClick={handleDisapprove}
-                        >
+                        <button className="btn red-btn short-btn" onClick={handleDisapprove}>
                           ไม่อนุมัติ
                         </button>
                       </>
                     )}
 
                     {doctor.approval.status === "approve" && (
-                      <button
-                        className="btn red-btn short-btn"
-                        onClick={handleDisapprove}
-                      >
+                      <button className="btn red-btn short-btn" onClick={handleDisapprove}>
                         ยกเลิกการอนุมัติ
                       </button>
                     )}
 
                     {doctor.approval.status === "disapprove" && (
-                      <button
-                        className="btn green-btn short-btn"
-                        onClick={handleApprove}
-                      >
+                      <button className="btn green-btn short-btn" onClick={handleApprove}>
                         แก้ไขเป็นอนุมัติ
                       </button>
                     )}
@@ -218,10 +223,7 @@ const DoctorID: React.FC = () => {
       )}
 
       {isApprovePopupOpen && (
-        <ApprovePopup
-          doctorName={`${doctor.firstname} ${doctor.lastname}`}
-          onClose={() => setIsApprovePopupOpen(false)}
-        />
+        <ApprovePopup doctorName={`${doctor.firstname} ${doctor.lastname}`} onClose={() => setIsApprovePopupOpen(false)} />
       )}
     </div>
   );
