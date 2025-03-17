@@ -57,9 +57,11 @@ export default function BlogCard({ blog_id, title, image, category = [] }: BlogC
           <Image
             src={imageUrl}
             alt={title || "Blog Image"}
-            layout="fill"
-            objectFit="cover"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            style={{ objectFit: "cover" }} // ✅ ใช้ style แทน objectFit
             className="rounded-t-md"
+            priority={true} 
           />
         )}
       </div>
