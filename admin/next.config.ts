@@ -1,12 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    domains: ["koomwan-storage.5f04fd0f03b8aa2c313105f3c2a3c704.r2.cloudflarestorage.com"],
+  },
   async redirects() {
     return [
       {
         source: "/",
         destination: "/medicalManagement",
-        permanent: true, // ใช้ true ถ้าต้องการ redirect แบบถาวร
+        permanent: true,
       },
     ];
   },

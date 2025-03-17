@@ -105,18 +105,18 @@ const editBlog = async (req, res) => {
             return res.status(404).json({ error: "Blog not found" });
         }
 
-        // If a new file is uploaded, delete the old file from R2
+        // ถ้ามีอัปโหลดไฟล์ใหม่ ให้ลบไฟล์เก่าจาก R2 ก่อน
         if (req.file) {
             if (blog.image) {
                 const oldImageName = blog.image.split('/').pop(); // Extract old filename
                 await deleteFromR2('blogImage', oldImageName);
             }
             imageUrl = await uploadToR2v2(req.file.buffer, req.file.originalname, 'blogImage');
-            blog.image = imageUrl; // Update image URL
+            updateBlog.image = imageUrl; // Update new image URL in update data
         }
 
-        // Update only the provided fields
-        Object.assign(blog, updateBlog);
+        // อัปเดตข้อมูล Blog
+        blog.set(updateBlog);
 
         await blog.save();
         res.status(200).json({ message: "Blog updated successfully", blog });
@@ -124,6 +124,7 @@ const editBlog = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error", details: error.message });
     }  
 };
+
 
 const deleteBlog = async (req, res) => { 
     try {
