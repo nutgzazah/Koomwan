@@ -10,7 +10,7 @@ interface BlogCardProps {
   category?: string[];
 }
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
 export default function BlogCard({ blog_id, title, image, category = [] }: BlogCardProps) {
   const [imageUrl, setImageUrl] = useState("/uploads/koomwanAvatar01.png");

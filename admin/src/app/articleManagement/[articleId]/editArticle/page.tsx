@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { BlogInterface } from "@/interfaces/blogInterface";
 import axios from "axios";
 import DeletePopup from "./components/DeletePopup";
+import BlogImageHandler from "@/utils/blogImageHandler";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -105,28 +106,33 @@ const EditBlogForm: React.FC = () => {
       setServerError("Invalid blog data or missing article ID.");
       return;
     }
-
+  
     try {
       console.log(`Updating blog at: ${BASE_URL}/api/v1/admin/editBlog/${articleId}`);
+  
+      // 1️⃣ อัปเดตรายละเอียดบทความก่อน
       await axios.put(`${BASE_URL}/api/v1/admin/editBlog/${articleId}`, {
         ...blog,
         category: Array.isArray(blog.category) ? blog.category.join(", ") : blog.category,
       });
-
+  
+      // 2️⃣ ถ้ามีรูปใหม่ให้อัปโหลด
       if (imageFile) {
-        const formData = new FormData();
-        formData.append("image", imageFile);
-
-        console.log("Uploading image to:", `${BASE_URL}/api/v1/admin/uploadImage/${articleId}`);
-        console.log("FormData contains:", formData.get("image"));
-
-        await axios.post(`${BASE_URL}/api/v1/admin/uploadImage/${articleId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-
-        console.log("Image uploaded successfully");
+        console.log("Uploading new blog image...");
+        const imageUrl = await BlogImageHandler.uploadBlogImage(imageFile, articleId);
+  
+        if (imageUrl) {
+          console.log("New image uploaded:", imageUrl);
+  
+          // 3️⃣ อัปเดตบทความให้ใช้รูปใหม่
+          await axios.put(`${BASE_URL}/api/v1/admin/editBlog/${articleId}`, {
+            image: imageUrl, // ✅ Update image URL
+          });
+        } else {
+          console.error("Failed to upload image.");
+        }
       }
-
+  
       router.push("/articleManagement");
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -136,7 +142,7 @@ const EditBlogForm: React.FC = () => {
       }
       console.error("Error updating blog:", error);
     }
-  };
+  };  
 
   const handleDelete = () => setIsDeletePopupOpen(true);
 

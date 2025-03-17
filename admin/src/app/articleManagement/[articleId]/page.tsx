@@ -1,13 +1,14 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { BlogInterface } from '@/interfaces/blogInterface';
-import Link from 'next/link';
-import axios from 'axios';
-import { formatDate } from '@/utils/formatDate.';
+import React, { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { BlogInterface } from "@/interfaces/blogInterface";
+import Link from "next/link";
+import axios from "axios";
+import { formatDate } from "@/utils/formatDate.";
+import BlogImageHandler from "@/utils/blogImageHandler";
 
-const BASE_URL = 'http://localhost:8080'; 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
 const ArticleId: React.FC = () => {
   const { articleId } = useParams();
@@ -30,27 +31,16 @@ const ArticleId: React.FC = () => {
   }, [articleId]);
 
   useEffect(() => {
-    const fetchImageUrl = async () => {
+    const loadImageUrl = async () => {
       if (!blog?.image) {
         setLoading(false);
         return;
       }
 
       try {
-        let folder = "blogImage";
-        let fileName = blog.image;
-
-        if (blog.image.includes("/")) {
-          const parts = blog.image.split("/");
-          folder = parts[0];
-          fileName = parts[1];
-        }
-
-        const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
-          params: { fileName, folder },
-        });
-
-        setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${blog.image}`);
+        console.log(`Fetching blog image using getCurrentBlogImage: ${blog.image}`);
+        const fetchedImageUrl = await BlogImageHandler.getCurrentBlogImage(blog.image);
+        setImageUrl(fetchedImageUrl || `${BASE_URL}/uploads/${blog.image}`);
       } catch (error) {
         console.error("Error fetching image URL:", error);
         setImageUrl(`${BASE_URL}/uploads/${blog.image}`);
@@ -60,7 +50,7 @@ const ArticleId: React.FC = () => {
     };
 
     if (blog?.image) {
-      fetchImageUrl();
+      loadImageUrl();
     }
   }, [blog]);
 
@@ -87,7 +77,7 @@ const ArticleId: React.FC = () => {
 
       {/* Category */}
       <div className="flex items-center space-x-2 mb-4">
-        <p className='text-detail_3 text-secondary'>หมวดหมู่ :</p>
+        <p className="text-detail_3 text-secondary">หมวดหมู่ :</p>
         {Array.isArray(blog.category) ? (
           blog.category.map((cat) => (
             <span key={cat} className="btn lightblue-btn p-2 rounded-md">{cat}</span>
@@ -98,7 +88,7 @@ const ArticleId: React.FC = () => {
       </div>
 
       {/* Image */}
-      <div className="w-full h-64 md:h-80 lg:h-96 mb-6 overflow-hidden rounded-md"> {/* Set fixed height and responsive adjustments */}
+      <div className="w-full h-64 md:h-80 lg:h-96 mb-6 overflow-hidden rounded-md">
         {!loading && (
           <img
             src={imageUrl}
