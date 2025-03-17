@@ -162,8 +162,8 @@ const HealthDashboard: React.FC = () => {
       const authData = await AsyncStorage.getItem("@auth");
 
       if (!authData) {
-        Alert.alert("Session Expired", "Please login again");
-        // router.push("/user/login");
+        console.error("Session expired or user not logged in");
+        setLoading(false);
         return;
       }
 

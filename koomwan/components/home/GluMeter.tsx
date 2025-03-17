@@ -135,9 +135,9 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
 
       // Handle unauthorized access
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        Alert.alert("Session Expired", "Please login again");
+        console.log("Session Expired", "Please login again");
         AsyncStorage.removeItem("@auth");
-        router.push("/user/login");
+        /* router.push("/user/login"); */
       } else {
         setError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
       }

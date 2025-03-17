@@ -141,7 +141,7 @@ export default function BMI() {
 
       const authData = await AsyncStorage.getItem("@auth");
       if (!authData) {
-        Alert.alert("Session Expired", "Please login again");
+        console.log("Session Expired", "Please login again");
         /* router.push("/user/login"); */
         return;
       }

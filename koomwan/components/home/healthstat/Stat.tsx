@@ -125,7 +125,8 @@ export default function HealthStats() {
       const authData = await AsyncStorage.getItem("@auth");
 
       if (!authData) {
-        Alert.alert("Session Expired", "Please login again");
+        console.error("Session expired or user not logged in");
+        setLoading(false);
         return;
       }
 
