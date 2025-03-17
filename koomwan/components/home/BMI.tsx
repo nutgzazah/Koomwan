@@ -224,17 +224,43 @@ export default function BMI() {
       const bmi = calculateBMI(latestRecord.weight, latestRecord.height);
 
       // Format the last updated timestamp
-      const recordDate = new Date(latestRecord.recordtime);
-      const formattedDate = recordDate.toLocaleDateString("th-TH", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-      const formattedTime = recordDate.toLocaleTimeString("th-TH", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const lastUpdatedText = `บันทึกล่าสุด ณ ${formattedDate} เวลา ${formattedTime} น.`;
+      // ฟังก์ชันสำหรับจัดรูปแบบวันที่เวลาแบบไทย (GMT+7)
+      const formatThaiDateTime = (dateString: string): string => {
+        // สร้าง Date object จากค่าที่รับเข้ามา
+        const date = new Date(dateString);
+
+        // ปรับเวลาให้เป็น GMT+7 (เวลาไทย)
+        const bangkokTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+        // ชื่อเดือนภาษาไทย
+        const thaiMonths = [
+          "มกราคม",
+          "กุมภาพันธ์",
+          "มีนาคม",
+          "เมษายน",
+          "พฤษภาคม",
+          "มิถุนายน",
+          "กรกฎาคม",
+          "สิงหาคม",
+          "กันยายน",
+          "ตุลาคม",
+          "พฤศจิกายน",
+          "ธันวาคม",
+        ];
+
+        // จัดรูปแบบวันที่
+        const day = bangkokTime.getDate();
+        const month = thaiMonths[bangkokTime.getMonth()];
+        const year = bangkokTime.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
+
+        // จัดรูปแบบเวลา
+        const hours = bangkokTime.getHours().toString().padStart(2, "0");
+        const minutes = bangkokTime.getMinutes().toString().padStart(2, "0");
+
+        return `บันทึกล่าสุด ณ วันที่ ${day} ${month} ${year} เวลา ${hours}:${minutes} น.`;
+      };
+
+      const lastUpdatedText = formatThaiDateTime(latestRecord.recordtime);
 
       // Set all the user data
       setUserData({

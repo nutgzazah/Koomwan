@@ -78,6 +78,53 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
 
   const screenWidth = Dimensions.get("window").width - 48; // Full width minus padding
 
+  // Format date to Thai format with GMT+7 timezone
+  const formatThaiDate = (dateString: string): string => {
+    // Create date object from string
+    const date = new Date(dateString);
+
+    // Add 7 hours to adjust for GMT+7 (Bangkok time)
+    const bangkokTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+    // Thai day names
+    const thaiDays = [
+      "อาทิตย์",
+      "จันทร์",
+      "อังคาร",
+      "พุธ",
+      "พฤหัสบดี",
+      "ศุกร์",
+      "เสาร์",
+    ];
+
+    // Thai month names
+    const thaiMonths = [
+      "มกราคม",
+      "กุมภาพันธ์",
+      "มีนาคม",
+      "เมษายน",
+      "พฤษภาคม",
+      "มิถุนายน",
+      "กรกฎาคม",
+      "สิงหาคม",
+      "กันยายน",
+      "ตุลาคม",
+      "พฤศจิกายน",
+      "ธันวาคม",
+    ];
+
+    /* const day = thaiDays[bangkokTime.getDay()]; */
+    const dayNum = bangkokTime.getDate();
+    const month = thaiMonths[bangkokTime.getMonth()];
+
+    // Format time as HH:MM
+    const hours = bangkokTime.getHours().toString().padStart(2, "0");
+    const minutes = bangkokTime.getMinutes().toString().padStart(2, "0");
+    const timeStr = `${hours}:${minutes} น.`;
+
+    return `วันที่ ${dayNum} ${month} เวลา ${timeStr}`;
+  };
+
   const fetchBloodSugarData = async () => {
     try {
       setLoading(true);
@@ -143,9 +190,12 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
         setBloodSugarData(sortedRecords);
 
         // Prepare chart data
+        // แก้ไขส่วนที่เตรียม labels สำหรับกราฟ
         const labels = sortedRecords.map((record) => {
           const date = new Date(record.recordtime);
-          return `${date.getDate()}/${date.getMonth() + 1}`;
+          // ปรับเวลาเป็น GMT+7
+          const bangkokTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+          return `${bangkokTime.getDate()}/${bangkokTime.getMonth() + 1}`;
         });
 
         const values = sortedRecords.map((record) => record.bloodsugar);

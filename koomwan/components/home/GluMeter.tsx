@@ -165,14 +165,46 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
   const formatDate = (dateString: string): string => {
     if (!dateString) return "ไม่มีข้อมูล";
 
+    // สร้าง Date object จากค่าที่รับเข้ามา
     const date = new Date(dateString);
-    return date.toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+
+    // ปรับเวลาให้เป็น GMT+7 (เวลาประเทศไทย)
+    const bangkokTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+    // ชื่อวันภาษาไทย
+    const thaiDays = [
+      "อาทิตย์",
+      "จันทร์",
+      "อังคาร",
+      "พุธ",
+      "พฤหัสบดี",
+      "ศุกร์",
+      "เสาร์",
+    ];
+
+    // ชื่อเดือนภาษาไทย
+    const thaiMonths = [
+      "มกราคม",
+      "กุมภาพันธ์",
+      "มีนาคม",
+      "เมษายน",
+      "พฤษภาคม",
+      "มิถุนายน",
+      "กรกฎาคม",
+      "สิงหาคม",
+      "กันยายน",
+      "ตุลาคม",
+      "พฤศจิกายน",
+      "ธันวาคม",
+    ];
+
+    const day = bangkokTime.getDate();
+    const month = thaiMonths[bangkokTime.getMonth()];
+    const year = bangkokTime.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
+    const hours = bangkokTime.getHours().toString().padStart(2, "0");
+    const minutes = bangkokTime.getMinutes().toString().padStart(2, "0");
+
+    return `วันที่ ${day} ${month} ${year} เวลา ${hours}:${minutes} น.`;
   };
 
   const statusConfig = {

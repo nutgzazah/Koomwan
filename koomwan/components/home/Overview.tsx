@@ -31,6 +31,13 @@ type WeeklyDataItem = {
   hasPill: boolean;
 };
 
+// ฟังก์ชันเพื่อรับวันที่ปัจจุบันแบบไทย (GMT+7)
+const getCurrentThaiDate = (): Date => {
+  const now = new Date();
+  // เพิ่ม 7 ชั่วโมงเพื่อปรับเป็นเวลาไทย (GMT+7)
+  return new Date(now.getTime() + 7 * 60 * 60 * 1000);
+};
+
 const Overview = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -47,7 +54,8 @@ const Overview = () => {
   // Process the records to get the last 7 days of data
   const processRecords = (records: any[]) => {
     const days = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
-    const today = new Date();
+    // ใช้เวลาไทย (GMT+7) แทนเวลาเครื่อง
+    const today = getCurrentThaiDate();
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
     // Create an array of the last 7 days (including today)
@@ -66,11 +74,19 @@ const Overview = () => {
     // Map the records to the days
     if (records && records.length > 0) {
       records.forEach((record) => {
-        const recordDate = new Date(record.recordtime);
+        // ปรับเวลาของข้อมูลให้เป็น GMT+7 เช่นกัน
+        const recordTime = new Date(record.recordtime);
+        const recordDateThai = new Date(
+          recordTime.getTime() + 7 * 60 * 60 * 1000
+        );
 
         // Only consider records from the last 7 days
         weekData.forEach((day) => {
-          if (recordDate.toDateString() === day.date.toDateString()) {
+          // เปรียบเทียบเฉพาะวันที่ เดือน ปี (ไม่รวมเวลา)
+          const recordDate = recordDateThai.toDateString();
+          const dayDate = day.date.toDateString();
+
+          if (recordDate === dayDate) {
             day.bmi = calculateBMI(record.weight, record.height).toFixed(2);
             // Handle the mood from the API - ensure it's a valid Mood type if possible
             day.mood = record.moodstatus || "neutral";
