@@ -13,19 +13,21 @@ import { useRouter } from "expo-router";
 export interface articleBoxProps {
     title: string,
     imageSource: ImageSourcePropType,
-    author: string,
-    categories: Array<string>
+    categories: string,
+    articleId: string,
 }
 
-export default function ArticleBox({ title,
+export default function ArticleBox({ 
+    title,
     imageSource,
-    author,
-    categories
+    categories,
+    articleId,
 }: articleBoxProps) {
     const router = useRouter();
+    const split_Categories = categories.split(",");
 
     return (
-        <Pressable onPress={(() => router.push("/resource/context/1", { relativeToDirectory: true }))}>
+        <Pressable onPress={(() => router.push(`/resource/(context)/${articleId}`, { relativeToDirectory: true }))}>
             <Card>
                 <View className="mx-3 w-full h-36">
                     <Image
@@ -41,13 +43,10 @@ export default function ArticleBox({ title,
                     >
                         {title}
                     </Text>
-                    <Text className="font-sans text-tag text-secondary">
-                        เขียนโดย : {author}
-                    </Text>
                 </View>
                 <View className="justify-start mx-3 flex flex-wrap flex-row w-full">
                     {
-                        categories.map((category, index) => (
+                        split_Categories.map((category, index) => (
                             <CategoryBox key={index} category={category} />
                         ))
                     }
