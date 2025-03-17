@@ -31,7 +31,7 @@ type WeeklyDataItem = {
   hasPill: boolean;
 };
 
-const Emotion = () => {
+const Overview = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [weeklyData, setWeeklyData] = useState<WeeklyDataItem[]>([]);
@@ -94,8 +94,8 @@ const Emotion = () => {
       const authData = await AsyncStorage.getItem("@auth");
 
       if (!authData) {
-        Alert.alert("Session Expired", "Please login again");
-        /*  router.push("/user/login"); */
+        console.error("Session expired or user not logged in");
+        setLoading(false);
         return;
       }
 
@@ -226,4 +226,4 @@ const Emotion = () => {
   );
 };
 
-export default Emotion;
+export default Overview;
