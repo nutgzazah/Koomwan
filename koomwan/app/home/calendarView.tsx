@@ -20,6 +20,23 @@ import { calculateBMI } from "../../util/bmi";
 import { useCalendarData, HealthLog } from "../../hooks/useCalendar";
 import Loading from "../../global/components/Loading";
 
+const addThaiHours = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+
+    // รูปแบบเวลา: HH:MM น.
+    return (
+      date.getHours().toString().padStart(2, "0") +
+      ":" +
+      date.getMinutes().toString().padStart(2, "0") +
+      " น."
+    );
+  } catch (error) {
+    console.error("Error formatting Thai time:", error);
+    return dateString; // คืนค่าเดิมถ้ามีข้อผิดพลาด
+  }
+};
+
 // เช็คว่าวันที่ที่ส่งมาอยู่ในอดีตหรือไม่
 const isDateInPast = (dateStr: string): boolean => {
   const today = new Date();
@@ -213,7 +230,10 @@ const CalendarScreen = () => {
         <View className="justify-between">
           <View className="flex-row justify-between items-center">
             <Text className="text-description text-secondary font-regular">
-              เวลา {log.time}
+              เวลา{" "}
+              {log.time.endsWith(" น.")
+                ? log.time
+                : `${addThaiHours(log.time)}`}
             </Text>
             {log.mood && log.mood !== "none" && (
               <Image
