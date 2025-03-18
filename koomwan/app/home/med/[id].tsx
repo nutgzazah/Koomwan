@@ -1,61 +1,71 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Image, SafeAreaView, ScrollView } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import Card from "../../../global/components/Card";
 import BackButton from "../../../global/components/BackButton";
 import BreakLine from "../../../global/components/BreakLine";
+import Loading from "../../../global/components/Loading";
 
-type RegularPill = {
-  pill_id: number;
-  user_id: number;
+type AdditionalPill = {
+  pill_id: string;
   pill_name: string;
   pill_type: string;
   description: string;
-  pill_notify_time?: string;
-  image?: string | null;
+  pill_image?: string | null;
 };
 
 export default function MedicationDetail() {
-  const { pill_id, pill_name } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pillData, setPillData] = useState<AdditionalPill | null>(null);
 
-  // Mock data - ในการใช้งานจริงดึงข้อมูลตาม pill_id ที่ได้รับมา
-  const mockPillDetails: { [key: string]: RegularPill } = {
-    Glipizide: {
-      pill_id: 1,
-      user_id: 1,
-      pill_name: "Glipizide",
-      pill_type: "ยารักษาโรคเบาหวาน",
-      description: "ยาลดระดับน้ำตาลในเลือด ใช้รักษาโรคเบาหวานชนิดที่ 2",
-      image: null,
-    },
-    Metformin: {
-      pill_id: 2,
-      user_id: 1,
-      pill_name: "Metformin",
-      pill_type: "ยารักษาโรคเบาหวาน",
-      description:
-        "ยาลดระดับน้ำตาลในเลือด ช่วยให้ร่างกายตอบสนองต่ออินซูลินดีขึ้น",
-      image: null,
-    },
-    พาราเซตามอล: {
-      pill_id: 3,
-      user_id: 1,
-      pill_name: "พาราเซตามอล",
-      pill_type: "ยาสามัญประจำบ้าน",
-      description: "ยาแก้ปวดที่ใช้รักษาอาการปวดต่าง ๆ",
-      image: null,
-    },
-  };
+  // Extract parameters from route
+  const id = params.id as string;
+  const pill_name = params.pill_name as string;
+  const pill_type = params.pill_type as string;
+  const description = params.description as string;
+  const pill_image = params.pill_image as string;
 
-  const pillData = mockPillDetails[pill_name as string];
+  useEffect(() => {
+    try {
+      // Instead of fetching, use the params
+      if (id) {
+        const pill: AdditionalPill = {
+          pill_id: id,
+          pill_name: pill_name || "ไม่มีชื่อยา",
+          pill_type: pill_type || "ไม่ระบุประเภท",
+          description: description || "ไม่มีรายละเอียด",
+          pill_image: pill_image || null,
+        };
 
-  if (!pillData) {
+        setPillData(pill);
+      } else {
+        setError("ไม่พบข้อมูล ID ยา");
+      }
+    } catch (err) {
+      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+      console.error("Error loading medication data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, pill_name, pill_type, description, pill_image]);
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error || !pillData) {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <BackButton title="ย้อนกลับ" />
         <View className="flex-1 justify-center items-center">
+          <Image
+            source={require("../../../assets/Home/none.png")}
+            className="w-16 h-16 mb-4"
+          />
           <Text className="text-description text-secondary font-regular">
-            ไม่พบข้อมูลยา
+            {error || "ไม่พบข้อมูลยา"}
           </Text>
         </View>
       </SafeAreaView>
@@ -64,21 +74,21 @@ export default function MedicationDetail() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <BackButton title="ย้อนกลับ" />
+      <BackButton title="ข้อมูลยา" />
 
       <ScrollView className="flex-1 px-4">
         <Card>
           <Text className="flex-1 text-headline text-secondary font-bold text-center">
-            ยา
+            ยาเพิ่มเติม
           </Text>
           <BreakLine />
 
           {/* Pill Image */}
-          <View className="w-full h-[150px] aspect-[2/1] bg-background rounded-lg items-center justify-center border border-gray">
-            {pillData.image ? (
+          <View className="w-full h-40 bg-background rounded-lg items-center justify-center border border-gray">
+            {pillData.pill_image ? (
               <Image
-                source={{ uri: pillData.image }}
-                className="w-full h-[150px] p-1"
+                source={{ uri: pillData.pill_image }}
+                className="w-full h-full p-1"
                 resizeMode="contain"
               />
             ) : (
@@ -101,7 +111,7 @@ export default function MedicationDetail() {
               ชื่อยา
             </Text>
             <View className="w-full bg-background border border-gray rounded p-2 px-4 text-description font-regular h-12 justify-center">
-              <Text className="text-description font-regular text-secondary font-regular">
+              <Text className="text-description font-regular text-secondary">
                 {pillData.pill_name}
               </Text>
             </View>
@@ -124,24 +134,12 @@ export default function MedicationDetail() {
             <Text className="text-description text-secondary font-regular mb-2">
               รายละเอียด
             </Text>
-            <View className="w-full bg-background border border-gray rounded p-2 px-4 text-description font-regular min-h-[96px]">
+            <View className="w-full bg-background border border-gray rounded p-2 px-4 text-description font-regular min-h-24">
               <Text className="text-description text-secondary font-regular">
                 {pillData.description}
               </Text>
             </View>
           </View>
-
-          {/* Notification Time */}
-          {/* <View className="mt-4 w-full">
-            <Text className="text-description text-secondary font-regular mb-2">
-              เวลาแจ้งเตือน
-            </Text>
-            <View className="w-full bg-background border border-gray rounded p-2 px-4 text-description font-regular h-12 justify-center">
-              <Text className="text-description text-secondary font-regular">
-                {pillData.pill_notify_time} น.
-              </Text>
-            </View>
-          </View> */}
         </Card>
       </ScrollView>
     </SafeAreaView>

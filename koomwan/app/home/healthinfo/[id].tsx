@@ -74,6 +74,26 @@ const CalendarHealthScreen = () => {
   // Get BMI category with text and color
   const bmiCategory = bmi && !isNaN(bmi) ? getBMICategory(bmi) : null;
 
+  // Navigate to medication details with all required data
+  const navigateToMedDetails = (med: {
+    pill_id: string;
+    pill_name: string;
+    pill_type?: string;
+    description?: string;
+    pill_image?: string | null;
+  }) => {
+    router.push({
+      pathname: "/home/med/[id]",
+      params: {
+        id: med.pill_id,
+        pill_name: med.pill_name,
+        pill_type: med.pill_type || "ไม่ระบุประเภท",
+        description: med.description || "",
+        pill_image: med.pill_image || null,
+      },
+    });
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -343,14 +363,7 @@ const CalendarHealthScreen = () => {
                       {med.pill_name}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() =>
-                      router.push({
-                        pathname: "/profile/(med)/(medDetail)/[id]",
-                        params: { id: med.pill_id, pill_name: med.pill_name },
-                      })
-                    }
-                  >
+                  <TouchableOpacity onPress={() => navigateToMedDetails(med)}>
                     <Text className="text-description text-primary font-bold">
                       รายละเอียดยา
                     </Text>
