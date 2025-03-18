@@ -283,7 +283,7 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
         <Text className="text-description font-regular text-center mt-4">
           <Text className="text-secondary">ค่าน้ำตาลในเลือด: </Text>
           <Text className={currentStatus.color}>
-            {bloodSugarData.bloodsugar} mg/dL
+            {bloodSugarData.bloodsugar} มก./ดล.
           </Text>
         </Text>
       )}
