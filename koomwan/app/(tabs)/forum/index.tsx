@@ -50,7 +50,7 @@ export default function ForumScreen() {
       postsData.map(async (post) => {
         // ถ้าไม่มีรูป (post.image เป็นค่าว่างหรือ undefined) ให้ใช้ค่า default ทันที
         if (!post.image || post.image.trim() === "") {
-          return { _id: post._id, imageUrl: "https://your-cdn.com/default-image.png" };
+          return { _id: post._id, imageUrl: null }; // ไม่มีภาพ ไม่ต้องส่ง imageContent
         }
 
         try {
@@ -62,7 +62,7 @@ export default function ForumScreen() {
           return { _id: post._id, imageUrl: res.data.url };
         } catch (error) {
           console.error(`Error fetching image for post ${post._id}:`, error);
-          return { _id: post._id, imageUrl: "https://your-cdn.com/default-image.png" }; // fallback URL
+          return { _id: post._id, imageUrl: null }; //ไม่มีภาพให้ส่งค่า null
           
         }
       })
@@ -71,7 +71,7 @@ export default function ForumScreen() {
     // ผูก URL จริงกับข้อมูล post
     const postsWithImages = postsData.map((post) => ({
       ...post,
-      imageUrl: urls.find((item) => item._id === post._id)?.imageUrl || "https://your-cdn.com/default-image.png",
+      imageUrl: urls.find((item) => item._id === post._id)?.imageUrl || null,
     }));
     console.log("Fetched image URLs:", urls);
     setPosts(postsWithImages);
@@ -113,7 +113,7 @@ export default function ForumScreen() {
             posts.map((post) => (
               <ForumCard
                 key={post._id}
-                imageContent={{ uri: post.imageUrl }} // เปลี่ยนเป็น URL จริง
+                {...(post.imageUrl ? { imageContent: { uri: post.imageUrl } } : {})} // ส่ง imageContent เฉพาะที่มีค่า
                 like={post.likes.count}
                 comments={post.comments.length}
                 userimage={{ uri: "https://your-cdn.com/default-user.png" }} // เปลี่ยนเป็น URL โปรไฟล์จริง
@@ -124,6 +124,7 @@ export default function ForumScreen() {
                 viewComments={false}
               />
             ))
+            
           )}
         </ScrollView>
       </SafeAreaView>

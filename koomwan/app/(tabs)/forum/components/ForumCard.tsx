@@ -97,16 +97,20 @@ export default function ForumCard({
                     </Text>
                 </View>
                 {
-                    imageContent
-                        ?
+                    imageContent ? (
                         <View className="w-auto h-auto mt-6">
                             <Image
-                                className="max-w-[21rem] max-h-[21rem]"
-                                source={{ uri: imageContent }}
+                                style={{ width: 336, height: 336 }} // แก้ให้มีขนาดแน่นอน
+                                source={
+                                    typeof imageContent === "string"
+                                        ? { uri: imageContent }
+                                        : imageContent
+                                }
+                                resizeMode="cover"
+                                onError={() => console.error("Error loading image:", imageContent)}
                             />
                         </View>
-                        :
-                        <></>
+                    ) : null
                 }
                 <View className="flex flex-row-reverse justify-start w-full mt-5 mr-4">
                     <View className="flex items-center">
