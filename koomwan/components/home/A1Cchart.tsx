@@ -83,8 +83,7 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
     // Create date object from string
     const date = new Date(dateString);
 
-    // Add 7 hours to adjust for GMT+7 (Bangkok time)
-    const bangkokTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+    const bangkokTime = new Date(date);
 
     // Thai day names
     const thaiDays = [

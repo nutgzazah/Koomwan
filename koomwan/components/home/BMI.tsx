@@ -224,13 +224,12 @@ export default function BMI() {
       const bmi = calculateBMI(latestRecord.weight, latestRecord.height);
 
       // Format the last updated timestamp
-      // ฟังก์ชันสำหรับจัดรูปแบบวันที่เวลาแบบไทย (GMT+7)
       const formatThaiDateTime = (dateString: string): string => {
         // สร้าง Date object จากค่าที่รับเข้ามา
         const date = new Date(dateString);
 
         // ปรับเวลาให้เป็น GMT+7 (เวลาไทย)
-        const bangkokTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+        const bangkokTime = new Date(date);
 
         // ชื่อเดือนภาษาไทย
         const thaiMonths = [

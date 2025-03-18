@@ -83,9 +83,7 @@ const Overview = () => {
       records.forEach((record) => {
         // ปรับเวลาของข้อมูลให้เป็น GMT+7 เช่นกัน
         const recordTime = new Date(record.recordtime);
-        const recordDateThai = new Date(
-          recordTime.getTime() + 7 * 60 * 60 * 1000
-        );
+        const recordDateThai = new Date(recordTime);
 
         // Only consider records from the last 7 days
         weekData.forEach((day) => {

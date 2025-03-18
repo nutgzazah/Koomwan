@@ -169,7 +169,7 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
     const date = new Date(dateString);
 
     // ปรับเวลาให้เป็น GMT+7 (เวลาประเทศไทย)
-    const bangkokTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+    const bangkokTime = new Date(date);
 
     // ชื่อวันภาษาไทย
     const thaiDays = [
