@@ -35,8 +35,7 @@ type WeeklyDataItem = {
 // ฟังก์ชันเพื่อรับวันที่ปัจจุบันแบบไทย (GMT+7)
 const getCurrentThaiDate = (): Date => {
   const now = new Date();
-  // เพิ่ม 7 ชั่วโมงเพื่อปรับเป็นเวลาไทย (GMT+7)
-  return new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  return now;
 };
 
 const Overview = () => {
@@ -61,20 +60,17 @@ const Overview = () => {
 
     // Create an array of the last 7 days (including today)
     const weekData: WeeklyDataItem[] = [];
-    for (let i = 0; i < 7; i++) {
-      const dayIndex = (dayOfWeek - i + 7) % 7; // Calculate the day of week (wrapping around)
+    for (let i = 6; i >= 0; i--) {
       const currentDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+      const dayIndex = currentDate.getDay(); // ใช้วันจาก currentDate โดยตรง
 
-      // ตรวจสอบว่าเป็นวันนี้หรือไม่
-      const isToday = i === 0;
-
-      weekData.unshift({
+      weekData.push({
         day: days[dayIndex],
         date: currentDate,
         bmi: "-",
         mood: "none" as Mood,
         hasPill: false,
-        isToday: isToday, // เพิ่ม property isToday
+        isToday: i === 0,
       });
     }
 
