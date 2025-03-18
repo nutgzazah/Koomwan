@@ -8,7 +8,7 @@ import Image from "next/image";
 import StatusBadge from "../components/StatusBadge";
 import DisapproveReasonPopup from "../components/DisapproveReason";
 import ApprovePopup from "../components/ApprovePopup";
-import DoctorImageHandler from "@/utils/doctorImageHandler";
+import DoctorFileHandler from "@/utils/doctorFileHandler";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
@@ -16,6 +16,8 @@ const DoctorID: React.FC = () => {
   const params = useParams();
   const doctorId = params?.doctorId || params?.id;
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   const [doctor, setDoctor] = useState<DoctorInterface | null>(null);
@@ -47,7 +49,7 @@ const DoctorID: React.FC = () => {
 
       try {
         console.log(`Fetching doctor image using getCurrentDoctorImage: ${doctor.image}`);
-        const fetchedImageUrl = await DoctorImageHandler.getCurrentDoctorImage(doctor.image);
+        const fetchedImageUrl = await DoctorFileHandler.getCurrentDoctorImage(doctor.image);
         setImageUrl(fetchedImageUrl || `${BASE_URL}/uploads/${doctor.image}`);
       } catch (error) {
         console.error("Error fetching image URL:", error);
@@ -61,6 +63,20 @@ const DoctorID: React.FC = () => {
       loadImageUrl();
     }
   }, [doctor]);
+
+   /** 🔹 Fetch doctor PDF (e.g., certificate) */
+  useEffect(() => {
+    const fetchPdf = async () => {
+      if (!doctor?.document) return; 
+      console.log(`Fetching doctor PDF: ${doctor.document}`);
+      const url = await DoctorFileHandler.getFileUrl(doctor.document);
+      setPdfUrl(url);
+    };
+
+    if (doctor?.document) {
+      fetchPdf();
+    }
+  }, [doctor?.document]);
 
   const handleApprove = async () => {
     if (!doctorId) return;
@@ -156,14 +172,13 @@ const DoctorID: React.FC = () => {
               <tr>
                 <td className="text-bold_detail py-2">เอกสารประกอบทางการแพทย์</td>
                 <td className="py-2 text-detail_2">
-                  <a
-                    href={doctor.document || "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 underline"
-                  >
-                    คลิกเพื่อดูรายละเอียด
-                  </a>
+                  {pdfUrl ? (
+                    <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                      คลิกเพื่อดูเอกสาร (PDF)
+                    </a>
+                  ) : (
+                    <p>กำลังโหลดเอกสาร...</p>
+                  )}
                 </td>
               </tr>
               <tr>
