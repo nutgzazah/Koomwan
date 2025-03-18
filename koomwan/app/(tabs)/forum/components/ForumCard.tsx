@@ -14,7 +14,7 @@ import PopupScreen from "../../../../global/components/PopupScreen";
 import DoctorIcon from "./DoctorIcon";
 
 interface forumCardProps {
-    imageContent: string | ImageSourcePropType; // รองรับทั้ง URL หรือไฟล์ท้องถิ่น
+    imageContent?: string | ImageSourcePropType | undefined; // รองรับทั้ง URL หรือไฟล์ท้องถิ่น
     like: number
     comments: number
     userimage: ImageSourcePropType

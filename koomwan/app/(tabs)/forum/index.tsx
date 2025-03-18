@@ -26,7 +26,7 @@ type Post = {
   likes: { count: number };
   comments: { length: number };
   title: string;
-  imageUrl: string; 
+  imageUrl: string | null;
 };
 
 export default function ForumScreen() {
@@ -58,7 +58,6 @@ export default function ForumScreen() {
             `${BASE_URL}/api/v1/storage/getFileUrlFromPath`,
             { params: { path: post.image } }
           );
-          console.log("IMAGE SSSSSSS",res.data.url)
           return { _id: post._id, imageUrl: res.data.url };
         } catch (error) {
           console.error(`Error fetching image for post ${post._id}:`, error);
@@ -73,7 +72,6 @@ export default function ForumScreen() {
       ...post,
       imageUrl: urls.find((item) => item._id === post._id)?.imageUrl || null,
     }));
-    console.log("Fetched image URLs:", urls);
     setPosts(postsWithImages);
   } catch (error) {
     console.error("Error fetching posts:", error);
