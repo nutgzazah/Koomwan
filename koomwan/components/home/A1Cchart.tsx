@@ -115,13 +115,14 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
     /* const day = thaiDays[bangkokTime.getDay()]; */
     const dayNum = bangkokTime.getDate();
     const month = thaiMonths[bangkokTime.getMonth()];
+    const year = bangkokTime.getFullYear() + 543;
 
     // Format time as HH:MM
     const hours = bangkokTime.getHours().toString().padStart(2, "0");
     const minutes = bangkokTime.getMinutes().toString().padStart(2, "0");
     const timeStr = `${hours}:${minutes} น.`;
 
-    return `วันที่ ${dayNum} ${month} เวลา ${timeStr}`;
+    return `วันที่ ${dayNum} ${month} ${year} เวลา ${timeStr}`;
   };
 
   const fetchBloodSugarData = async () => {
