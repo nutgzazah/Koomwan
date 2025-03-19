@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   SafeAreaView,
@@ -7,6 +7,7 @@ import {
   ImageSourcePropType,
   Alert,
   Pressable,
+  Text,
 } from "react-native";
 import axios from "axios";
 import ArticleBox from "./components/ArticleBox";
@@ -21,7 +22,7 @@ interface Blog {
   _id: string;
   title: string;
   content: string;
-  image: ImageSourcePropType;
+  image: string;
   date: Date;
   category: string;
   ref: string;
@@ -33,15 +34,25 @@ export default function ResourceScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [blogsData, setBlogsData] = useState<Blog[]>([]);
-  const mockChoices: string[] = [
-    "การดูแลสุขภาพ",
-    "ความรู้",
-    "โภชนาการ",
-    "การดูแลสุขภาพ",
-    "การออกกำลังกาย",
-    "โรค",
-    "ผู้ป่วยเบาหวาน",
-  ]
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const choices: string[] = extractCategories(blogsData);
+
+  function extractCategories(blogList: Blog[]): string[] {
+    const categorySet = new Set<string>();
+    blogList.forEach(blog => {
+      const categories = blog.category;
+      const split_Categories = categories.split(", ");
+      split_Categories.forEach(category => categorySet.add(category));
+    });
+    return Array.from(categorySet);
+  }
+
+  const filteredBlogs = useMemo(() => {
+    return blogsData.filter(blog =>
+      blog.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (selectedCategories.length === 0 || selectedCategories.every(category => blog.category.includes(category)))
+    );
+  }, [blogsData, searchQuery, selectedCategories]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,11 +77,11 @@ export default function ResourceScreen() {
           return;
         }
 
-        const resourceResponse = await axios.get(`${BASE_URL}/api/v1/admin/blog`)
+        const resourceResponse = await axios.get(`${BASE_URL}/api/v1/admin/blog`);
 
         if (resourceResponse.data.success) {
           setBlogsData(resourceResponse.data.data);
-          console.log(resourceResponse.data.data);
+          console.log(extractCategories(resourceResponse.data.data));
         }
       } catch (error) {
         console.error("Error fetching profile data:", error);
@@ -101,19 +112,20 @@ export default function ResourceScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      <ScrollView 
+      <ScrollView
         className="mb-24"
         showsVerticalScrollIndicator={false}
       >
         <PopupScreen
           header="หมวดหมู่"
           modalVisible={modalVisible}
-          setModalVisible={(() => setModalVisible(!setModalVisible))}
-          choices={mockChoices}
+          setModalVisible={() => setModalVisible(!modalVisible)}
+          choices={choices}
           modalClosePlaceholder="ปิด"
+          onChoiceSelect={setSelectedCategories}
         />
         <View className="flex flex-row ml-10 my-4 items-center">
-          <Pressable 
+          <Pressable
             className="mr-4"
             onPress={() => setModalVisible(true)}
           >
@@ -130,8 +142,8 @@ export default function ResourceScreen() {
             onChangeText={setSearchQuery}
           />
         </View>
-        {
-          blogsData.map((item, index) => (
+        {filteredBlogs.length > 0 ? (
+          filteredBlogs.map((item, index) => (
             <ArticleBox
               key={index}
               title={item.title}
@@ -140,7 +152,18 @@ export default function ResourceScreen() {
               articleId={item._id}
             />
           ))
-        }
+        ) : (
+          <View className="flex-1 justify-center items-center mt-[16.125rem]">
+          {/* Display if no blogs data is found */}
+            <Image
+              source={require("../../../assets/Resource/search-status.png")}
+              className="w-[3.375rem] h-[3.375rem] mb-2"
+            />
+            <Text className="font-sans text-button text-secondary mx-10 text-center">
+              ไม่มีข้อมูล
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

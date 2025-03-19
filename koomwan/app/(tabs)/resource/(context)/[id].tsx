@@ -20,7 +20,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 interface Blog {
   title: string;
   content: string;
-  image: ImageSourcePropType;
+  image: string;
   date: Date;
   category: string;
   refs: string;
@@ -44,6 +44,32 @@ function ArticleStructure({
   category,
   refs,
 }: Blog) {
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    async function fetchImage() {
+        try {
+            const [folder, fileName] = image.includes("/") ? image.split("/") : ["blogImage", image];
+            
+            console.log(`Fetching image URL from: ${BASE_URL}/api/v1/storage/getFileUrl?fileName=${fileName}&folder=${folder}`);
+            
+            const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
+                params: { fileName, folder },
+                headers: { "Cache-Control": "no-cache" },
+            });
+            
+            console.log("Image URL fetched:", response.data);
+            
+            setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${image}`);
+        } catch (error) {
+            console.error("Error fetching image URL:", error);
+            setImageUrl("");
+        }
+    }
+
+    fetchImage();
+}, [image]);
   return (
     <SafeAreaView className="flex-1">
       <ScrollView 
@@ -58,7 +84,7 @@ function ArticleStructure({
           <View className="mx-4 w-full h-[9.375rem] mb-3">
             <Image
               className="w-full h-full"
-              source={image}
+              source={{ uri: imageUrl } as ImageSourcePropType}
             />
           </View>
           <Text className="font-sans text-description text-secondary w-full ml-4 pr-4">{content}</Text>

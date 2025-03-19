@@ -5,14 +5,16 @@ import {
     ImageSourcePropType,
     Pressable,
 } from "react-native";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import BASE_URL from "../../../../config";
 import CategoryBox from "./CategoryBox";
 import Card from "../../../../global/components/Card";
 import { useRouter } from "expo-router";
 
 export interface articleBoxProps {
     title: string,
-    imageSource: ImageSourcePropType,
+    imageSource: string,
     categories: string,
     articleId: string,
 }
@@ -24,16 +26,43 @@ export default function ArticleBox({
     articleId,
 }: articleBoxProps) {
     const router = useRouter();
-    const split_Categories = categories.split(",");
+    const split_Categories = categories.split(", ");
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function fetchImage() {
+            try {
+                const [folder, fileName] = imageSource.includes("/") ? imageSource.split("/") : ["blogImage", imageSource];
+                
+                console.log(`Fetching image URL from: ${BASE_URL}/api/v1/storage/getFileUrl?fileName=${fileName}&folder=${folder}`);
+                
+                const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
+                    params: { fileName, folder },
+                    headers: { "Cache-Control": "no-cache" },
+                });
+                
+                console.log("Image URL fetched:", response.data);
+                
+                setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${imageSource}`);
+            } catch (error) {
+                console.error("Error fetching image URL:", error);
+                setImageUrl("");
+            }
+        }
+
+        fetchImage();
+    }, [imageSource]);
 
     return (
         <Pressable onPress={(() => router.push(`/resource/(context)/${articleId}`, { relativeToDirectory: true }))}>
             <Card>
                 <View className="mx-3 w-full h-36">
-                    <Image
-                        className="w-full h-full"
-                        source={imageSource}
-                    />
+                    {imageUrl && (
+                        <Image
+                            className="w-full h-full"
+                            source={{ uri: imageUrl } as ImageSourcePropType}
+                        />
+                    )}
                 </View>
                 <View className="mx-3 justify-start flex w-full">
                     <Text
