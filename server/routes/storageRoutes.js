@@ -12,10 +12,10 @@ const generateFileName = (file) => {
     const randomString = crypto.randomBytes(3).toString('hex'); // สร้างตัวอักษรสุ่ม 5 ตัว (3 ไบต์ = 6 ตัวอักษร Hex)
     const timestamp = Date.now();
     const fileExtension = path.extname(file.originalname).toLowerCase();
-    const originalName = path.basename(file.originalname, fileExtension); // เอาชื่อไฟล์เดิมที่ไม่รวมส่วนขยาย
+    // const originalName = path.basename(file.originalname, fileExtension); // เอาชื่อไฟล์เดิมที่ไม่รวมส่วนขยาย
 
 
-    return `koomwan-${originalName}-${timestamp}-${randomString}${fileExtension}`; 
+    return `koomwan-${timestamp}-${randomString}${fileExtension}`; 
 
 };
 

@@ -18,7 +18,10 @@ import { useRouter } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import BASE_URL from "../../../config"
 
-const mockImageContent = require("../../../assets/Forum/forum-image.png")
+const defaultUserAvatar01 = require("../../../assets/Avatars/koomwanAvatar01.png");
+const defaultUserAvatar02 = require("../../../assets/Avatars/koomwanAvatar02.png");
+const defaultUserAvatar03 = require("../../../assets/Avatars/koomwanAvatar03.png");
+const defaultUserAvatar04 = require("../../../assets/Avatars/koomwanAvatar04.png");
 
 type Post = {
   _id: string;
@@ -27,6 +30,11 @@ type Post = {
   comments: { length: number };
   title: string;
   imageUrl: string | null;
+  postedBy: {
+    username: string;
+    image: string;  // เพิ่มฟิลด์รูปโปรไฟล์ของ user
+  };
+  userImage: string | null; // เก็บ URL รูปโปรไฟล์ของผู้ใช้
 };
 
 export default function ForumScreen() {
@@ -44,41 +52,80 @@ export default function ForumScreen() {
   try {
     const response = await axios.get<Post[]>(`${BASE_URL}/api/v1/forum/getAllPost`);
     const postsData = response.data;
-
-    // เรียก API เพื่อแปลง path เป็น URL จริง
+    
+    // ดึง URL สำหรับรูปภาพโพสต์และโปรไฟล์ของผู้ใช้
     const urls = await Promise.all(
       postsData.map(async (post) => {
-        // ถ้าไม่มีรูป (post.image เป็นค่าว่างหรือ undefined) ให้ใช้ค่า default ทันที
-        if (!post.image || post.image.trim() === "") {
-          return { _id: post._id, imageUrl: null }; // ไม่มีภาพ ไม่ต้องส่ง imageContent
+        const imageUrl = post.image
+          ? await getImageUrl(post.image)
+          : null;
+
+        let userImageUrl = null;
+          if (post.postedBy?.image) {
+          // Checking if the user image is one of the local avatar files
+          if (
+            post.postedBy.image === "koomwanAvatar01.png" ||
+            post.postedBy.image === "koomwanAvatar02.png" ||
+            post.postedBy.image === "koomwanAvatar03.png" ||
+            post.postedBy.image === "koomwanAvatar04.png"
+          ) {
+            // Set the local path for the avatar image
+            userImageUrl = post.postedBy.image;
+          } else {
+            // Fallback to fetching the image URL if not a local avatar
+            userImageUrl = await getProfileImageUrl(post.postedBy.image, "user");
+          }
         }
 
-        try {
-          const res = await axios.get<{ url: string }>(
-            `${BASE_URL}/api/v1/storage/getFileUrlFromPath`,
-            { params: { path: post.image } }
-          );
-          return { _id: post._id, imageUrl: res.data.url };
-        } catch (error) {
-          console.error(`Error fetching image for post ${post._id}:`, error);
-          return { _id: post._id, imageUrl: null }; //ไม่มีภาพให้ส่งค่า null
-          
-        }
+        return {
+          _id: post._id,
+          imageUrl,
+          userImage: userImageUrl,
+        };
       })
     );
 
-    // ผูก URL จริงกับข้อมูล post
+    // รวมข้อมูลที่อัปเดต
     const postsWithImages = postsData.map((post) => ({
       ...post,
       imageUrl: urls.find((item) => item._id === post._id)?.imageUrl || null,
+      userImage: urls.find((item) => item._id === post._id)?.userImage || null,
     }));
-    setPosts(postsWithImages);
-  } catch (error) {
-    console.error("Error fetching posts:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+
+      setPosts(postsWithImages);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ฟังก์ชันดึง URL ของไฟล์จาก path
+  const getImageUrl = async (path: string): Promise<string | null> => {
+    try {
+      const res = await axios.get<{ url: string }>(
+        `${BASE_URL}/api/v1/storage/getFileUrlFromPath`,
+        { params: { path } }
+      );
+      return res.data.url;
+    } catch (error) {
+      console.error(`Error fetching image for path ${path}:`, error);
+      return null;
+    }
+  };
+
+  const getProfileImageUrl = async (fileName: string, folder: string, ) : Promise<string | null> => {
+    try {
+      const res = await axios.get<{ url: string }>(
+        `${BASE_URL}/api/v1/storage/getFileUrl`,
+        { params: { fileName,folder } }
+      );
+      return res.data.url;
+    } catch (error) {
+      console.error(`Error fetching image for path ${folder}/${fileName}:`, error);
+      return null;
+    }
+  };
 
   return (
     <SafeAreaProvider>
@@ -114,8 +161,16 @@ export default function ForumScreen() {
                 {...(post.imageUrl ? { imageContent: { uri: post.imageUrl } } : {})} // ส่ง imageContent เฉพาะที่มีค่า
                 like={post.likes.count}
                 comments={post.comments.length}
-                userimage={{ uri: "https://your-cdn.com/default-user.png" }} // เปลี่ยนเป็น URL โปรไฟล์จริง
-                userName={"ไม่ระบุชื่อ"} // หาก API ไม่มีข้อมูล username ต้องแก้ไขตรงนี้
+                userimage={
+                  post.userImage ? (
+                    post.userImage === "koomwanAvatar01.png" ? defaultUserAvatar01 :
+                    post.userImage === "koomwanAvatar02.png" ? defaultUserAvatar02 :
+                    post.userImage === "koomwanAvatar03.png" ? defaultUserAvatar03 :
+                    post.userImage === "koomwanAvatar04.png" ? defaultUserAvatar04 :
+                    { uri: post.userImage } // ถ้าไม่ใช่ 4 avatar ข้างต้น ให้ใช้ URL ของ userImage
+                  ) : defaultUserAvatar01 // 🟢 ใช้รูป local ถ้า user ไม่มีรูป
+                }
+                userName={post.postedBy?.username || "ไม่ระบุชื่อ"}
                 doctorImage={{ uri: "https://your-cdn.com/default-doctor.png" }}
                 doctorName={"แพทย์ไม่ระบุชื่อ"} // หาก API ไม่มีข้อมูลแพทย์ ต้องแก้ไขตรงนี้
                 content={post.title}

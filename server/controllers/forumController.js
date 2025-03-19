@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Forum = require('../models/forumModel'); // นำเข้า Forum Model
+const User = require('../models/userModel'); // นำเข้า User Model
 const { uploadToR2v2, deleteFromR2 } = require('../Services/uploadService');
 
 // Create a new forum post
@@ -33,10 +34,11 @@ exports.createForumPost = async (req, res) => {
     }
 };
 
+
 // ดึงโพสต์ทั้งหมด
 exports.getAllPost = async (req, res) => {
     try {
-        const posts = await Forum.find().populate('postedBy', 'name').sort({ createdAt: -1 });
+        const posts = await Forum.find().populate('postedBy', 'username image').sort({ createdAt: -1 });
         res.status(200).json(posts);
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error", details: error.message });
