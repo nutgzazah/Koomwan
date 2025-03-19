@@ -10,9 +10,9 @@ import { calculateBMI, getBMICategory } from "../../util/bmi";
 
 const BMIScale = () => {
   const indicators = [
-    { range: 6, color: "bg-primary" }, // Underweight < 18.5
+    { range: 6, color: "bg-warning" }, // Underweight < 18.5
     { range: 6, color: "bg-normal" }, // Normal 18.6-24
-    { range: 6, color: "bg-warning" }, // Overweight 25-29.9
+    { range: 6, color: "bg-orange" }, // Overweight 25-29.9
     { range: 6, color: "bg-abnormal" }, // Obese > 30
   ];
 
@@ -31,11 +31,11 @@ const BMIScale = () => {
         )}
       </View>
       <View className="flex flex-row justify-between">
-        <Text className="text-tag text-secondary font-regular">16.2</Text>
+        <Text className="text-tag text-secondary font-regular">{"> "}0</Text>
         <Text className="text-tag text-secondary font-regular">18.6</Text>
-        <Text className="text-tag text-secondary font-regular">25.1</Text>
-        <Text className="text-tag text-secondary font-regular">33.4</Text>
-        <Text className="text-tag text-secondary font-regular">42.8</Text>
+        <Text className="text-tag text-secondary font-regular">23.0</Text>
+        <Text className="text-tag text-secondary font-regular">25.0</Text>
+        <Text className="text-tag text-secondary font-regular">{"> "}40</Text>
       </View>
     </View>
   );
@@ -66,7 +66,7 @@ const UserInfo: React.FC<UserInfoProps> = ({ weight, height, age, gender }) => {
           <Text className="text-description font-regular text-secondary">
             {item.value}
           </Text>
-          <Text className="text-tag font-regular text-secondary">
+          <Text className="text-description font-regular text-secondary">
             {item.label}
           </Text>
         </View>
@@ -112,7 +112,7 @@ const BMIDisplay: React.FC<BMIDisplayProps> = ({ bmiValue }) => {
           {bmiCategory.text}
         </Text>
         <Text className="text-tag font-regular text-secondary mb-2">
-          {bmiValue.toFixed(1)} กก./ม.²
+          {bmiValue.toFixed(2)} กก./ม.²
         </Text>
       </View>
     </View>

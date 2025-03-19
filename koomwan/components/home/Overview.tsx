@@ -210,7 +210,7 @@ const Overview = () => {
             <Text
               className={`text-description font-regular ${
                 item.isToday
-                  ? "text-primary text-body font-regular"
+                  ? "text-primary text-body font-bold"
                   : "text-secondary"
               } mb-2`}
             >
