@@ -324,11 +324,11 @@ export default function BMI() {
 
   return (
     <Card>
-      <View className="p-4 items-center">
+      <View className=" items-center">
         <Text className="text-title font-regular text-secondary mb-2">
           ดัชนีมวลกายของฉัน
         </Text>
-        <Text className="text-tag text-secondary font-regular mb-2">
+        <Text className="text-tag font-regular text-secondary text-center mb-2">
           {lastUpdated}
         </Text>
 
