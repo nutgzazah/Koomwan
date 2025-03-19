@@ -7,13 +7,19 @@ import { ForumDataInterface } from "@/interfaces/forumInterface";
 import DeleteReasonPopup from "../components/deleteReason";
 import ApprovePopup from "../components/ApprovePopup";
 import DetailPopup from "../components/detailPopup";
+import ForumImageHandler from "@/utils/forumImageHandler";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
 const ForumID: React.FC = () => {
   const { forumId } = useParams();
   const [forum, setForum] = useState<ForumDataInterface | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [isApprovePopupOpen, setIsApprovePopupOpen] = useState(false);
   const [isDetailPopupOpen, setIsDetailPopupOpen] = useState(false);
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchForum = async () => {
@@ -31,6 +37,32 @@ const ForumID: React.FC = () => {
 
     fetchForum();
   }, [forumId]);
+
+  /** 🔹 Fetch forum image */
+  useEffect(() => {
+    const loadImageUrl = async () => {
+      if (!forum?.image) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log(`Fetching forum image using getCurrentForumImage: ${forum.image}`);
+        const fetchedImageUrl = await ForumImageHandler.getCurrentForumImage(forum.image);
+        
+        setImageUrl(fetchedImageUrl || "/assets/forum-default.jpg"); 
+      } catch (error) {
+        console.error("Error fetching image URL:", error);
+        setImageUrl("/assets/forum-default.jpg"); 
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (forum?.image) {
+      loadImageUrl();
+    }
+  }, [forum?.image]);
 
   if (!forum) {
     return (
@@ -53,11 +85,14 @@ const ForumID: React.FC = () => {
       </div>
       <h2 className="text-headline_3 text-secondary">{forum.title}</h2>
       <p className="text-detail_3 text-secondary">เขียนเมื่อ {new Date(forum.createdAt).toLocaleString()}</p>
-      {forum.image && typeof forum.image === "string" && (
+       
+       {/* ✅ Display image only if `imageUrl` exists */}
+       {imageUrl && (
         <div className="w-full h-auto mb-6">
-          <img src={forum.image} alt="forum image" className="w-full h-auto object-cover rounded-md" />
+          <img src={imageUrl} alt="forum image" className="max-w-full md:max-w-2xl lg:max-w-3xl h-auto rounded-lg shadow-md" />
         </div>
       )}
+
       <div className="flex w-full justify-center space-x-4 mt-4">
         <button className="btn green-btn short-btn" onClick={handleApprove}>อนุมัติ</button>
         <button className="btn red-btn short-btn" onClick={() => setIsDeletePopupOpen(true)}>ลบ</button>

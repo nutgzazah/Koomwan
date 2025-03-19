@@ -86,7 +86,7 @@ export default function BlogManagement() {
                 <BlogCard
                   blog_id={_id}
                   title={title}
-                  // image={image}
+                  image={image}
                   category={Array.isArray(category) ? category : [category]}
                 />
               </div>
@@ -101,3 +101,4 @@ export default function BlogManagement() {
     </div>
   );
 }
+
