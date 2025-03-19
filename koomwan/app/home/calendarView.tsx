@@ -227,8 +227,8 @@ const CalendarScreen = () => {
       }
     >
       <Card>
-        <View className="justify-between">
-          <View className="flex-row justify-between items-center">
+        <View className="justify-between p-2">
+          <View className="flex-row justify-between">
             <Text className="text-description text-secondary font-regular">
               เวลา{" "}
               {log.time.endsWith(" น.")
@@ -244,7 +244,7 @@ const CalendarScreen = () => {
             )}
           </View>
 
-          <View className="flex-row flex-wrap gap-4 mt-4">
+          <View className="flex-row flex-wrap justify-center gap-4 mt-4 items-center">
             {log.weight && log.height && (
               <View className="flex-row items-center">
                 <Image
@@ -381,7 +381,7 @@ const CalendarScreen = () => {
             <Loading />
           ) : (
             <View className="mt-4">
-              <Text className="text-headline font-regular text-secondary px-4">
+              <Text className="text-body font-regular text-secondary px-4">
                 {new Date(selectedDate).toLocaleDateString("th-TH", {
                   weekday: "long",
                   year: "numeric",
