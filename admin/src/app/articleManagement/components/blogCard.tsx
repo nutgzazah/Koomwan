@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import axios from "axios";
 
@@ -14,56 +14,48 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
 export default function BlogCard({ blog_id, title, image, category = [] }: BlogCardProps) {
   const [imageUrl, setImageUrl] = useState("/uploads/koomwanAvatar01.png");
-  const [loading, setLoading] = useState(true);
+
+  const fetchImageUrl = useCallback(async () => {
+    if (!image || image.startsWith("/uploads")) return;
+
+    try {
+      let folder = "blogImage";
+      let fileName = image;
+
+      const lastSlashIndex = image.lastIndexOf("/");
+      if (lastSlashIndex !== -1) {
+        folder = image.substring(0, lastSlashIndex);
+        fileName = image.substring(lastSlashIndex + 1);
+      }
+
+      const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
+        params: { fileName, folder },
+      });
+
+      setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${image}`);
+    } catch (error) {
+      console.error("Error fetching image URL:", error);
+      setImageUrl(`${BASE_URL}/uploads/${image}`);
+    }
+  }, [image]);
 
   useEffect(() => {
-    const fetchImageUrl = async () => {
-      if (!image) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        let folder = "blogImage";
-        let fileName = image;
-
-        if (image.includes("/")) {
-          const parts = image.split("/");
-          folder = parts[0];
-          fileName = parts[1];
-        }
-
-        const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
-          params: { fileName, folder },
-        });
-
-        setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${image}`);
-      } catch (error) {
-        console.error("Error fetching image URL:", error);
-        setImageUrl(`${BASE_URL}/uploads/${image}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchImageUrl();
-  }, [image]);
+  }, [fetchImageUrl]);
 
   return (
     <div className="bg-card flex flex-col border rounded-md shadow-md w-full h-[500px] overflow-hidden">
       {/* Blog Image */}
       <div className="w-full h-80 relative bg-ourGray">
-        {!loading && (
-          <Image
-            src={imageUrl}
-            alt={title || "Blog Image"}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            style={{ objectFit: "cover" }} // ✅ ใช้ style แทน objectFit
-            className="rounded-t-md"
-            priority={true} 
-          />
-        )}
+        <Image
+          src={imageUrl}
+          alt={title || "Blog Image"}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          style={{ objectFit: "cover" }}
+          className="rounded-t-md"
+          priority
+        />
       </div>
 
       {/* Blog Content */}
@@ -72,10 +64,7 @@ export default function BlogCard({ blog_id, title, image, category = [] }: BlogC
           <h2 className="text-bold_detail text-secondary line-clamp-2">{title}</h2>
 
           <Link href={`/articleManagement/${blog_id}/editArticle`} passHref>
-            <button
-              className="p-2 btn blue-btn rounded-md"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <button className="p-2 btn blue-btn rounded-md" onClick={(e) => e.stopPropagation()}>
               แก้ไข
             </button>
           </Link>

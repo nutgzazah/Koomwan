@@ -1,5 +1,5 @@
 import PopupCard from "@/components/PopupCard";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { ForumReportTitle } from "@/utils/statusMapping";
 import DetailTable from "./deatilTable";
@@ -9,22 +9,31 @@ interface DetailPopupProps {
   forumId: string;
 }
 
+interface ForumData {
+  reports?: {
+    count?: number;
+    reasons?: { reason?: string }[];
+  };
+}
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
+
 export default function DetailPopup({ onClose, forumId }: DetailPopupProps) {
   const [activeTab, setActiveTab] = useState<string>("ทั้งหมด");
-  const [forum, setForum] = useState<any | null>(null);
+  const [forum, setForum] = useState<ForumData | null>(null);
+
+  const fetchForumData = useCallback(async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/v1/admin/forum/reported/${forumId}`);
+      setForum(response.data.data || response.data);
+    } catch (error) {
+      console.error("Error fetching forum data:", error);
+    }
+  }, [forumId]);
 
   useEffect(() => {
-    const fetchForumData = async () => {
-      try {
-        const response = await axios.get(`http://localhost:8080/api/v1/admin/forum/reported/${forumId}`);
-        setForum(response.data.data || response.data);
-      } catch (error) {
-        console.error("Error fetching forum data:", error);
-      }
-    };
-
     fetchForumData();
-  }, [forumId]);
+  }, [fetchForumData]);
 
   if (!forum) {
     return (
@@ -39,23 +48,23 @@ export default function DetailPopup({ onClose, forumId }: DetailPopupProps) {
   // Ensure reasons is an array
   const reportsArray = Array.isArray(forum.reports?.reasons) ? forum.reports.reasons : [];
 
-  // Get all report categories from ForumReportTitle
-  const reportCategories = ["ทั้งหมด", ...Object.keys(ForumReportTitle).map((key) => ForumReportTitle[key])];
+  // Get all report categories
+  const reportCategories = ["ทั้งหมด", ...Object.values(ForumReportTitle)];
 
-  // Count reports for each category
-  const reportCounts: { [key: string]: number } = reportCategories.reduce((acc, category) => {
-    if (category === "ทั้งหมด") {
-      acc[category] = reportsArray.length;
-    } else {
+  // Count reports for each category efficiently
+  const reportCounts: Record<string, number> = {
+    ทั้งหมด: reportsArray.length,
+    ...Object.values(ForumReportTitle).reduce((acc, category) => {
       acc[category] = reportsArray.filter((r) => r?.reason && ForumReportTitle[r.reason] === category).length || 0;
-    }
-    return acc;
-  }, {} as { [key: string]: number });
+      return acc;
+    }, {} as Record<string, number>),
+  };
 
-  // filter reported title
-  const filteredReports = activeTab === "ทั้งหมด" 
-    ? reportsArray 
-    : reportsArray.filter((r) => r?.reason && ForumReportTitle[r.reason] === activeTab);
+  // Filter reports based on the active tab
+  const filteredReports =
+    activeTab === "ทั้งหมด"
+      ? reportsArray
+      : reportsArray.filter((r) => r?.reason && ForumReportTitle[r.reason] === activeTab);
 
   return (
     <PopupCard title={`จำนวนครั้งที่ถูกรายงาน ${forum.reports?.count || 0} ครั้ง`} onClose={onClose} className="w-[1300px] min-h-[500px]">
@@ -70,7 +79,7 @@ export default function DetailPopup({ onClose, forumId }: DetailPopupProps) {
               }`}
               onClick={() => setActiveTab(category)}
             >
-              {category} ({reportCounts[category]})
+              {category} ({reportCounts[category] || 0})
             </button>
           ))}
         </div>
@@ -81,3 +90,4 @@ export default function DetailPopup({ onClose, forumId }: DetailPopupProps) {
     </PopupCard>
   );
 }
+ 

@@ -6,6 +6,7 @@ import { BlogInterface } from "@/interfaces/blogInterface";
 import axios from "axios";
 import DeletePopup from "./components/DeletePopup";
 import BlogImageHandler from "@/utils/blogImageHandler";
+import Image from "next/image";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -27,7 +28,6 @@ const EditBlogForm: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [errors, setErrors] = useState<{ image?: string }>({});
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -64,18 +64,19 @@ const EditBlogForm: React.FC = () => {
 
   const fetchImageUrl = async (imagePath: string) => {
     try {
-      let [folder, fileName] = imagePath.includes("/") ? imagePath.split("/") : ["blogImage", imagePath];
+      const [folder, fileName] = imagePath.includes("/") ? imagePath.split("/") : ["blogImage", imagePath];
       console.log(`Fetching image URL from: ${BASE_URL}/api/v1/storage/getFileUrl?fileName=${fileName}&folder=${folder}`);
-
+  
       const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, { params: { fileName, folder } });
       console.log("Image URL fetched:", response.data);
-
+  
       setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${imagePath}`);
     } catch (error) {
       console.error("Error fetching image URL:", error);
       setImageUrl(`${BASE_URL}/uploads/${imagePath}`);
     }
   };
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (!blog) return;
@@ -97,7 +98,7 @@ const EditBlogForm: React.FC = () => {
     if (file) {
       console.log("Selected file:", file);
       setImageFile(file);
-      setPreviewImage(URL.createObjectURL(file)); // Show preview
+      setPreviewImage(URL.createObjectURL(file)); 
     }
   };
 
@@ -110,13 +111,11 @@ const EditBlogForm: React.FC = () => {
     try {
       console.log(`Updating blog at: ${BASE_URL}/api/v1/admin/editBlog/${articleId}`);
   
-      // 1️⃣ อัปเดตรายละเอียดบทความก่อน
       await axios.put(`${BASE_URL}/api/v1/admin/editBlog/${articleId}`, {
         ...blog,
         category: Array.isArray(blog.category) ? blog.category.join(", ") : blog.category,
       });
   
-      // 2️⃣ ถ้ามีรูปใหม่ให้อัปโหลด
       if (imageFile) {
         console.log("Uploading new blog image...");
         const imageUrl = await BlogImageHandler.uploadBlogImage(imageFile, articleId);
@@ -124,9 +123,8 @@ const EditBlogForm: React.FC = () => {
         if (imageUrl) {
           console.log("New image uploaded:", imageUrl);
   
-          // 3️⃣ อัปเดตบทความให้ใช้รูปใหม่
           await axios.put(`${BASE_URL}/api/v1/admin/editBlog/${articleId}`, {
-            image: imageUrl, // ✅ Update image URL
+            image: imageUrl,
           });
         } else {
           console.error("Failed to upload image.");
@@ -156,9 +154,9 @@ const EditBlogForm: React.FC = () => {
       {/* อัปโหลดรูปภาพ */}
       <div className="relative w-full h-64 flex justify-center items-center border border-gray-300 rounded-lg overflow-hidden">
         {previewImage ? (
-          <img src={previewImage} alt="New Preview" className="w-full h-full object-cover" />
+          <Image src={previewImage} alt="New Preview" width={300} height={300} className="w-full h-full object-cover" />
         ) : imageUrl ? (
-          <img src={imageUrl} alt="Existing Image" className="w-full h-full object-cover" />
+          <Image src={imageUrl} alt="Existing Image" width={300} height={300} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex justify-center items-center bg-gray-200 text-gray-500 text-sm">
             ไม่มีรูปภาพ
@@ -170,7 +168,6 @@ const EditBlogForm: React.FC = () => {
           คลิกเพื่ออัปโหลดรูปภาพใหม่
         </div>
       </div>
-      {errors.image && <p className="text-red-500">{errors.image}</p>}
 
       <div>
         <label htmlFor="title">ชื่อบทความ</label>

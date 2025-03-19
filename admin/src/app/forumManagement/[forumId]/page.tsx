@@ -8,6 +8,7 @@ import DeleteReasonPopup from "../components/deleteReason";
 import ApprovePopup from "../components/ApprovePopup";
 import DetailPopup from "../components/detailPopup";
 import ForumImageHandler from "@/utils/forumImageHandler";
+import Image from "next/image";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
@@ -18,7 +19,6 @@ const ForumID: React.FC = () => {
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [isApprovePopupOpen, setIsApprovePopupOpen] = useState(false);
   const [isDetailPopupOpen, setIsDetailPopupOpen] = useState(false);
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const ForumID: React.FC = () => {
       if (!forumId || typeof forumId !== "string") return;
 
       try {
-        const response = await axios.get(`http://localhost:8080/api/v1/admin/forum/reported/${forumId}`);
+        const response = await axios.get(`${BASE_URL}/api/v1/admin/forum/reported/${forumId}`);
         console.log("Fetched forum data:", response.data);
 
         setForum(response.data.data || response.data);
@@ -38,7 +38,7 @@ const ForumID: React.FC = () => {
     fetchForum();
   }, [forumId]);
 
-  /** 🔹 Fetch forum image */
+  /** Fetch forum image */
   useEffect(() => {
     const loadImageUrl = async () => {
       if (!forum?.image) {
@@ -86,10 +86,17 @@ const ForumID: React.FC = () => {
       <h2 className="text-headline_3 text-secondary">{forum.title}</h2>
       <p className="text-detail_3 text-secondary">เขียนเมื่อ {new Date(forum.createdAt).toLocaleString()}</p>
        
-       {/* ✅ Display image only if `imageUrl` exists */}
        {imageUrl && (
         <div className="w-full h-auto mb-6">
-          <img src={imageUrl} alt="forum image" className="max-w-full md:max-w-2xl lg:max-w-3xl h-auto rounded-lg shadow-md" />
+          {!loading && (
+              <Image 
+                src={imageUrl} 
+                alt="forum image" 
+                width={300}
+                height={300}
+                className="max-w-full md:max-w-2xl lg:max-w-3xl h-auto shadow-md" />
+            )
+          }  
         </div>
       )}
 

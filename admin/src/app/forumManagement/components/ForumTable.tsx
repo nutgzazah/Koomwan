@@ -4,7 +4,6 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import Table from "@/components/Table";
 import { ForumDataInterface } from "@/interfaces/forumInterface";
-import { statusMapping } from "@/utils/statusMapping";
 
 interface ForumTableProps {
   forums: ForumDataInterface[];

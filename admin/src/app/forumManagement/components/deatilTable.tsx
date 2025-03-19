@@ -32,9 +32,9 @@ const DetailTable: React.FC<DetailTableProps> = ({ forums = [] }) => {
   ];
 
   const tableData = forums.map((report) => [
-    report?.user?.username || "ไม่ระบุ",
-    ForumReportTitle[report?.reason] || "ไม่ระบุ",
-  ]);
+    report?.user?.username ?? "ไม่ระบุ",
+    report?.reason && ForumReportTitle[report.reason] ? ForumReportTitle[report.reason] : "ไม่ระบุ",
+  ]);  
 
   return (
     <div className="overflow-x-auto" style={{ maxHeight: forums.length > 4 ? '300px' : 'auto', overflowY: forums.length > 3 ? 'scroll' : 'visible' }}>

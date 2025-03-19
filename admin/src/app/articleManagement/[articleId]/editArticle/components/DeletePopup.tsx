@@ -2,7 +2,6 @@ import PopupCard from "@/components/PopupCard";
 import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import BlogImageHandler from "@/utils/blogImageHandler";
 
 interface DeletePopupProps {
   onClose: () => void;
@@ -19,12 +18,10 @@ export default function DeletePopup({ onClose, articleId }: DeletePopupProps) {
     setError(null);
 
     try {
-      // 1️⃣ Get current blog data to retrieve image filename
       const blogResponse = await axios.get(`http://localhost:8080/api/v1/admin/blog/${articleId}`);
       const currentImageFileName = blogResponse.data.data?.image || null;
       console.log("Current blog image before delete:", currentImageFileName);
 
-      // 2️⃣ Delete the blog post from the backend
       await axios.delete(`http://localhost:8080/api/v1/admin/deleteBlog/${articleId}`);
       console.log("Blog deleted successfully");
 

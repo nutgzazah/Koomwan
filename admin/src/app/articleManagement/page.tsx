@@ -82,7 +82,6 @@ export default function BlogManagement() {
                 className="w-full cursor-pointer"
                 onClick={() => router.push(`/articleManagement/${_id}`)}
               >
-                {/* เว้นรูปไว้ก่อน */}
                 <BlogCard
                   blog_id={_id}
                   title={title}

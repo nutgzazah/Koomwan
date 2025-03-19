@@ -100,7 +100,7 @@ const UserReportForm: React.FC = () => {
               id="response_to_user"
               name="response"
               placeholder="การตอบกลับไปยังผู้ใช้"
-              value={report.response || ""} // Ensure response is always defined
+              value={report.response || ""} 
               onChange={handleChange}
               className="input h-64"
             ></textarea>
