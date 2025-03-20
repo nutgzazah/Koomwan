@@ -9,7 +9,7 @@ import {
   ActivityIndicator
 } from "react-native";
 import React, { useState } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import BackButton from "../../../global/components/BackButton";
@@ -41,6 +41,7 @@ const REGULAR_MEDICINES = [
 
 export default function SummaryTrackingScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams(); 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedMood, setSelectedMood] = useState("happy");
@@ -84,20 +85,22 @@ export default function SummaryTrackingScreen() {
         return require("../../../assets/Tracking/mood-happy.png");
       case "laughing":
         return require("../../../assets/Tracking/mood-laughing.png");
-      case "impassive":
-        return require("../../../assets/Tracking/mood-impassive.png");
-      case "frustrated":
-        return require("../../../assets/Tracking/mood-frustrated.png");
-      case "ill":
-        return require("../../../assets/Tracking/mood-ill.png");
-      case "sad":
-        return require("../../../assets/Tracking/mood-sad.png");
+      case "neutral":
+        return require("../../../assets/Tracking/mood-neutral.png");
+      case "irritated":
+        return require("../../../assets/Tracking/mood-irritated.png");
+      case "sick":
+        return require("../../../assets/Tracking/mood-sick.png");
+      case "crying":
+        return require("../../../assets/Tracking/mood-crying.png");
       case "angry":
         return require("../../../assets/Tracking/mood-angry.png");
       default:
         return require("../../../assets/Tracking/mood-happy.png"); // default to happy
     }
   };
+
+  //ตรงนี้งง
 
   return (
     <SafeAreaView className="flex-1">
@@ -234,15 +237,15 @@ export default function SummaryTrackingScreen() {
           disabled={loading}
           className="bg-primary rounded-lg py-4 px-8 mt-3 mb-6 mx-6"
         >
-          <Text className="text-button font-sans text-card text-center font-bold">
-            {loading ? "กำลังบันทึก..." : "ถัดไป"}
-          </Text>
+            <Text className="text-button font-sans text-card text-center font-bold">{loading ? "กำลังบันทึก..." : "ถัดไป"}</Text>
         </TouchableOpacity>
 
         {loading && (
           <View className="items-center mt-4">
             <ActivityIndicator size="large" color="#4CAF50" />
-            <Text className="text-gray-600 mt-2">กำลังบันทึกข้อมูล...</Text>
+            <Text className="text-button font-sans text-card text-center font-bold">
+              <Text>{loading ? "กำลังบันทึก..." : "ถัดไป"}</Text>
+            </Text>
           </View>
         )}
 

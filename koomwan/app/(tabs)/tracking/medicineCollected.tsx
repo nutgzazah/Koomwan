@@ -13,7 +13,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import Checkbox from "expo-checkbox";
-import BackButton from "../../../global/components/BackButton";
+//import BackButton from "../../../global/components/BackButton";
 import { LongButton } from "./components/LongButton";
 
 // Define a Medicine interface for better type-checking
@@ -45,33 +45,47 @@ const REGULAR_MEDICINES: Medicine[] = [
 
 export default function MedicineCollectedScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
 
   const [additionalMedicines, setAdditionalMedicines] = useState<Medicine[]>([]);
   const [selectedMedicines, setSelectedMedicines] = useState<{ [key: string]: boolean }>({});
+
+  const params = useLocalSearchParams();
+  const formData = params?.formData ? JSON.parse(params.formData as string) : {};
+
+  console.log("Data received in medicineCollected.tsx:", formData);
+
+  useEffect(() => {
+    console.log("Current Route:", router);
+  }, []);
+  
+
+  useEffect(() => {
+  console.log("Updated Data received in medicineCollected.tsx:", formData);
+  }, [formData]);
+
 
   // Load data when params are available
   useEffect(() => {
     if (params.name && params.type) {
       const newMedicine: Medicine = {
-        id: params.id ? String(params.id) : Date.now().toString(), // Generate unique ID for new medicine
+        id: params.id ? String(params.id) : Date.now().toString(),
         name: String(params.name),
         type: String(params.type),
         details: params.details ? String(params.details) : "",
         image: params.image ? String(params.image) : require("../../../assets/Tracking/Medicine.png"),
       };
-
-      // Check if the medicine already exists
+  
       const exists = additionalMedicines.some((med) => med.id === newMedicine.id);
       if (!exists) {
-        setAdditionalMedicines((prev) => [...prev, newMedicine]); // Add new medicine
+        setAdditionalMedicines((prev) => [...prev, newMedicine]);
       } else {
         setAdditionalMedicines((prev) =>
-          prev.map((med) => (med.id === newMedicine.id ? newMedicine : med)) // Update existing medicine
+          prev.map((med) => (med.id === newMedicine.id ? newMedicine : med))
         );
       }
     }
   }, [params.name, params.type, params.details, params.image]);
+  
 
   // View medicine details when clicked
   const handleViewDetails = (medicine: Medicine, isRegular: boolean) => {
@@ -112,12 +126,12 @@ export default function MedicineCollectedScreen() {
   // Delete a medicine
   const handleDeleteMedicine = (medicineId: string) => {
     Alert.alert(
-      "ยืนยันการลบ",
-      "คุณแน่ใจหรือไม่ว่าต้องการลบยานี้?",
+      String("ยืนยันการลบ"), 
+      String("คุณแน่ใจหรือไม่ว่าต้องการลบยานี้?"),
       [
-        { text: "ยกเลิก", style: "cancel" },
+        { text: String("ยกเลิก"), style: "cancel" },
         {
-          text: "ลบ",
+          text: String("ลบ"),
           onPress: () => {
             setAdditionalMedicines((prev) =>
               prev.filter((medicine) => medicine.id !== medicineId)
@@ -127,12 +141,13 @@ export default function MedicineCollectedScreen() {
               delete updatedState[medicineId]; // Remove the deleted medicine from selected state
               return updatedState;
             });
-            Alert.alert("ลบสำเร็จ", "ยาถูกลบเรียบร้อย");
+            Alert.alert(String("ลบสำเร็จ"), String("ยาถูกลบเรียบร้อย")); 
           },
         },
       ]
     );
   };
+  
 
   // Handle checkbox selection change
   const handleCheckboxChange = (medicineId: string, isChecked: boolean) => {
@@ -141,6 +156,7 @@ export default function MedicineCollectedScreen() {
       [medicineId]: isChecked, // Update the checkbox state
     }));
   };
+  
 
   // Handle next button click
   const handleNext = () => {
@@ -162,7 +178,19 @@ export default function MedicineCollectedScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      <BackButton title="ย้อนกลับ" /> {/* Back button */}
+     <TouchableOpacity
+      className="flex flex-row ml-6 mt-6 mb-3 items-center"
+      onPress={() => router.back()}
+     >
+      <Image 
+       className="w-8 h-8 mr-3"
+       source={require("../../../assets/arrow-circle-left.png")}
+      />
+      <Text className="font-sans text-body text-secondary">
+       ย้อนกลับ
+      </Text>
+     </TouchableOpacity>
+      
       <ScrollView className="mb-24">
         {/* Regular medicines section */}
         <Card>
@@ -184,7 +212,7 @@ export default function MedicineCollectedScreen() {
                 className="w-8 h-8 rounded-lg ml-2"
               />
               <View className="ml-2 flex-1">
-                <Text className="font-sans text-description font-semibold">{medicine.name}</Text>
+              <Text className="font-sans text-description font-semibold">{String(medicine.name)}</Text>
               </View>
               <Text className="font-sans text-button font-bold text-primary">ดูรายละเอียด</Text>
             </TouchableOpacity>
@@ -212,7 +240,8 @@ export default function MedicineCollectedScreen() {
                   className="w-8 h-8 rounded-lg ml-2"
                 />
                 <View className="ml-2 flex-1">
-                  <Text className="font-sans text-description font-semibold">{medicine.name}</Text>
+   
+                  <Text className="font-sans text-description font-semibold">{String(medicine.name)}</Text>
                 </View>
                 <View className="flex-row items-center">
                   <TouchableOpacity onPress={() => handleEditMedicine(medicine)} className="mr-3">
@@ -229,11 +258,9 @@ export default function MedicineCollectedScreen() {
               </TouchableOpacity>
             ))
           ) : (
-            <Text className="text-button text-card font-sans text-center text-gray mt-2">
-              ยังไม่มียาเพิ่มเติม
-            </Text>
+            <Text className="text-button text-card font-sans text-center text-gray mt-2">ยังไม่มียาเพิ่มเติม</Text>
           )}
-
+ 
           <TouchableOpacity className="bg-primary rounded-xl py-4 px-8 mt-4" onPress={handleAddMedicine}>
             <Text className="font-sans text-button font-bold text-card text-center text-white">เพิ่มยาใหม่</Text>
           </TouchableOpacity>
@@ -253,3 +280,4 @@ export default function MedicineCollectedScreen() {
     </SafeAreaView>
   );
 }
+

@@ -15,10 +15,10 @@ interface MoodSelecterProps {
 const moods = [
   { id: 'laughing', icon: require("../../../../assets/Tracking/mood-laughing.png"), label: 'หัวเราะ' },
   { id: 'happy', icon: require("../../../../assets/Tracking/mood-happy.png"), label: 'ความสุข' },
-  { id: 'impassive', icon: require("../../../../assets/Tracking/mood-impassive.png"), label: 'เฉยๆ' },
-  { id: 'frustrated', icon: require("../../../../assets/Tracking/mood-frustrated.png"), label: 'หงุดหงิด' },
-  { id: 'ill', icon: require("../../../../assets/Tracking/mood-ill.png"), label: 'ป่วย' },
-  { id: 'sad', icon: require("../../../../assets/Tracking/mood-sad.png"), label: 'เศร้า' },
+  { id: 'neutral', icon: require("../../../../assets/Tracking/mood-neutral.png"), label: 'เฉยๆ' },
+  { id: 'irritated', icon: require("../../../../assets/Tracking/mood-irritated.png"), label: 'หงุดหงิด' },
+  { id: 'sick', icon: require("../../../../assets/Tracking/mood-sick.png"), label: 'ป่วย' },
+  { id: 'crying', icon: require("../../../../assets/Tracking/mood-crying.png"), label: 'เศร้า' },
   { id: 'angry', icon: require("../../../../assets/Tracking/mood-angry.png"), label: 'โกรธ' },
 ];
 
