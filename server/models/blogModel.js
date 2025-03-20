@@ -12,7 +12,7 @@ const blogSchema = new mongoose.Schema({
     },
     image: {
         type: String, // URL หรือ path ของรูปภาพ
-        required: false
+        default: null
     },
     date: {
         type: Date,

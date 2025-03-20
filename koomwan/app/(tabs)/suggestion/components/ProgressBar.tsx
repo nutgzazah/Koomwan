@@ -8,7 +8,7 @@ interface ProgressBarProps {
 const ProgressBar: React.FC<ProgressBarProps> = ({ progress }) => {
   return (
     <View
-      className="bg-background h-6 w-2/4 rounded mx-auto mt2"
+      className="bg-background h-6 w-3/4 rounded mx-auto mt2"
       style={{ borderWidth: 1, borderColor: "#007bff" }} 
     >
       <View

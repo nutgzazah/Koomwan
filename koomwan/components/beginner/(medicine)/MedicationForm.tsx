@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,11 @@ import BreakLine from "../../../global/components/BreakLine";
 import BackButton from "../../../global/components/BackButton";
 import MedDropdown from "./MedDropdown";
 import { MEDICATION_TYPES } from "../../../constant/medication";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import BASE_URL from "../../../config";
+import ImageUploader from "../../../global/components/ImageUploader";
+import ImageUploaderWithPreview from "../../../global/components/ImageUploader";
 
 type ImagePickerResult = {
   canceled: boolean;
@@ -28,52 +33,88 @@ type ImagePickerResult = {
   }[];
 };
 
-// Simulated API service
-const api = {
-  uploadImage: async (uri: string) => {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Simulate success/failure (80% success rate)
-    if (Math.random() > 0.2) {
-      return { success: true, imageUrl: uri };
-    }
-    throw new Error("Failed to upload image");
-  },
-
-  addMedication: async (data: {
-    name: string;
-    type?: string;
-    description?: string;
-    imageUrl?: string;
-  }) => {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // Simulate success/failure (90% success rate)
-    if (Math.random() > 0.1) {
-      return { success: true, data };
-    }
-    throw new Error("Failed to add medication");
-  },
-};
-
 export default function MedicationForm() {
   const { reminderFormat } = useLocalSearchParams();
-  const [pill_name, setPillName] = useState("");
-  const [pill_type, setPillType] = useState("");
-  const [pill_description, setPillDescription] = useState("");
-  const [pill_image, setPillImage] = useState<string | null>(null);
+  const [pillName, setPillName] = useState("");
+  const [pillType, setPillType] = useState("");
+  const [pillDescription, setPillDescription] = useState("");
+  const [pillImage, setPillImage] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [localImageUri, setLocalImageUri] = useState<string | null>(null);
+  const [reminderTimes, setReminderTimes] = useState<string[]>(
+    reminderFormat ? [reminderFormat as string] : []
+  );
 
   // Loading states
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  {
-    /* สำหรับอัพโหลดภาพ */
-  }
+
   const pathname = usePathname();
-  console.log("Current Path:"+pathname)
+  console.log("Current Path:" + pathname);
+  console.log("Reminder Format:", reminderFormat);
+
+  useEffect(() => {
+    if (reminderFormat && !reminderTimes.includes(reminderFormat as string)) {
+      setReminderTimes([...reminderTimes, reminderFormat as string]);
+    }
+  }, [reminderFormat]);
+
+  const uploadImageToServer = async (imageUri: string) => {
+    try {
+      setIsUploadingImage(true);
+
+      // ดึง auth token
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        Alert.alert("Session Expired", "Please login again");
+        router.push("/user/login");
+        return null;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // สร้าง FormData
+      const formData = new FormData();
+
+      // เพิ่มไฟล์รูปภาพ
+      const filename = imageUri.split("/").pop();
+      const match = /\.(\w+)$/.exec(filename || "");
+      const type = match ? `image/${match[1]}` : `image`;
+
+      formData.append("file", {
+        uri: imageUri,
+        type,
+        name: filename,
+      } as any);
+
+      // เพิ่ม folder ที่จะอัปโหลด
+      formData.append("folder", "pill-images");
+
+      // ส่งไปที่ API อัปโหลดรูปภาพ
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/storage/uploadFile`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data && response.data.R2filePath) {
+        return response.data.R2filePath;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return null;
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   const handleImageUpload = async () => {
     try {
@@ -93,22 +134,20 @@ export default function MedicationForm() {
         mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [2, 1],
-        quality: 0.8,
+        quality: 0.6,
       })) as ImagePickerResult;
 
       if (!result.canceled && result.assets[0]) {
-        setIsUploadingImage(true);
-        try {
-          // Simulate API upload
-          const response = await api.uploadImage(result.assets[0].uri);
-          setPillImage(response.imageUrl);
-        } catch (error) {
+        // อัปโหลดรูปภาพไปยังเซิร์ฟเวอร์
+        const imageUrl = await uploadImageToServer(result.assets[0].uri);
+        if (imageUrl) {
+          setPillImage(imageUrl);
+        } else {
           Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถอัพโหลดรูปภาพได้");
-        } finally {
-          setIsUploadingImage(false);
         }
       }
     } catch (error) {
+      console.error("Error selecting image:", error);
       Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถเลือกรูปภาพได้");
     }
   };
@@ -130,22 +169,20 @@ export default function MedicationForm() {
         mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [2, 1],
-        quality: 0.8,
+        quality: 0.6,
       })) as ImagePickerResult;
 
       if (!result.canceled && result.assets[0]) {
-        setIsUploadingImage(true);
-        try {
-          // Simulate API upload
-          const response = await api.uploadImage(result.assets[0].uri);
-          setPillImage(response.imageUrl);
-        } catch (error) {
+        // อัปโหลดรูปภาพไปยังเซิร์ฟเวอร์
+        const imageUrl = await uploadImageToServer(result.assets[0].uri);
+        if (imageUrl) {
+          setPillImage(imageUrl);
+        } else {
           Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถอัพโหลดรูปภาพได้");
-        } finally {
-          setIsUploadingImage(false);
         }
       }
     } catch (error) {
+      console.error("Error taking photo:", error);
       Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถถ่ายรูปได้");
     }
   };
@@ -196,13 +233,7 @@ export default function MedicationForm() {
     setPillType(selectedType);
     setIsDropdownOpen(false);
   };
-  //ปุ่ม กลับ
-  const handleBack = () => {
-    if (isSubmitting) {
-      return; // Prevent navigation while submitting
-    }
-    router.back();
-  };
+
   //ปุ่ม เพิ่มยา
   const handleAddMedication = async () => {
     if (isSubmitting) {
@@ -210,32 +241,89 @@ export default function MedicationForm() {
     }
 
     // Validation
-    if (!pill_name.trim()) {
+    if (!pillName.trim()) {
       Alert.alert("กรุณากรอกชื่อยา", "ชื่อยาไม่สามารถเว้นว่างได้");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Prepare data
+      // ดึง auth token
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        Alert.alert("Session Expired", "Please login again");
+        router.push("/user/login");
+        return;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+      const userId = auth.user._id;
+
+      // ดึง healthInfoId ของผู้ใช้
+      const userResponse = await axios.get(
+        `${BASE_URL}/api/v1/user/profile/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!userResponse.data.success || !userResponse.data.user.healthinfo) {
+        throw new Error("ไม่พบข้อมูลสุขภาพของผู้ใช้");
+      }
+
+      const healthInfoId = userResponse.data.user.healthinfo._id;
+
+      // Check if there's a local image to upload
+      let finalImagePath = pillImage;
+
+      if (localImageUri) {
+        // upload the image
+        const uploadedImagePath = await uploadImageToServer(localImageUri);
+        if (uploadedImagePath) {
+          finalImagePath = uploadedImagePath;
+        } else {
+          // Only show warning, don't block submission
+          console.warn("Failed to upload image, proceeding without image");
+        }
+      }
+
+      // เตรียมข้อมูล
       const medicationData = {
-        name: pill_name.trim(),
-        type: pill_type || undefined,
-        description: pill_description.trim() || undefined,
-        imageUrl: pill_image || undefined,
+        pillName: pillName.trim(),
+        pillType: pillType || "",
+        description: pillDescription.trim() || "",
+        pillImage: finalImagePath || null,
+        reminderTimes: reminderTimes,
       };
 
-      // Simulate API call
-      await api.addMedication(medicationData);
-
-      // Show success message
-      Alert.alert("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", [
+      // ส่งข้อมูลไปยัง API
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}/add-pill`,
+        medicationData,
         {
-          text: "ตกลง",
-          onPress: () => router.back(), //แก้ไขกลับไปหน้า medInput ด้วย
-        },
-      ]);
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // แสดงข้อความสำเร็จ
+        Alert.alert("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", [
+          {
+            text: "ตกลง",
+            onPress: () => router.back(),
+          },
+        ]);
+      } else {
+        throw new Error(response.data.message || "ไม่สามารถเพิ่มข้อมูลยาได้");
+      }
     } catch (error) {
+      console.error("Error adding medication:", error);
       Alert.alert(
         "เกิดข้อผิดพลาด",
         "ไม่สามารถเพิ่มข้อมูลยาได้ กรุณาลองใหม่อีกครั้ง"
@@ -243,6 +331,12 @@ export default function MedicationForm() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleRemoveReminder = (index: number) => {
+    const updatedReminders = [...reminderTimes];
+    updatedReminders.splice(index, 1);
+    setReminderTimes(updatedReminders);
   };
 
   return (
@@ -262,46 +356,13 @@ export default function MedicationForm() {
             <BreakLine />
 
             {/* Image Upload */}
-            <TouchableOpacity
-              onPress={pill_image ? handleRemoveImage : showImageOptions}
-              disabled={isUploadingImage}
-              className="w-full h-[150px] aspect-[2/1] bg-background rounded-lg items-center justify-center border border-gray relative"
-            >
-              {isUploadingImage ? (
-                <View className="items-center">
-                  <ActivityIndicator size="large" color="#3972F0" />
-                  <Text className="text-description text-gray font-regular mt-2">
-                    กำลังอัพโหลด...
-                  </Text>
-                </View>
-              ) : pill_image ? (
-                <>
-                  <Image
-                    source={{ uri: pill_image }}
-                    className="w-full h-[150px] p-1 "
-                    resizeMode="contain"
-                  />
-                  <View className="absolute top-4 right-4 bg-black bg-opacity-50 rounded-full p-2">
-                    <Image
-                      source={require("../../../assets/BeginnerSetup/trash.png")}
-                      className="w-5 h-5"
-                      resizeMode="contain"
-                    />
-                  </View>
-                </>
-              ) : (
-                <View className="items-center">
-                  <Image
-                    source={require("../../../assets/BeginnerSetup/add-image.png")}
-                    className="w-16 h-16 mb-2"
-                    resizeMode="contain"
-                  />
-                  <Text className="text-description text-gray font-regular">
-                    เพิ่มรูปภาพ
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
+            <ImageUploaderWithPreview
+              imageUrl={pillImage}
+              setImageUrl={setPillImage}
+              localImage={localImageUri}
+              setLocalImage={setLocalImageUri}
+              disabled={isSubmitting}
+            />
 
             {/* Name Input */}
             <View className="mt-4 w-full">
@@ -309,7 +370,7 @@ export default function MedicationForm() {
                 ชื่อยา
               </Text>
               <TextInput
-                value={pill_name}
+                value={pillName}
                 onChangeText={setPillName}
                 placeholder="ชื่อยา"
                 className="w-full bg-background border border-gray rounded p-3 px-4 text-description font-regular h-12"
@@ -323,7 +384,7 @@ export default function MedicationForm() {
                 ประเภท (Optional)
               </Text>
               <MedDropdown
-                value={pill_type}
+                value={pillType}
                 options={MEDICATION_TYPES}
                 onSelect={handleSelectType}
                 disabled={isSubmitting}
@@ -336,7 +397,7 @@ export default function MedicationForm() {
                 รายละเอียด (Optional)
               </Text>
               <TextInput
-                value={pill_description}
+                value={pillDescription}
                 onChangeText={setPillDescription}
                 placeholder="เพิ่มรายละเอียดเกี่ยวกับยา"
                 multiline
@@ -347,21 +408,70 @@ export default function MedicationForm() {
               />
             </View>
 
-            {/* Medicine Noti */}
-            <View className="mt-4 mb-4 flex-row">
-              <Text className="text-description text-secondary font-regular mb-2">
-                แจ้งเตือนการใช้ยา (Optional)
-              </Text>
-              <TouchableOpacity
-                className="items-center"
-                onPress={() => router.push("user/medNoti")}
-              >
-                <Image
-                  source={require("../../../assets/BeginnerSetup/add.png")}
-                  className="w-8 h-8 ml-1"
-                />
-              </TouchableOpacity>
-            </View>
+            {/* Medicine Notification Display */}
+            {reminderTimes.length > 0 && (
+              <View className="mt-4 mb-4 w-full items-center">
+                <View className=" flex-row items-center">
+                  <Text className="text-description text-secondary font-regular mb-2">
+                    แจ้งเตือนการใช้ยา (Optional)
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => router.push("/user/medNoti")}
+                  >
+                    <Image
+                      source={require("../../../assets/BeginnerSetup/add.png")}
+                      className="w-8 h-8 ml-1"
+                    />
+                  </TouchableOpacity>
+                </View>
+                <View className="w-full bg-background border border-gray rounded p-2 px-4 mt-2">
+                  {reminderTimes.map((time, index) => (
+                    <View
+                      key={index}
+                      className="py-1 flex-row items-center justify-between"
+                    >
+                      <View className="flex-row">
+                        <Image
+                          source={require("../../../assets/BeginnerSetup/clock.png")}
+                          className="w-5 h-5 mr-2"
+                        />
+                        <Text className="text-description text-secondary font-regular">
+                          {time.replace("/", " เวลา ")}
+                        </Text>
+                      </View>
+                      <View>
+                        <TouchableOpacity
+                          onPress={() => handleRemoveReminder(index)}
+                        >
+                          <Image
+                            source={require("../../../assets/Profile/eraser.png")}
+                            className="w-5 h-5"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Medicine Noti Button - Only show if no reminders */}
+            {reminderTimes.length === 0 && (
+              <View className="mt-4 mb-4 flex-row items-center">
+                <Text className="text-description text-secondary font-regular">
+                  แจ้งเตือนการใช้ยา (Optional)
+                </Text>
+                <TouchableOpacity
+                  className="items-center ml-2"
+                  onPress={() => router.push("/user/medNoti")}
+                >
+                  <Image
+                    source={require("../../../assets/BeginnerSetup/add.png")}
+                    className="w-8 h-8"
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
           </Card>
         </ScrollView>
 
