@@ -40,7 +40,8 @@ type Post = {
   createdAt: string;
   posttime: string;
   doctorImage: string;
-  doctorName: string;
+  doctorName: string; 
+  postId: string;
   
 };
 
@@ -53,13 +54,24 @@ export default function ForumScreen() {
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [currentFilterChoice]);
 
   const fetchPosts = async () => {
   try {
     const response = await axios.get<Post[]>(`${BASE_URL}/api/v1/forum/getAllPost`);
-    const postsData = response.data;
+    let postsData = response.data;
     
+     // กรองโพสต์เฉพาะภายใน 1 เดือนที่ผ่านมา
+     const oneMonthAgo = new Date();
+     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+ 
+     postsData = postsData.filter((post) => new Date(post.createdAt) >= oneMonthAgo);
+ 
+     // เรียงลำดับโพสต์ตามไลค์ ถ้าเลือก "ยอดนิยม"
+     if (currentFilterChoice === 2) {
+       postsData.sort((a, b) => b.likes.count - a.likes.count);
+     }
+
     // ดึง URL สำหรับรูปภาพโพสต์และโปรไฟล์ของผู้ใช้
     const urls = await Promise.all(
       postsData.map(async (post) => {
@@ -105,7 +117,6 @@ export default function ForumScreen() {
             } else {
               // Fallback to fetching the image URL if not a local avatar
               doctorImageUrl = await getImageUrl(doctorResponse.data.image);
-              console.log(doctorImageUrl)
             }
           }
         }
@@ -116,6 +127,7 @@ export default function ForumScreen() {
           userImage: userImageUrl,
           doctorImage: doctorImageUrl,
           doctorName: doctorName,
+          postId: post._id,
         };
       })
     );
@@ -128,6 +140,7 @@ export default function ForumScreen() {
       doctorImage: urls.find((item) => item._id === post._id)?.doctorImage || null,
       doctorName: urls.find((item) => item._id === post._id)?.doctorName || null,
       posttime: post.createdAt, // 🟢 ใช้ createdAt เป็น posttime
+      postId: post._id, // Add postId
     }));
 
       setPosts(postsWithImages);
@@ -196,6 +209,7 @@ export default function ForumScreen() {
             posts.map((post) => (
               <ForumCard
                 key={post._id}
+                postId={post.postId}  // Pass postId
                 {...(post.imageUrl ? { imageContent: { uri: post.imageUrl } } : {})} // ส่ง imageContent เฉพาะที่มีค่า
                 like={post.likes.count}
                 comments={post.comments.length}
@@ -220,6 +234,7 @@ export default function ForumScreen() {
                 content={post.title}
                 viewComments={false}
                 posttime={post.posttime} // 🟢 ส่ง posttime ไปยัง ForumCard
+                
               />
             ))
             

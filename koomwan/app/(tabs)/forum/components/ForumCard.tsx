@@ -33,6 +33,7 @@ interface forumCardProps {
     content: string
     viewComments: boolean
     posttime: string
+    postId: string; 
 }
 
 const formatPostTime = (posttime: string): string => {
@@ -42,6 +43,7 @@ const formatPostTime = (posttime: string): string => {
     const diffHours = now.diff(postDate, "hour");
     const diffDays = now.diff(postDate, "day");
     const diffWeeks = now.diff(postDate, "week");
+
   
     if (diffMinutes < 1) return "เมื่อสักครู่";
     if (diffMinutes < 60) return `${diffMinutes} นาทีที่แล้ว`;
@@ -61,6 +63,7 @@ export default function ForumCard({
     content,
     viewComments,
     posttime,
+    postId,
 }: forumCardProps) {
     const [likes, setLikes] = useState(like);
     const [isLike, setIsLike] = useState(false);
@@ -151,7 +154,7 @@ export default function ForumCard({
                     </View>
                 </View>
                 {comments !== 0 && !viewComments &&
-                    <CommentTrigger />
+                    <CommentTrigger postId={postId} />
                 }
                 {comments === 0 && !viewComments && 
                     <NoCommentsBox />
@@ -178,11 +181,14 @@ export default function ForumCard({
         </Pressable>;
     }
 
-    function CommentTrigger(): React.ReactNode {
+    function CommentTrigger({ postId }: { postId: string }): React.ReactNode {
         return <>
             <BreakLine />
             <View className="w-full ml-5">
-                <Pressable onPress={() => router.push("/forum/post/1", { relativeToDirectory: false })}>
+                <Pressable onPress={() => router.push({
+                    pathname: `/forum/post/${postId}`,
+                    params: { postId: postId },  // Add the postId as a parameter
+                })}>
                     <Text className="font-sans text-tag">การตอบกลับ ({comments})</Text>
                 </Pressable>
                 {doctorName && (

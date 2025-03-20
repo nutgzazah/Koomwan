@@ -70,6 +70,21 @@ exports.getAllPost = async (req, res) => {
     }
 };
 
+exports.getPostById = async (req, res) => {
+    try {
+        const { id } = req.params; // รับค่า id จาก URL parameters
+        const post = await Forum.findById(id).populate('postedBy', 'username image');
+        
+        if (!post) {
+            return res.status(404).json({ error: "Post not found "+id });
+        }
+        
+        res.status(200).json(post);
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error", details: error.message });
+    }
+};
+
 // Get all forums created by the authenticated user
 exports.getMyForum = async (req, res) => {
     try {
