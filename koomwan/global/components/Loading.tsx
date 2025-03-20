@@ -3,7 +3,7 @@ import { SafeAreaView, Text, View, Image } from "react-native";
 
 const Loading = () => {
   return (
-    <SafeAreaView className="flex-1 bg-background justify-center items-center">
+    <SafeAreaView className="flex-1 bg-white justify-center items-center">
       {/* <Image
         source={require("../../assets/koomwan2.png")}
         className="w-24 h-24 mb-4"
