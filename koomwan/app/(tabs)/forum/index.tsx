@@ -22,6 +22,8 @@ const defaultUserAvatar01 = require("../../../assets/Avatars/koomwanAvatar01.png
 const defaultUserAvatar02 = require("../../../assets/Avatars/koomwanAvatar02.png");
 const defaultUserAvatar03 = require("../../../assets/Avatars/koomwanAvatar03.png");
 const defaultUserAvatar04 = require("../../../assets/Avatars/koomwanAvatar04.png");
+const defaultDoctorAvatar01 = require("../../../assets/Avatars/koomwanDoctorAvatar01.png");
+const defaultDoctorAvatar02 = require("../../../assets/Avatars/koomwanDoctorAvatar02.png");
 
 type Post = {
   _id: string;
@@ -35,6 +37,11 @@ type Post = {
     image: string;  // เพิ่มฟิลด์รูปโปรไฟล์ของ user
   };
   userImage: string | null; // เก็บ URL รูปโปรไฟล์ของผู้ใช้
+  createdAt: string;
+  posttime: string;
+  doctorImage: string;
+  doctorName: string;
+  
 };
 
 export default function ForumScreen() {
@@ -62,18 +69,44 @@ export default function ForumScreen() {
 
         let userImageUrl = null;
           if (post.postedBy?.image) {
-          // Checking if the user image is one of the local avatar files
-          if (
-            post.postedBy.image === "koomwanAvatar01.png" ||
-            post.postedBy.image === "koomwanAvatar02.png" ||
-            post.postedBy.image === "koomwanAvatar03.png" ||
-            post.postedBy.image === "koomwanAvatar04.png"
-          ) {
-            // Set the local path for the avatar image
-            userImageUrl = post.postedBy.image;
-          } else {
-            // Fallback to fetching the image URL if not a local avatar
-            userImageUrl = await getProfileImageUrl(post.postedBy.image, "user");
+            // Checking if the user image is one of the local avatar files
+            if (
+              post.postedBy.image.startsWith("koomwanAvatar")
+            ) {
+              // Set the local path for the avatar image
+              userImageUrl = post.postedBy.image;
+            } else {
+              // Fallback to fetching the image URL if not a local avatar
+              userImageUrl = await getProfileImageUrl(post.postedBy.image, "user");
+            }
+          }
+
+        // หาคอมเมนต์ล่าสุดที่เป็นของ Doctor
+        const latestDoctorComment = [...post.comments]
+          .reverse()
+          .find((comment) => comment.commenterModel === "Doctor");
+
+        let doctorImageUrl = null;
+        let doctorName = null;
+
+        if (latestDoctorComment) {
+          const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string }>(
+            `${BASE_URL}/api/v1/forum/getDoctorInfo`,
+            { params: { doctorId: latestDoctorComment.commenter } }
+          );
+
+          doctorName = doctorResponse.data.firstname+" "+doctorResponse.data.lastname;
+          if (doctorResponse.data?.image) {
+            if (
+            doctorResponse.data.image.startsWith("koomwanDoctorAvatar")
+            ) {
+              // Set the local path for the avatar image
+              doctorImageUrl = doctorResponse.data.image;
+            } else {
+              // Fallback to fetching the image URL if not a local avatar
+              doctorImageUrl = await getImageUrl(doctorResponse.data.image);
+              console.log(doctorImageUrl)
+            }
           }
         }
 
@@ -81,6 +114,8 @@ export default function ForumScreen() {
           _id: post._id,
           imageUrl,
           userImage: userImageUrl,
+          doctorImage: doctorImageUrl,
+          doctorName: doctorName,
         };
       })
     );
@@ -90,6 +125,9 @@ export default function ForumScreen() {
       ...post,
       imageUrl: urls.find((item) => item._id === post._id)?.imageUrl || null,
       userImage: urls.find((item) => item._id === post._id)?.userImage || null,
+      doctorImage: urls.find((item) => item._id === post._id)?.doctorImage || null,
+      doctorName: urls.find((item) => item._id === post._id)?.doctorName || null,
+      posttime: post.createdAt, // 🟢 ใช้ createdAt เป็น posttime
     }));
 
       setPosts(postsWithImages);
@@ -171,10 +209,17 @@ export default function ForumScreen() {
                   ) : defaultUserAvatar01 // 🟢 ใช้รูป local ถ้า user ไม่มีรูป
                 }
                 userName={post.postedBy?.username || "ไม่ระบุชื่อ"}
-                doctorImage={{ uri: "https://your-cdn.com/default-doctor.png" }}
-                doctorName={"แพทย์ไม่ระบุชื่อ"} // หาก API ไม่มีข้อมูลแพทย์ ต้องแก้ไขตรงนี้
+                doctorImage={
+                  post.doctorImage ? (
+                    post.doctorImage === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
+                    post.doctorImage === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
+                  { uri: post.doctorImage } 
+                ) : defaultDoctorAvatar01
+              }
+                doctorName={post.doctorName || "แพทย์ไม่ระบุชื่อ"}
                 content={post.title}
                 viewComments={false}
+                posttime={post.posttime} // 🟢 ส่ง posttime ไปยัง ForumCard
               />
             ))
             

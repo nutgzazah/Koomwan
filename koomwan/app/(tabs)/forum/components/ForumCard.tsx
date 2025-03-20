@@ -13,6 +13,15 @@ import { useRouter } from "expo-router";
 import PopupScreen from "../../../../global/components/PopupScreen";
 import DoctorIcon from "./DoctorIcon";
 
+import dayjs from "dayjs";
+import "dayjs/locale/th";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
+dayjs.locale("th");
+
+const defaultUserAvatar01 = require("../../../../assets/Avatars/koomwanAvatar01.png");
+
 interface forumCardProps {
     imageContent?: string | ImageSourcePropType | undefined; // รองรับทั้ง URL หรือไฟล์ท้องถิ่น
     like: number
@@ -23,7 +32,23 @@ interface forumCardProps {
     doctorName: string
     content: string
     viewComments: boolean
+    posttime: string
 }
+
+const formatPostTime = (posttime: string): string => {
+    const postDate = dayjs(posttime);
+    const now = dayjs();
+    const diffMinutes = now.diff(postDate, "minute");
+    const diffHours = now.diff(postDate, "hour");
+    const diffDays = now.diff(postDate, "day");
+    const diffWeeks = now.diff(postDate, "week");
+  
+    if (diffMinutes < 1) return "เมื่อสักครู่";
+    if (diffMinutes < 60) return `${diffMinutes} นาทีที่แล้ว`;
+    if (diffHours < 24) return `${diffHours} ชั่วโมงที่แล้ว`;
+    if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
+    return postDate.format("D MMMM ") + (postDate.year() + 543);
+  };
 
 export default function ForumCard({
     imageContent,
@@ -35,6 +60,7 @@ export default function ForumCard({
     doctorName,
     content,
     viewComments,
+    posttime,
 }: forumCardProps) {
     const [likes, setLikes] = useState(like);
     const [isLike, setIsLike] = useState(false);
@@ -80,7 +106,7 @@ export default function ForumCard({
                         >
                             {userName}
                         </Text>
-                        <Text className="font-sans text-tag">10 นาทีที่แล้ว</Text>
+                        <Text className="font-sans text-tag">{formatPostTime(posttime)}</Text>
                     </View>
                     <View className="ml-7 w-10">
                         <Pressable

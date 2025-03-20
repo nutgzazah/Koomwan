@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Forum = require('../models/forumModel'); // นำเข้า Forum Model
 const User = require('../models/userModel'); // นำเข้า User Model
+const Doctor = require('../models/doctorModel'); // นำเข้า Doctor Model
 const { uploadToR2v2, deleteFromR2 } = require('../Services/uploadService');
 
 // Create a new forum post
@@ -34,11 +35,35 @@ exports.createForumPost = async (req, res) => {
     }
 };
 
+// ดึงโพสต์ทั้งหมด
+exports.getDoctorInfo = async (req, res) => {
+    try {
+        const { doctorId } = req.query;
+    
+        if (!doctorId) {
+          return res.status(400).json({ error: "Doctor ID is required" });
+        }
+    
+        const doctor = await Doctor.findById(doctorId).select("firstname lastname image");
+    
+        if (!doctor) {
+          return res.status(404).json({ error: "Doctor not found" });
+        }
+    
+        res.status(200).json({ firstname: doctor.firstname,lastname: doctor.lastname, image: doctor.image });
+      } catch (error) {
+        console.error("Error fetching doctor info:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
+};
+
+
 
 // ดึงโพสต์ทั้งหมด
 exports.getAllPost = async (req, res) => {
     try {
-        const posts = await Forum.find().populate('postedBy', 'username image').sort({ createdAt: -1 });
+        const posts = await Forum.find().populate('postedBy', 'username image')
+        .sort({ createdAt: -1 });
         res.status(200).json(posts);
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error", details: error.message });

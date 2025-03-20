@@ -55,7 +55,12 @@ const doctorSchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        required: true
+        required: true,
+        default: () => {
+            const avatars = ['koomwanDoctorAvatar01.png', 'koomwanDoctorAvatar02.png'];
+            const randomIndex = Math.floor(Math.random() * avatars.length);
+            return avatars[randomIndex];
+        }
     },
     approval: {
         status: {
