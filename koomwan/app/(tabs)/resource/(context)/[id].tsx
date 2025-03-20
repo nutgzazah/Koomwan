@@ -46,33 +46,33 @@ function ArticleStructure({
 }: Blog) {
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  
+
   useEffect(() => {
     async function fetchImage() {
-        try {
-            const [folder, fileName] = image.includes("/") ? image.split("/") : ["blogImage", image];
-            
-            console.log(`Fetching image URL from: ${BASE_URL}/api/v1/storage/getFileUrl?fileName=${fileName}&folder=${folder}`);
-            
-            const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
-                params: { fileName, folder },
-                headers: { "Cache-Control": "no-cache" },
-            });
-            
-            console.log("Image URL fetched:", response.data);
-            
-            setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${image}`);
-        } catch (error) {
-            console.error("Error fetching image URL:", error);
-            setImageUrl("");
-        }
+      try {
+        const [folder, fileName] = image.includes("/") ? image.split("/") : ["blogImage", image];
+
+        console.log(`Fetching image URL from: ${BASE_URL}/api/v1/storage/getFileUrl?fileName=${fileName}&folder=${folder}`);
+
+        const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
+          params: { fileName, folder },
+          headers: { "Cache-Control": "no-cache" },
+        });
+
+        console.log("Image URL fetched:", response.data);
+
+        setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${image}`);
+      } catch (error) {
+        console.error("Error fetching image URL:", error);
+        setImageUrl("");
+      }
     }
 
     fetchImage();
-}, [image]);
+  }, [image]);
   return (
     <SafeAreaView className="flex-1">
-      <ScrollView 
+      <ScrollView
         className="mb-24"
         showsVerticalScrollIndicator={false}
       >
@@ -81,10 +81,12 @@ function ArticleStructure({
           <Text className="font-sans text-headline text-secondary w-full ml-4">{title}</Text>
           <BreakLine />
           <Text className="font-sans text-tag text-secondary w-full ml-4">{formatDate(new Date(date))}</Text>
-          <View className="mx-4 w-full h-[9.375rem] mb-3">
+          <Text className="font-sans text-tag text-secondary w-full ml-4 mb-3">เขียนโดย : {refs}</Text>
+          <View className="mx-4 w-full min-h-[9.375rem] max-h-[18rem] mb-3">
             <Image
               className="w-full h-full"
               source={{ uri: imageUrl } as ImageSourcePropType}
+              resizeMode="contain"
             />
           </View>
           <Text className="font-sans text-description text-secondary w-full ml-4 pr-4">{content}</Text>
@@ -163,7 +165,7 @@ export default function ArticleContent() {
       image={blogData.image}
       date={blogData.date}
       category={blogData.category}
-      refs={blogData.refs}
+      refs={blogData.ref}
     />
   )
 }
