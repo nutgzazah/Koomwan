@@ -1,6 +1,6 @@
 const express = require('express')
 const { requireSignIn } = require('../controllers/authController')
-const { createForumPost, getAllPost, updatePost, deletePost, toggleLikePost, addComment, deleteComment, reportPost, removeReports, getMyForum } = require('../controllers/forumController')
+const { createForumPost, getAllPost, updatePost, deletePost, toggleLikePost, addComment, deleteComment, reportPost, removeReports, getMyForum, getUsernameAndPicByObjId, getDoctorInfoByObjId, getDoctorInfo, getPostById } = require('../controllers/forumController')
 const multer = require('multer');
 
 // ตั้งค่าอัปโหลดไฟล์ (ใช้หน่วยความจำแทน disk storage)
@@ -17,6 +17,8 @@ const router = express.Router()
 //GETALL POST || GET
 router.get('/getAllPost' , getAllPost)
 router.get('/getMyPost' ,requireSignIn, getMyForum)
+router.get('/getDoctorInfo' , getDoctorInfo)
+router.get('/getPostById/:id' , getPostById)
 
 //CREATE POST || POST
 router.post('/createPost' ,requireSignIn, upload.single('image') , createForumPost)

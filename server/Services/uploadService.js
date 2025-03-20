@@ -24,7 +24,7 @@ module.exports = {
         const randomString = crypto.randomBytes(3).toString('hex');
         const timestamp = Date.now();
         const fileExtension = path.extname(fileName).toLowerCase();
-        const newFileName = `koomwan-${path.basename(fileName, fileExtension)}-${timestamp}-${randomString}${fileExtension}`;
+        const newFileName = `koomwan-${timestamp}-${randomString}${fileExtension}`;
         const key = `${folder}/${newFileName}`;
         const params = {
         Bucket: process.env.R2_BUCKET_NAME,
