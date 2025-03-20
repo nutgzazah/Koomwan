@@ -76,7 +76,7 @@ export default function CommentCard({
 }
 function ContentBox(content: string) {
     return <View className="justify-start flex w-full mt-2">
-        <Text className="font-sans text-tag ml-3 mr-2">
+        <Text className="font-sans text-body ml-3 mr-2">
             {content}
         </Text>
     </View>;

@@ -125,7 +125,7 @@ export default function ForumCard({
                     </View>
                 </View>
                 <View className="justify-start flex w-full mt-4">
-                    <Text className="font-sans text-tag ml-4 mr-2">
+                    <Text className="font-sans text-body ml-4 mr-2">
                         {content}
                     </Text>
                 </View>
