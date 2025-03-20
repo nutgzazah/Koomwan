@@ -5,17 +5,19 @@ import {
     Text,
     ScrollView,
     Pressable,
+    TouchableOpacity,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import BreakLine from "./BreakLine";
 import DropdownChoice from "./DropdownChoice";
 
-interface modalScreenProps {
-    header: string,
-    modalClosePlaceholder: string
-    modalVisible: boolean,
-    setModalVisible: (visible: boolean) => void,
-    choices: string[],
+interface ModalScreenProps {
+    header: string;
+    modalClosePlaceholder: string;
+    modalVisible: boolean;
+    setModalVisible: (visible: boolean) => void;
+    choices: string[];
+    onChoiceSelect: (selectedChoice: string[]) => void;
 }
 
 export default function PopupScreen({
@@ -23,8 +25,24 @@ export default function PopupScreen({
     modalClosePlaceholder,
     modalVisible = false,
     setModalVisible,
-    choices
-}: modalScreenProps) {
+    choices,
+    onChoiceSelect,
+}: ModalScreenProps) {
+    const [selectedChoice, setselectedChoice] = useState<string[]>([]);
+
+    const toggleCategory = (category: string) => {
+        setselectedChoice(prevSelected =>
+            prevSelected.includes(category)
+                ? prevSelected.filter(item => item !== category)
+                : [...prevSelected, category]
+        );
+    };
+
+    const handleApplyFilters = () => {
+        onChoiceSelect(selectedChoice);
+        setModalVisible(false);
+    };
+
     return (
         <Modal
             animationType="slide"
@@ -41,7 +59,7 @@ export default function PopupScreen({
                             {header}
                         </Text>
                         <BreakLine />
-                        <ScrollView 
+                        <ScrollView
                             className="w-full h-52 mb-2"
                             showsVerticalScrollIndicator={false}
                         >
@@ -49,13 +67,15 @@ export default function PopupScreen({
                                 <DropdownChoice
                                     key={index}
                                     choice={choice}
+                                    isSelected={selectedChoice.includes(choice)}
+                                    toggleSelection={() => toggleCategory(choice)}
                                 />
                             ))}
                         </ScrollView>
 
                         <Pressable
                             className="w-[10.5rem] h-12 bg-primary rounded-md justify-center items-center"
-                            onPress={(() => setModalVisible(false))}
+                            onPress={handleApplyFilters}
                         >
                             <Text
                                 className="font-sans text-button text-card"
@@ -67,5 +87,5 @@ export default function PopupScreen({
                 </View>
             </View>
         </Modal>
-    )
+    );
 }
