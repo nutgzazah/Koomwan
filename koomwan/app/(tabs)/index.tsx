@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import BreakLine from "../../global/components/BreakLine";
 import A1Cchart from "../../components/home/A1Cchart";
 import BMI from "../../components/home/BMI";
-import Emotion from "../../components/home/Emotion";
+import Overview from "../../components/home/Overview";
 import BloodSugarStatus from "../../components/home/GluMeter";
 import EmoteDisplay from "../../components/home/Emote";
 import MedicationStatus from "../../components/home/MedStatus";
@@ -47,9 +47,9 @@ export default function HomeScreen() {
 
         <A1Cchart />
         <BMI />
-        <Emotion />
-        <BloodSugarStatus date="วันจันทร์ที่ 2 ธันวาคม" status="risk" />
-        <EmoteDisplay mood="happy" />
+        <Overview />
+        <BloodSugarStatus />
+        <EmoteDisplay />
         <MedicationStatus hasTakenMeds={true} />
         <HealthDashboard />
       </ScrollView>
