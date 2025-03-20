@@ -100,7 +100,11 @@ export default function ForumCard({
             />
             <Card>
                 <View className="flex flex-row justify-evenly items-center">
-                    <Image source={userimage} className="rounded-full w-11 h-10 mr-2 ml-3" />
+                    <Image 
+                    source={userimage}
+                    resizeMode="cover"
+                    onError={() => console.error("Error loading image:", userimage)}
+                    className="rounded-full w-11 h-10 mr-2 ml-3" />
                     <View className="w-64">
                         <Text
                             className="font-sans text-description"
