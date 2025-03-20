@@ -41,7 +41,7 @@ const AddMedicineScreen: React.FC = () => {
   // Permission Required Image From User Gallery
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status == "granted") {
+    if (status !== "granted") {
       Alert.alert("Permission required", "กรุณาอนุญาตให้เข้าถึงรูปภาพ");
       return;
     }

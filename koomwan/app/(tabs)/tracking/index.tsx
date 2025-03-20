@@ -6,7 +6,7 @@ import {
   TouchableOpacity, 
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState} from "react"; 
 import { useRouter } from "expo-router";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import Card from "../../../global/components/Card";
@@ -30,6 +30,7 @@ const formatTime = (date: Date): string => {
 
 export default function TrackingScreen() {
   const router = useRouter();
+  
   const [formData, setFormData] = useState({
     date: "",
     time: "",
@@ -122,15 +123,18 @@ export default function TrackingScreen() {
     }
   };
 
-  // Validation Before Submit
-  const handleSubmit = () => {
+ 
+   // Validation Before Submit
+   const handleSubmit = () => {
     const requiredFields = ["date", "time", "weight", "height"];
     if (requiredFields.some((field) => !formData[field as keyof typeof formData])) {
       Alert.alert("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
-    router.push("./medicineCollected");
-  };
+
+    console.log("Sending Data:", formData); // Debug log
+    router.push({ pathname: "./medicineCollected", params: { formData: JSON.stringify(formData) } });
+  };  
 
   // Date And Time Picker Handle
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
