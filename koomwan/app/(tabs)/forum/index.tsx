@@ -216,7 +216,7 @@ export default function ForumScreen() {
                   { uri: post.doctorImage } 
                 ) : defaultDoctorAvatar01
               }
-                doctorName={post.doctorName || "แพทย์ไม่ระบุชื่อ"}
+                doctorName={post.doctorName || null}
                 content={post.title}
                 viewComments={false}
                 posttime={post.posttime} // 🟢 ส่ง posttime ไปยัง ForumCard

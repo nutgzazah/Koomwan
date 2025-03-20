@@ -215,6 +215,14 @@ exports.addComment = async (req, res) => {
         // ตรวจสอบว่า user เป็นเจ้าของโพสต์หรือไม่
         const isPostOwner = post.postedBy.toString() === userId;
 
+        // ตรวจสอบว่า user เป็นหมอหรือไม่ (ถ้าใช้ `Doctor` collection)
+        const isDoctor = req.auth.role === 'doctor';
+
+        // ถ้าไม่ใช่เจ้าของโพสต์ และไม่ใช่หมอ → ห้ามคอมเมนต์
+        if (!isPostOwner && !isDoctor) {
+            return res.status(403).json({ message: 'You are not allowed to comment on this post' });
+        }
+
         // เพิ่มคอมเมนต์
         const newComment = {
             commenter: userId,

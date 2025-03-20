@@ -153,7 +153,7 @@ export default function ForumCard({
                 {comments !== 0 && !viewComments &&
                     <CommentTrigger />
                 }
-                {comments === 0 && !viewComments &&
+                {comments === 0 && !viewComments && 
                     <NoCommentsBox />
                 }
             </Card>
@@ -185,23 +185,25 @@ export default function ForumCard({
                 <Pressable onPress={() => router.push("/forum/post/1", { relativeToDirectory: false })}>
                     <Text className="font-sans text-tag">การตอบกลับ ({comments})</Text>
                 </Pressable>
-                <View className="flex flex-row items-center mt-4">
-                    <DoctorIcon doctorImage={doctorImage} />
-                    <View>
-                        <Text
-                            className="font-sans text-description"
-                            numberOfLines={1}
-                            ellipsizeMode='tail'
-                        >
-                            {doctorName}
-                        </Text>
-                        <View className="bg-primary rounded-3xl h-6 w-20 items-center">
-                            <Text className="text-white text-tag">
-                                แพทย์
+                {doctorName && (
+                    <View className="flex flex-row items-center mt-4">
+                        <DoctorIcon doctorImage={doctorImage} />
+                        <View>
+                            <Text
+                                className="font-sans text-description"
+                                numberOfLines={1}
+                                ellipsizeMode='tail'
+                            >
+                                {doctorName}
                             </Text>
+                            <View className="bg-primary rounded-3xl h-6 w-20 items-center">
+                                <Text className="text-white text-tag">
+                                    แพทย์
+                                </Text>
+                            </View>
                         </View>
                     </View>
-                </View>
+                )}
             </View>
         </>;
     }
