@@ -56,7 +56,7 @@ export default function CommentCard({
             <Card>
                 <View className="flex flex-row justify-evenly items-center">
                     <Pressable onPress={(() => setModalVisible(true))}>
-                        <DoctorIcon doctorImage={profileImage} />
+                    <DoctorIcon doctorImage={profileImage} verify={!isOwner} />
                     </Pressable>
                     {DoctorNameBox(doctorName, isOwner)}
                 </View>
