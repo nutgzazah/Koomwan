@@ -1,5 +1,10 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, Image, SafeAreaView } from "react-native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
+import BASE_URL from "../../config";
+import Loading from "../../global/components/Loading";
 
 const PillIcon = () => (
   <View className="w-16 h-16 items-center justify-center">
@@ -11,26 +16,105 @@ const PillIcon = () => (
   </View>
 );
 
-const MedicationStatus = ({ hasTakenMeds = false }) => {
+const MedicationStatus = () => {
+  const [loading, setLoading] = useState(true);
+  const [hasTakenMeds, setHasTakenMeds] = useState(false);
+  const [totalMeds, setTotalMeds] = useState(0);
+  const [takenMeds, setTakenMeds] = useState(0);
+
+  const checkMedicationStatus = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch user data from AsyncStorage
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        console.warn("User not logged in");
+        setLoading(false);
+        return;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+      const userId = auth.user._id;
+
+      // Fetch today's medication data
+      const today = new Date().toISOString().split("T")[0];
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/regular-pills/daily/${userId}?date=${today}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Process the response
+      if (response.data.success && response.data.medicationLogs) {
+        let total = 0;
+        let taken = 0;
+
+        response.data.medicationLogs.forEach(
+          (timeGroup: {
+            medications: { isTaken?: boolean; taken?: boolean }[];
+          }) => {
+            timeGroup.medications.forEach(
+              (med: { isTaken?: boolean; taken?: boolean }) => {
+                total++;
+                if (med.isTaken || med.taken) {
+                  taken++;
+                }
+              }
+            );
+          }
+        );
+
+        setTotalMeds(total);
+        setTakenMeds(taken);
+        setHasTakenMeds(total > 0 && total === taken);
+      }
+    } catch (error) {
+      console.error("Error checking medication status:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use useFocusEffect to refresh data when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      checkMedicationStatus();
+    }, [])
+  );
+
+  // Status messages
   const statusText = hasTakenMeds
     ? "ตอนนี้คุณทานยาประจำครบแล้ว!"
-    : "คุณยังไม่ได้ทานยาประจำ";
+    : totalMeds === 0
+    ? "ไม่มียาประจำที่ต้องทานวันนี้"
+    : `คุณยังทานยาไม่ครบ (${takenMeds}/${totalMeds})`;
 
   const subtitleText = hasTakenMeds
     ? "ยินดีด้วย! คุณทานยาประจำตัวครบแล้ว"
-    : "อย่าลืมทานยาประจำตัวของคุณ";
+    : totalMeds === 0
+    ? "ไม่มีรายการยาประจำในวันนี้"
+    : "อย่าลืมทานยาประจำตัวที่เหลือของคุณ";
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <SafeAreaView>
-      <View className="w-full items-center flex-row bg-white p-4 py-8 mb-8 justify-evenly ">
+      <View className="w-full items-center flex-row bg-white p-4 py-8 mb-8 justify-evenly">
         <PillIcon />
 
         <View className="items-center">
-          <Text className="text-description font-regular text-secondary">
+          <Text className="text-body font-regular text-secondary">
             {statusText}
           </Text>
 
-          <Text className="text-tag text-secondary text-center font-regular">
+          <Text className="text-description text-secondary text-center font-regular">
             {subtitleText}
           </Text>
         </View>
