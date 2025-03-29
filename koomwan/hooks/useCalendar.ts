@@ -77,7 +77,7 @@ const isDateInPast = (dateStr: string): boolean => {
 };
 
 /**
- * ฟังก์ชันสำหรับประมวลผลข้อมูลที่ได้จาก API อย่างปลอดภัย
+ * ฟังก์ชันสำหรับประมวลผลข้อมูลที่ได้จาก API 
  * รองรับหลายรูปแบบของข้อมูลที่อาจได้รับจาก API
  */
 const safelyExtractRecords = (response: any): any[] => {
@@ -139,27 +139,63 @@ export const useCalendarData = () => {
         setError("ไม่พบข้อมูลสุขภาพ");
         throw new Error("Health info not found");
       }
+      // วันที่ปัจจุบัน
+    const today = formatDate(new Date());
 
+    try {
+      // เรียก API เพื่อสร้างข้อมูลประวัติย้อนหลังถ้ายังไม่มี
+      await axios.post(
+        `${BASE_URL}/api/v1/regular-pills/generate`,
+        { 
+          userId, 
+          date: today,
+          generateHistory: true // เพิ่มฟิลด์นี้เพื่อขอข้อมูลย้อนหลัง
+        },
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } catch (error) {
+      console.warn("Error ensuring historical medication trackings:", error);
+    }
       // Process the data
       const newMarkedDates: { [key: string]: { marked: boolean; dotColor: string } } = {};
       const newDayData: { [key: string]: DayData } = {};
 
+      // กำหนดช่วงวันที่
+      const daysInPast = 30;    // เก็บข้อมูลย้อนหลัง 30 วัน
+      const daysInFuture = 7;   // เก็บข้อมูลล่วงหน้า 7 วัน
+      
+      const currentDate = new Date();
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - daysInPast);
+      
+      const endDate = new Date(currentDate);
+      endDate.setDate(endDate.getDate() + daysInFuture);
+      
+      // Format dates for API
+      const startDateStr = formatDate(startDate);
+      const endDateStr = formatDate(endDate);
+
       // ทำ Promise.allSettled เพื่อให้ไม่เกิด error ถ้า request ใด request หนึ่งล้มเหลว
-      const [recordsResult, healthInfoResult] = await Promise.allSettled([
-        // Fetch records
+      const [recordsResult, medicationTrackingsResult] = await Promise.allSettled([
+        // Fetch health records
         axios.get(`${BASE_URL}/api/v1/user/getRecord/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
         
-        // Fetch health info to get regular pills
-        axios.get(`${BASE_URL}/api/v1/user/healthinfo/${userHealthInfoId}`, {
+        // Fetch medication trackings
+        axios.get(`${BASE_URL}/api/v1/regular-pills/range/${userId}?startDate=${startDateStr}&endDate=${endDateStr}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
 
-      // ประมวลผลข้อมูล records ถ้าการเรียก API สำเร็จ
+      // ประมวลผลข้อมูล health records ถ้าการเรียก API สำเร็จ
       if (recordsResult.status === 'fulfilled') {
-        // ใช้ฟังก์ชันที่ปรับปรุงเพื่อรองรับหลายรูปแบบข้อมูล
+        // ใช้ฟังก์ชันที่ เพื่อรองรับหลายรูปแบบข้อมูล
         const records = safelyExtractRecords(recordsResult.value.data);
         
         if (records.length === 0) {
@@ -182,7 +218,7 @@ export const useCalendarData = () => {
             newDayData[recordDate] = { medications: [], healthLogs: [] };
           }
 
-          // สร้าง health log
+          // Create health log
           const healthLog: HealthLog = {
             id: record._id,
             time: formatTime(record.recordtime),
@@ -217,140 +253,103 @@ export const useCalendarData = () => {
         console.warn('Failed to fetch records:', recordsResult.reason);
       }
 
-      // ประมวลผลข้อมูล healthInfo ถ้าการเรียก API สำเร็จ
-      let regularPills: any[] = [];
-      if (healthInfoResult.status === 'fulfilled') {
-        const healthInfoData = healthInfoResult.value.data;
+      // ประมวลผลข้อมูล medication trackings ถ้าการเรียก API สำเร็จ
+      if (medicationTrackingsResult.status === 'fulfilled') {
+        const trackingsResponse = medicationTrackingsResult.value.data;
+        /* console.log("Medication trackings response:", JSON.stringify(trackingsResponse)); */
         
-        // ตรวจสอบรูปแบบข้อมูลจาก API
-        if (healthInfoData && healthInfoData.regularpill) {
-          regularPills = healthInfoData.regularpill;
-        } else if (healthInfoData && healthInfoData.healthInfo && healthInfoData.healthInfo.regularpill) {
-          regularPills = healthInfoData.healthInfo.regularpill;
+        if (trackingsResponse && trackingsResponse.success && trackingsResponse.data) {
+          // Merge data from medication trackings
+          const dateData = trackingsResponse.data;
+          
+          // Loop through each date in the response
+          Object.keys(dateData).forEach(dateStr => {
+            // Mark the date in calendar
+            newMarkedDates[dateStr] = { marked: true, dotColor: "#3972F0" };
+            
+            // Initialize day data if needed
+            if (!newDayData[dateStr]) {
+              newDayData[dateStr] = { medications: [], healthLogs: [] };
+            }
+            
+            // Add medication logs with proper field mapping
+            if (dateData[dateStr].medications && dateData[dateStr].medications.length > 0) {
+              // แปลงข้อมูลจาก API เป็นรูปแบบที่ component ต้องการ
+              const mappedMedications = dateData[dateStr].medications.map((medicationLog: any) => {
+                return {
+                  time: medicationLog.time,
+                  medications: medicationLog.medications.map((med: any) => {
+                    return {
+                      id: med.pillId || med.id, 
+                      name: med.pillName || med.name || "ไม่ระบุชื่อยา", 
+                      taken: med.isTaken || med.taken || false, // แปลง isTaken เป็น taken
+                      type: med.type || med.pillType || "",
+                      description: med.description || "",
+                      isPastMedication: isDateInPast(dateStr)
+                    };
+                  })
+                };
+              });
+              
+              newDayData[dateStr].medications = mappedMedications;
+            }
+          });
         } else {
-          console.warn("Could not find regularpill in healthInfo response:", healthInfoData);
+          console.warn("No medication tracking data or unexpected format:", trackingsResponse);
         }
       } else {
-        console.warn('Failed to fetch health info:', healthInfoResult.reason);
+        console.warn('Failed to fetch medication trackings:', medicationTrackingsResult.reason);
       }
 
-      // Process regular pills (for past, today and future days)
-      if (regularPills.length > 0) {
-        // วันที่ย้อนหลัง, วันนี้, และวันในอนาคต
-        const currentDate = new Date();
-        
-        // กำหนดช่วงเวลา
-        const daysInPast = 21;    // เก็บข้อมูลย้อนหลัง 21 วัน
-        const daysInFuture = 7;   // เก็บข้อมูลล่วงหน้า 7 วัน
-        
-        // สร้างช่วงวันที่จะแสดงในปฏิทิน
-        const datesToShow: string[] = [];
-        
-        // เพิ่มวันย้อนหลัง
-        for (let i = daysInPast; i > 0; i--) {
-          const date = new Date(currentDate);
-          date.setDate(date.getDate() - i);
-          datesToShow.push(formatDate(date));
-        }
-        
-        // เพิ่มวันปัจจุบัน
-        datesToShow.push(formatDate(currentDate));
-        
-        // เพิ่มวันในอนาคต
-        for (let i = 1; i <= daysInFuture; i++) {
-          const date = new Date(currentDate);
-          date.setDate(date.getDate() + i);
-          datesToShow.push(formatDate(date));
-        }
-        
-        regularPills.forEach((pill: any) => {
-          if (pill.reminderTimes && pill.reminderTimes.length > 0) {
-            pill.reminderTimes.forEach((reminderTime: string) => {
-              // แยกเวลาและวันที่ต้องแจ้งเตือน
-              let timeStr = '';
-              let dayPattern = '';
-              
-              if (reminderTime.includes('/')) {
-                // รูปแบบ "Everyday/08:00" หรือ "Mon/20:00"
-                const parts = reminderTime.split('/');
-                dayPattern = parts[0].toLowerCase(); // everyday, mon, tue, ...
-                timeStr = parts[1]; // เวลา เช่น 08:00
-              } else {
-                // รูปแบบเวลาอย่างเดียว "08:00"
-                timeStr = reminderTime;
-                dayPattern = 'everyday'; // ถ้าไม่ระบุวัน ถือว่าเป็นทุกวัน
-              }
-              
-              // จัดการนำยาเข้าวันที่ตรงกับรูปแบบที่กำหนด
-              datesToShow.forEach(dateStr => {
-                const date = new Date(dateStr);
-                const dayOfWeek = date.getDay(); // 0 = อาทิตย์, 1 = จันทร์, ...
-                const isPast = isDateInPast(dateStr);
-                
-                // ตรวจสอบว่าวันนี้ตรงกับรูปแบบหรือไม่
-                const shouldShowPill = 
-                  dayPattern === 'everyday' || 
-                  (dayPattern === 'mon' && dayOfWeek === 1) ||
-                  (dayPattern === 'tue' && dayOfWeek === 2) ||
-                  (dayPattern === 'wed' && dayOfWeek === 3) ||
-                  (dayPattern === 'thu' && dayOfWeek === 4) ||
-                  (dayPattern === 'fri' && dayOfWeek === 5) ||
-                  (dayPattern === 'sat' && dayOfWeek === 6) ||
-                  (dayPattern === 'sun' && dayOfWeek === 0);
-                
-                if (shouldShowPill) {
-                  // เตรียมข้อมูลสำหรับวันนี้
-                  if (!newDayData[dateStr]) {
-                    newDayData[dateStr] = { medications: [], healthLogs: [] };
-                    newMarkedDates[dateStr] = { marked: true, dotColor: "#3972F0" };
-                  }
-                  
-                  // จัดการเวลา
-                  const timeDisplay = timeStr.endsWith('น.') ? timeStr : `${timeStr} น.`;
-
-                  // ตรวจสอบว่ามีเวลานี้ในข้อมูลแล้วหรือไม่
-                  // ปรับเพื่อป้องกัน key ซ้ำ
-                  const existingMedicationLogIndex = newDayData[dateStr].medications.findIndex(
-                    log => log.time === timeDisplay
-                  );
-                  
-                  if (existingMedicationLogIndex === -1) {
-                    // ถ้ายังไม่มี ให้สร้างใหม่
-                    const newMedicationLog = {
-                      time: timeDisplay,
-                      medications: [{
-                        id: pill._id,
-                        name: pill.pillName,
-                        taken: false, // ยาประจำเริ่มต้นยังไม่ได้ทาน
-                        type: pill.pillType,
-                        description: pill.description,
-                        isPastMedication: isPast // เพิ่มการระบุว่าเป็นยาในอดีตหรือไม่
-                      }]
-                    };
-                    newDayData[dateStr].medications.push(newMedicationLog);
-                  } else {
-                    // ถ้ามีแล้ว ให้เพิ่มยาในรายการที่มีอยู่
-                    newDayData[dateStr].medications[existingMedicationLogIndex].medications.push({
-                      id: pill._id,
-                      name: pill.pillName,
-                      taken: false,
-                      type: pill.pillType,
-                      description: pill.description,
-                      isPastMedication: isPast
-                    });
-                  }
-                }
-              });
-            });
-          }
-        });
-      }
-
-      // ถ้าไม่มีข้อมูลทั้ง records และ regularPills
-      if (Object.keys(newMarkedDates).length === 0 && Object.keys(newDayData).length === 0) {
-        // แม้ไม่มีข้อมูล แต่ยังต้องสร้างข้อมูลสำหรับวันนี้เพื่อแสดงในปฏิทิน
-        const today = formatDate(new Date());
+      // สร้างข้อมูลสำหรับวันนี้ถ้ายังไม่มี
+      if (!newDayData[today]) {
         newDayData[today] = { medications: [], healthLogs: [] };
+      }
+
+      // ดึงรายการติดตามยาสำหรับวันนี้เพื่อให้แน่ใจว่ามีข้อมูลล่าสุด
+      try {
+        // ทำให้แน่ใจว่ามีรายการติดตามสำหรับวันนี้
+        await axios.post(
+          `${BASE_URL}/api/v1/regular-pills/generate`,
+          { userId, date: today },
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        // ดึงข้อมูลสำหรับวันนี้อีกครั้ง
+        const todayTrackingsResponse = await axios.get(
+          `${BASE_URL}/api/v1/regular-pills/daily/${userId}?date=${today}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        
+        if (todayTrackingsResponse.data.success && todayTrackingsResponse.data.medicationLogs) {
+          // แปลงข้อมูลให้ตรงกับโครงสร้างที่ component ต้องการ
+          const mappedMedications = todayTrackingsResponse.data.medicationLogs.map((medicationLog: any) => {
+            return {
+              time: medicationLog.time,
+              medications: medicationLog.medications.map((med: any) => {
+                return {
+                  id: med.pillId || med.id,
+                  name: med.pillName || med.name || "ไม่ระบุชื่อยา",
+                  taken: med.isTaken || med.taken || false,
+                  type: med.type || med.pillType || "",
+                  description: med.description || "",
+                  isPastMedication: false 
+                };
+              })
+            };
+          });
+          
+          newDayData[today].medications = mappedMedications;
+        }
+      } catch (error) {
+        console.warn("Error ensuring today's medication trackings:", error);
       }
 
       console.log("Calendar data prepared:", {
@@ -364,7 +363,6 @@ export const useCalendarData = () => {
     } catch (error: any) {
       console.error("Error fetching calendar data:", error);
       setError(error.message || "ไม่สามารถโหลดข้อมูลปฏิทินได้");
-      // ไม่ throw error เพื่อป้องกันแอปพลิเคชันล่ม
       return { newMarkedDates: {}, newDayData: {} };
     }
   }, []);
@@ -376,7 +374,6 @@ export const useCalendarData = () => {
       await fetchCalendarData();
     } catch (error) {
       console.error("Error loading calendar data:", error);
-      // Error handling already done in fetchCalendarData
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -389,7 +386,7 @@ export const useCalendarData = () => {
     loadCalendarData();
   }, [loadCalendarData]);
 
-  // Update pill status
+  // Update pill status using the API
   const updatePillStatus = useCallback(async (
     pillId: string,
     recordDate: string,
@@ -402,35 +399,38 @@ export const useCalendarData = () => {
         console.warn("Cannot update pill status for past dates");
         return false;
       }
-
+  
       // Get auth data from local storage
       const authData = await AsyncStorage.getItem("@auth");
-
+  
       if (!authData) {
         console.error("Session expired or user not logged in");
         return false;
       }
-
+  
       // Parse auth data
       const auth = JSON.parse(authData);
       const token = auth.token;
-      
-      // Send update request to API
-      /* await axios.post(
-        `${BASE_URL}/api/records/pill/status`,
+      const userId = auth.user._id;
+  
+      // Using regular pills API to update status
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/regular-pills/update-status`,
         {
-          pillId,
-          date: recordDate,
-          time: pillTime,
-          taken
+          medicationId: pillId,
+          userId: userId,
+          status: taken ? 'taken' : 'pending',
+          actualTime: pillTime.replace(' น.', '') // ตัด " น." ออก
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      ); */
-      // รอการเชื่อมต่อกับ API จริงๆ
-
-      return true;
+      );
+  
+      return response.data.success;
     } catch (error) {
       console.error("Error updating pill status:", error);
       return false;
@@ -444,13 +444,13 @@ export const useCalendarData = () => {
     medicationTime: string,
     newStatus: boolean
   ) => {
-    // ตรวจสอบว่าเป็นวันในอดีตหรือไม่
+    // Check if date is in the past
     if (isDateInPast(date)) {
       console.warn("Cannot change pill status for past dates");
-      return; // ไม่อนุญาตให้เปลี่ยนสถานะยาในอดีต
+      return; // Don't allow status change for past dates
     }
     
-    // Clone the current state to avoid mutating it directly
+    // Clone current state to avoid direct mutation
     const newDayData = { ...dayData };
     const currentDayData = { ...newDayData[date] };
     
@@ -470,11 +470,11 @@ export const useCalendarData = () => {
       return medicationLog;
     });
     
-    // Update the state first for immediate UI feedback
+    // Update state first for immediate UI feedback
     newDayData[date] = currentDayData;
     setDayData(newDayData);
     
-    // Then send the update to the API
+    // Then send update to API
     try {
       const success = await updatePillStatus(
         pillId,
@@ -484,7 +484,7 @@ export const useCalendarData = () => {
       );
       
       if (!success) {
-        // Revert the change if the API update failed
+        // Revert change if API update failed
         setError("ไม่สามารถอัปเดตสถานะยาได้");
         loadCalendarData(); // Reload data to ensure UI is in sync with server
       }
@@ -495,7 +495,7 @@ export const useCalendarData = () => {
     }
   }, [dayData, loadCalendarData, updatePillStatus]);
 
-  // Load data when the hook is initialized
+  // Load data on hook initialization
   useEffect(() => {
     loadCalendarData();
   }, [loadCalendarData]);
