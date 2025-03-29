@@ -136,6 +136,10 @@ const CalendarScreen = () => {
     const selectedDayData = getSelectedDayData();
     const isPastDate = isDateInPast(selectedDate);
 
+    console.log(
+      "Selected day medications:",
+      JSON.stringify(selectedDayData.medications)
+    );
     if (
       !selectedDayData.medications ||
       selectedDayData.medications.length === 0
@@ -189,12 +193,15 @@ const CalendarScreen = () => {
                       className="w-6 h-6 ml-2"
                     />
                     <Text className="text-description text-secondary font-regular ml-2">
-                      {medication.name}
+                      {medication.name || "ไม่ระบุชื่อยา"}
                     </Text>
                   </View>
                   <TouchableOpacity
                     onPress={() =>
-                      navigateToPillDetail(medication.id, medication.name)
+                      navigateToPillDetail(
+                        medication.id,
+                        medication.name || "ไม่ระบุชื่อยา"
+                      )
                     }
                   >
                     <Text className="text-primary text-description font-regular">
