@@ -166,7 +166,7 @@ export const useCalendarData = () => {
       const newDayData: { [key: string]: DayData } = {};
 
       // กำหนดช่วงวันที่
-      const daysInPast = 30;    // เก็บข้อมูลย้อนหลัง 30 วัน
+      const daysInPast = 60;    // เก็บข้อมูลย้อนหลัง 30 วัน
       const daysInFuture = 7;   // เก็บข้อมูลล่วงหน้า 7 วัน
       
       const currentDate = new Date();
@@ -311,7 +311,7 @@ export const useCalendarData = () => {
         // ทำให้แน่ใจว่ามีรายการติดตามสำหรับวันนี้
         await axios.post(
           `${BASE_URL}/api/v1/regular-pills/generate`,
-          { userId, date: today },
+          { userId, date: today, generateHistory: true  },
           {
             headers: { 
               Authorization: `Bearer ${token}`,
