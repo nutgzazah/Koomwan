@@ -47,6 +47,20 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
 
     // ประมวลผลยาประจำแต่ละรายการ
     for (const pill of healthInfo.regularpill) {
+      // ตรวจสอบว่ายาถูกเพิ่มก่อนหรือในวันที่กำลังสร้างรายการหรือไม่
+      if (pill.addedAt) {
+        const pillAddedDate = new Date(pill.addedAt);
+        pillAddedDate.setHours(0, 0, 0, 0);
+
+        const trackingDateCopy = new Date(trackingDate);
+        trackingDateCopy.setHours(0, 0, 0, 0);
+
+        // ถ้ายาถูกเพิ่มหลังจากวันที่กำลังสร้างรายการ ให้ข้ามไป
+        if (pillAddedDate > trackingDateCopy) {
+          continue;
+        }
+      }
+
       // ข้ามถ้าไม่มีเวลาเตือน
       if (!pill.reminderTimes || pill.reminderTimes.length === 0) {
         continue;
@@ -78,8 +92,10 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
           healthinfo: healthInfo._id,
           pillId: pill._id,
           scheduledDate: {
-            $gte: new Date(trackingDate.setHours(0, 0, 0, 0)),
-            $lt: new Date(trackingDate.getTime() + 24 * 60 * 60 * 1000),
+            $gte: new Date(new Date(trackingDate).setHours(0, 0, 0, 0)),
+            $lt: new Date(
+              new Date(trackingDate).setHours(0, 0, 0, 0) + 24 * 60 * 60 * 1000
+            ),
           },
           scheduledTime: displayTime,
         });
@@ -94,7 +110,10 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        if (trackingDate < today) {
+        const trackingDateCopy = new Date(trackingDate);
+        trackingDateCopy.setHours(0, 0, 0, 0);
+
+        if (trackingDateCopy < today) {
           initialStatus = "missed";
         }
 
