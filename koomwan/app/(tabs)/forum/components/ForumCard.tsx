@@ -237,7 +237,7 @@ export default function ForumCard({
                     pathname: `/forum/post/${postId}`,
                     params: { postId: postId },  // Add the postId as a parameter
                 })}>
-                    <Text className="font-sans text-tag ">การตอบกลับ ({comments})</Text>
+                    <Text className="font-sans text-tag text-primary font-bold">การตอบกลับ ({comments})</Text>
                 {doctorName && (
                     <View className="flex flex-row items-center mt-4">
                         <DoctorIcon doctorImage={doctorImage} />
@@ -266,7 +266,7 @@ export default function ForumCard({
         return <>
             <BreakLine />
             <View className="w-full ml-5">
-                <Text className="font-sans text-tag text-abnormal">การตอบกลับ ({comments})</Text>
+                <Text className="font-sans text-tag text-secondary">การตอบกลับ ({comments})</Text>
             </View>
         </>;
     }
