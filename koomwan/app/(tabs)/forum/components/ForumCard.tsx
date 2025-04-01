@@ -6,16 +6,19 @@ import {
     ImageSourcePropType,
 } from "react-native";
 import Card from "../../../../global/components/Card";
-import React from "react";
+import React, { useContext,useEffect, useState } from "react";
 import BreakLine from "../../../../global/components/BreakLine";
-import { useState } from "react";
 import { useRouter } from "expo-router";
 import PopupScreen from "../../../../global/components/PopupScreen";
 import DoctorIcon from "./DoctorIcon";
+import BASE_URL from "../../../../config";
 
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { AuthContext } from "../../../../context/authContext";
+import axios from "axios";
+import { useFocusEffect } from "@react-navigation/native";
 
 dayjs.extend(relativeTime);
 dayjs.locale("th");
@@ -52,6 +55,8 @@ const formatPostTime = (posttime: string): string => {
     return postDate.format("D MMMM ") + (postDate.year() + 543);
   };
 
+  
+
 export default function ForumCard({
     imageContent,
     like,
@@ -65,6 +70,8 @@ export default function ForumCard({
     posttime,
     postId,
 }: forumCardProps) {
+    
+    const [state] = useContext(AuthContext)
     const [likes, setLikes] = useState(like);
     const [isLike, setIsLike] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
@@ -78,16 +85,53 @@ export default function ForumCard({
         "อื่นๆ",
     ];
 
-    const onPressedLike = () => {
-        if (isLike) {
-            setLikes(likes - 1);
-            setIsLike(false);
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchLikeStatus = async () => {
+                try {
+                    const response = await axios.get(`${BASE_URL}/api/v1/forum/isliked/${postId}`);
+                    setIsLike(response.data.isLiked);
+                    setLikes(response.data.likes); // อัปเดตจำนวนไลค์ให้ถูกต้อง
+                    console.log("Post Likes: ",response.data.likes)
+                } catch (error) {
+                    console.error("Error fetching like status:", error);
+                }
+            }; 
+    
+            if (state.token) {
+                fetchLikeStatus();
+            }
+        }, [postId, state.token])
+    );
+
+    const onPressedLike = async () => {
+        console.log("State:", state); // ตรวจสอบโครงสร้างของ state อีกที
+        console.log("Post ID:", postId); // ตรวจสอบ postId
+        console.log("token: ", state.token)
+
+        if (!postId) {
+            console.error("Error: postId is undefined.");
+            return;
         }
-        else if (!isLike) {
-            setLikes(likes + 1);
-            setIsLike(true);
+    
+        const token = state.token; // ดึง token จาก state
+    
+        if (!token) {
+            console.error("No token found, user might not be logged in.");
+            return;
         }
-    }
+    
+        try {
+            const response = await axios.post(
+                `${BASE_URL}/api/v1/forum/like/${postId}`
+            );
+    
+            setLikes(response.data.likes);
+            setIsLike((prevIsLike) => !prevIsLike);
+        } catch (error) {
+            console.error("Error toggling like:", error);
+        }
+    };
 
     return (
         <>
@@ -193,8 +237,7 @@ export default function ForumCard({
                     pathname: `/forum/post/${postId}`,
                     params: { postId: postId },  // Add the postId as a parameter
                 })}>
-                    <Text className="font-sans text-tag">การตอบกลับ ({comments})</Text>
-                </Pressable>
+                    <Text className="font-sans text-tag ">การตอบกลับ ({comments})</Text>
                 {doctorName && (
                     <View className="flex flex-row items-center mt-4">
                         <DoctorIcon doctorImage={doctorImage} />
@@ -214,6 +257,7 @@ export default function ForumCard({
                         </View>
                     </View>
                 )}
+                </Pressable>
             </View>
         </>;
     }

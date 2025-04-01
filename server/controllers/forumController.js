@@ -166,6 +166,31 @@ exports.deletePost = async (req, res) => {
     }
 };
 
+//ตรวจสอบว่า userId ได้กดไลค์ postId หรือไม่
+exports.isLiked = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.auth._id;
+
+        if (!userId) {
+            return res.status(400).json({ error: "UserId is required" });
+        }
+
+        const post = await Forum.findById(postId);
+        if (!post) {
+            return res.status(404).json({ error: "Post not found" });
+        }
+
+        const isLiked = post.likes.users.includes(userId);
+        const likes = post.likes.users.length; // ดึงจำนวนไลค์ทั้งหมด
+        return res.json({ isLiked, likes });
+    } catch (error) {
+        console.error("Error checking like status:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+
 //กดไลค์/ลบไลค์
 exports.toggleLikePost = async (req, res) => {
     try {

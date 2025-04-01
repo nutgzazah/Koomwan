@@ -180,6 +180,7 @@ export default function ForumScreen() {
               content={postData.title}  // เนื้อหาของโพสต์
               viewComments={true}
               posttime={postData.date}
+              postId={postData._id}
             />
           {comments.map((comment, index) => (
             <CommentCard
