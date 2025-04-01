@@ -1,4 +1,5 @@
 const express = require('express')
+const { requireSignIn } = require('../controllers/authController')
 const { getUserByUsername, getAllUser, getAllDoctor, getDoctorById, editStatusDoctor } = require('../controllers/adminController');
 const { addBlog, getAllBlog, getBlogById, editBlog, deleteBlog } = require('../controllers/adminBlogController');
 const { sentReport, getAllRequest, getReportById, editReport } = require('../controllers/adminReportController');
@@ -35,7 +36,7 @@ router.put("/forum/approve/:id", ApprovePost);
 router.delete("/forum/deletePost/:id", deletePost);
 
 // report
-router.post("/addReport", sentReport);
+router.post("/addReport",requireSignIn, sentReport);
 router.get("/report", getAllRequest);
 router.get("/report/:id", getReportById);
 router.put("/editReport/response/:id", editReport);

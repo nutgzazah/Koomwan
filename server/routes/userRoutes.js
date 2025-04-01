@@ -15,6 +15,7 @@ const {
   deleteRecord,
   getRecord,
 } = require("../controllers/trackingController");
+const { sentHelpRequest } = require('../controllers/helpRequestController');
 
 //router object
 const router = express.Router();
@@ -55,6 +56,9 @@ router.post("/addRecord" /*,requireSignIn*/, addRecord);
 router.put("/updateRecord/:recordId" /*,requireSignIn*/, updateRecord);
 //DELETE RECORD || DELETE
 router.delete("/deleteRecord/:recordId" /*,requireSignIn*/, deleteRecord);
+
+// Setting (Sent Help Request) || POST
+router.post("/sentHelpRequest",requireSignIn , sentHelpRequest);
 
 //export
 module.exports = router;
