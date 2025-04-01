@@ -355,6 +355,30 @@ export default function EditProfileScreen() {
         return;
       }
 
+      // ตรวจสอบความถูกต้องของข้อมูล
+      if (!formData.height || isNaN(Number(formData.height))) {
+        Alert.alert("ข้อผิดพลาด", "กรุณากรอกส่วนสูงเป็นตัวเลข");
+        return;
+      }
+
+      // ตรวจสอบว่าส่วนสูงต้องเป็นเลข 3 หลัก
+      if (formData.height.length !== 3) {
+        Alert.alert("ข้อผิดพลาด", "กรุณากรอกส่วนสูงให้ถูกต้อง");
+        return;
+      }
+
+      if (
+        !formData.email ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+      ) {
+        Alert.alert("ข้อผิดพลาด", "กรุณากรอกอีเมลให้ถูกต้อง");
+        return;
+      }
+
+      if (!formData.phone || !/^\d{10}$/.test(formData.phone)) {
+        Alert.alert("ข้อผิดพลาด", "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (10 หลัก)");
+        return;
+      }
       setUpdating(true);
 
       // Handle profile image change if a new image was selected
