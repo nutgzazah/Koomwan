@@ -130,10 +130,10 @@ const CalendarScreen = () => {
     const selectedDayData = getSelectedDayData();
     const isPastDate = isDateInPast(selectedDate);
 
-    console.log(
+    /* console.log(
       "Selected day medications:",
       JSON.stringify(selectedDayData.medications)
-    );
+    ); */
     if (
       !selectedDayData.medications ||
       selectedDayData.medications.length === 0
