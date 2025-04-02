@@ -283,7 +283,16 @@ export default function PillDetailScreen() {
                   {pillData.reminderTimes
                     .map((time) => {
                       const formattedTime = time.includes("/")
-                        ? time.replace("/", " เวลา ") + " น."
+                        ? time
+                            .replace("/", " เวลา ")
+                            .replace("monday", "วันจันทร์")
+                            .replace("tuesday", "วันอังคาร")
+                            .replace("wednesday", "วันพุธ")
+                            .replace("thursday", "วันพฤหัสบดี")
+                            .replace("friday", "วันศุกร์")
+                            .replace("saturday", "วันเสาร์")
+                            .replace("sunday", "วันอาทิตย์")
+                            .replace("everyday", "ทุกวัน") + " น."
                         : time + " น.";
                       return formattedTime;
                     })

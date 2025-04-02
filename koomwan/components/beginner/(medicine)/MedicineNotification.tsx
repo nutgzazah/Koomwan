@@ -65,7 +65,7 @@ const MedicineNotification = () => {
       return;
     }
 
-    const formattedDay = dayMap[selectedDay] || "Everyday"; // แปลงวันภาษาไทย -> อังกฤษ
+    const formattedDay = dayMap[selectedDay] || "everyday"; // แปลงวันภาษาไทย -> อังกฤษ
     const formattedTime = formatTime(selectedTime); // "08:00"
     const reminderFormat = `${formattedDay}/${formattedTime}`; // "Mon/08:00"
 

@@ -18,7 +18,15 @@ const formatDate = (date) => {
  * ฟังก์ชันดึงวันในสัปดาห์ (เป็นภาษาอังกฤษย่อ)
  */
 const getDayOfWeek = (date) => {
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const days = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
   return days[date.getDay()];
 };
 
@@ -69,7 +77,7 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
       // ประมวลผลเวลาเตือนแต่ละรายการ
       for (const reminderTime of pill.reminderTimes) {
         // รูปแบบ: "Everyday/08:00" หรือ "Mon/20:00"
-        let dayPattern = "Everyday";
+        let dayPattern = "everyday";
         let timeStr = reminderTime;
 
         if (reminderTime.includes("/")) {
@@ -79,7 +87,7 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
         }
 
         // ตรวจสอบว่าเป็นวันที่ต้องทานยาหรือไม่
-        if (dayPattern !== "Everyday" && dayPattern !== dayOfWeek) {
+        if (dayPattern !== "everyday" && dayPattern !== dayOfWeek) {
           continue;
         }
 
