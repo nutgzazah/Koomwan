@@ -53,6 +53,9 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
     // จำนวนรายการที่สร้าง
     let createdCount = 0;
 
+    // เก็บ key ของรายการที่มีการสร้างแล้ว เพื่อป้องกันข้อมูลซ้ำ
+    const createdEntries = new Set();
+
     // ประมวลผลยาประจำแต่ละรายการ
     for (const pill of healthInfo.regularpill) {
       // ตรวจสอบว่ายาถูกเพิ่มก่อนหรือในวันที่กำลังสร้างรายการหรือไม่
@@ -74,15 +77,18 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
         continue;
       }
 
+      // สร้าง Set เพื่อตรวจสอบเวลาที่ซ้ำกัน
+      const processedTimes = new Set();
+
       // ประมวลผลเวลาเตือนแต่ละรายการ
       for (const reminderTime of pill.reminderTimes) {
-        // รูปแบบ: "Everyday/08:00" หรือ "Mon/20:00"
+        // รูปแบบ: "everyday/08:00" หรือ "monday/20:00"
         let dayPattern = "everyday";
         let timeStr = reminderTime;
 
         if (reminderTime.includes("/")) {
           const parts = reminderTime.split("/");
-          dayPattern = parts[0];
+          dayPattern = parts[0].toLowerCase(); // แปลงเป็นตัวพิมพ์เล็กเพื่อรองรับทั้งรูปแบบเก่าและใหม่
           timeStr = parts[1];
         }
 
@@ -94,11 +100,26 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
         // เพิ่ม "น." ถ้าไม่มี
         const displayTime = timeStr.endsWith(" น.") ? timeStr : `${timeStr} น.`;
 
+        // สร้าง unique key สำหรับรายการน
+        const entryKey = `${pill._id.toString()}_${displayTime}`;
+
+        // ตรวจสอบว่าได้ประมวลผลเวลานี้แล้วหรือไม่
+        if (processedTimes.has(displayTime) || createdEntries.has(entryKey)) {
+          console.log(
+            `Skipping duplicate reminder time: ${pill.pillName} at ${displayTime}`
+          );
+          continue;
+        }
+
+        // เพิ่มเวลานี้เข้าไปในเวลาที่ประมวลผลแล้ว
+        processedTimes.add(displayTime);
+
         // ตรวจสอบว่ามีรายการติดตามนี้แล้วหรือไม่
-        const existingTracking = await regularPillTrackingModel.findOne({
+        const existingTrackings = await regularPillTrackingModel.find({
           user: userId,
           healthinfo: healthInfo._id,
           pillId: pill._id,
+          pillName: pill.pillName,
           scheduledDate: {
             $gte: new Date(new Date(trackingDate).setHours(0, 0, 0, 0)),
             $lt: new Date(
@@ -109,7 +130,28 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
         });
 
         // ข้ามถ้ามีรายการติดตามแล้ว
-        if (existingTracking) {
+        if (existingTrackings && existingTrackings.length > 0) {
+          /* console.log(
+            `Entry already exists for ${pill.pillName} at ${displayTime}`
+          ); */
+
+          // ถ้ามีมากกว่า 1 รายการ ลบรายการซ้ำที่เกินมา
+          if (existingTrackings.length > 1) {
+            console.log(
+              `Found ${existingTrackings.length} duplicate entries, removing extras`
+            );
+
+            // เก็บรายการแรกไว้ ลบรายการที่เหลือ
+            for (let i = 1; i < existingTrackings.length; i++) {
+              await regularPillTrackingModel.findByIdAndDelete(
+                existingTrackings[i]._id
+              );
+              console.log(
+                `Removed duplicate tracking: ${existingTrackings[i]._id}`
+              );
+            }
+          }
+
           continue;
         }
 
@@ -138,6 +180,10 @@ const generateEntriesForDate = async (userId, healthInfo, trackingDate) => {
         });
 
         await newTracking.save();
+
+        // เพิ่มรายการที่สร้างแล้วเข้าไปใน Set
+        createdEntries.add(entryKey);
+
         createdCount++;
       }
     }
