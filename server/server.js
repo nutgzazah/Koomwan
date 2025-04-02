@@ -54,8 +54,8 @@ cron.schedule("5 0 * * *", async () => {
   }
 });
 
-// สร้างรายการยาสำหรับวันใหม่ทุกวันเวลา 00:10 น.
-cron.schedule("10 0 * * *", async () => {
+// สร้างรายการยาสำหรับวันใหม่ทุกวันเวลา 00:01 น.
+cron.schedule("1 0 * * *", async () => {
   console.log("Running daily job: generating pill trackings for all users");
   try {
     await generateDailyPillTrackingsForAllUsers();
