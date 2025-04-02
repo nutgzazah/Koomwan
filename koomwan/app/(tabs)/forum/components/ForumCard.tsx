@@ -4,6 +4,7 @@ import {
     Image,
     Pressable,
     ImageSourcePropType,
+    Alert,
 } from "react-native";
 import Card from "../../../../global/components/Card";
 import React, { useContext,useEffect, useState } from "react";
@@ -17,7 +18,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/th";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { AuthContext } from "../../../../context/authContext";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 import CommentReplyCard from "./CommentReplyBox";
 
@@ -105,6 +106,41 @@ export default function ForumCard({
         }, [postId, state.token])
     );
 
+    const handleReportPost = async (selectedReason: string) => {
+        if (!state.token) {
+            console.error("No token found, user might not be logged in.");
+            return;
+        }
+    
+        try {
+            console.log("Reason for report:", selectedReason); // ✅ Log ค่าที่ส่งไป
+
+            const response = await axios.post(
+                `${BASE_URL}/api/v1/forum/report/${postId}`,
+                { reason: selectedReason },
+            );
+            console.log("Report Success:", response.data);
+            setModalVisible(false); // ปิด PopupScreen หลังจากส่งรายงานสำเร็จ
+        } catch (error) {
+            const axiosError = error as AxiosError; // ✅ บอก TypeScript ว่า error เป็น AxiosError
+            
+            if (axiosError.response) {
+                const errorMessage = (axiosError.response.data as { message?: string })?.message || "Unknown error";
+                
+                if (errorMessage.includes("already reported")) {
+                    Alert.alert("แจ้งเตือน", "คุณได้รายงานโพสต์นี้ไปแล้ว", [{ text: "ตกลง" }]);
+                } else {
+                    Alert.alert("ข้อผิดพลาด", "ไม่สามารถรายงานโพสต์ได้ โปรดลองใหม่", [{ text: "ตกลง" }]);
+                }
+                
+                console.error("Error reporting post:", errorMessage);
+            } else {
+                Alert.alert("ข้อผิดพลาด", "เกิดข้อผิดพลาด โปรดลองใหม่", [{ text: "ตกลง" }]);
+                console.error("Error:", axiosError.message);
+            }
+        }
+    };
+
     const onPressedLike = async () => {
         console.log("State:", state); // ตรวจสอบโครงสร้างของ state อีกที
         console.log("Post ID:", postId); // ตรวจสอบ postId
@@ -139,12 +175,13 @@ export default function ForumCard({
             <PopupScreen
                 header="รายงานโพสต์"
                 modalVisible={modalVisible}
-                setModalVisible={(() => setModalVisible(!setModalVisible))}
+                setModalVisible={() => setModalVisible(!modalVisible)}
                 choices={mockChoices}
-                modalClosePlaceholder="ส่งรายงาน" 
-                onChoiceSelect={function (selectedChoice: string[]): void {
-                    throw new Error("Function not implemented.");
-                } }            />
+                modalClosePlaceholder="ส่งรายงาน"
+                onChoiceSelect={(selectedChoice) => {
+                    handleReportPost(selectedChoice[0]); // ส่งเฉพาะเหตุผลแรกที่เลือก
+                }}
+            />
             <Card>
                 <View className="flex flex-row justify-evenly items-center">
                     <Image 
