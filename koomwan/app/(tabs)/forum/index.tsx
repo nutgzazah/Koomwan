@@ -230,7 +230,7 @@ export default function ForumScreen() {
                   { uri: post.doctorImage } 
                 ) : defaultDoctorAvatar01
               }
-                doctorName={post.doctorName || null}
+                doctorName={post.doctorName || ""}
                 content={post.title}
                 viewComments={false}
                 posttime={post.posttime} // 🟢 ส่ง posttime ไปยัง ForumCard

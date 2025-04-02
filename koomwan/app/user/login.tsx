@@ -61,12 +61,16 @@ export default function UserLoginScreen() {
           `${BASE_URL}/api/v1/auth/login`,
           loginData
         );
-        setState(response);
+        setState({
+          user: response.data.user,
+          token: response.data.token,
+        });
         await AsyncStorage.setItem("@auth", JSON.stringify(response.data));
         await AsyncStorage.setItem("userId", response.data.user._id);
         await AsyncStorage.setItem("token", response.data.token);
         console.log("Login response data:", response.data);
-        router.replace("/user/beginner");
+        // router.replace("/user/beginner");
+        router.replace("(tabs)"); //ใช้ dev ก่อนค่อยเอาออก
       }
     } catch (error) {
       // ตรวจสอบว่าคือ AxiosError หรือไม่

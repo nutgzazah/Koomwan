@@ -1,14 +1,37 @@
-import { View, Text } from "react-native";
-import React, { useEffect } from "react";
-import { Redirect, useRouter } from "expo-router";
+import React, { createContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthContext } from "../context/authContext";
 
-export default function Index() {
-  const isLoggedIn = true; //Test if logged in or not True False
-  const router = useRouter();
 
-  return isLoggedIn ? (
-    <Redirect href="/(tabs)" />
-  ) : (
-    <Redirect href="/onboarding" />
+export const AuthProvider = ({ children }) => {
+  const [state, setState] = useState({
+    token: "",
+    user: null,
+  });
+
+  useEffect(() => {
+    const loadAuthData = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem("token");
+        const storedUser = await AsyncStorage.getItem("user");
+
+        if (storedToken && storedUser) {
+          setState({
+            token: storedToken,
+            user: JSON.parse(storedUser),
+          });
+        }
+      } catch (error) {
+        console.error("Error loading auth data:", error);
+      }
+    };
+
+    loadAuthData();
+  }, []);
+
+  return (
+    <AuthContext.Provider value={[state, setState]}>
+      {children}
+    </AuthContext.Provider>
   );
-}
+};

@@ -107,7 +107,7 @@ export default function ForumCard({
     const onPressedLike = async () => {
         console.log("State:", state); // ตรวจสอบโครงสร้างของ state อีกที
         console.log("Post ID:", postId); // ตรวจสอบ postId
-        console.log("token: ", state.token)
+        console.log("token:", state.token)
 
         if (!postId) {
             console.error("Error: postId is undefined.");
@@ -140,8 +140,10 @@ export default function ForumCard({
                 modalVisible={modalVisible}
                 setModalVisible={(() => setModalVisible(!setModalVisible))}
                 choices={mockChoices}
-                modalClosePlaceholder="ส่งรายงาน"
-            />
+                modalClosePlaceholder="ส่งรายงาน" 
+                onChoiceSelect={function (selectedChoice: string[]): void {
+                    throw new Error("Function not implemented.");
+                } }            />
             <Card>
                 <View className="flex flex-row justify-evenly items-center">
                     <Image 

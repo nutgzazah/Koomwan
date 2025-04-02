@@ -8,6 +8,8 @@ import { AuthProvider } from "../context/authContext";
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
+//global state
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     "K2D-Bold": require("../assets/fonts/K2D-Bold.ttf"),
