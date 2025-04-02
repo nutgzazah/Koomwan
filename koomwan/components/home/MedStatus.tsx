@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, Image, SafeAreaView } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
+import { useFocusEffect } from "@react-navigation/native";
 import BASE_URL from "../../config";
 import Loading from "../../global/components/Loading";
+import { getTodayLocalDate } from "../../util/date";
 
 const PillIcon = () => (
   <View className="w-16 h-16 items-center justify-center">
@@ -21,10 +22,17 @@ const MedicationStatus = () => {
   const [hasTakenMeds, setHasTakenMeds] = useState(false);
   const [totalMeds, setTotalMeds] = useState(0);
   const [takenMeds, setTakenMeds] = useState(0);
+  const [currentDate, setCurrentDate] = useState(getTodayLocalDate());
 
   const checkMedicationStatus = async () => {
     try {
       setLoading(true);
+
+      // ตรวจสอบวันปัจจุบันและอัพเดต
+      const todayFormatted = getTodayLocalDate();
+      if (currentDate !== todayFormatted) {
+        setCurrentDate(todayFormatted);
+      }
 
       // Fetch user data from AsyncStorage
       const authData = await AsyncStorage.getItem("@auth");
@@ -38,10 +46,9 @@ const MedicationStatus = () => {
       const token = auth.token;
       const userId = auth.user._id;
 
-      // Fetch today's medication data
-      const today = new Date().toISOString().split("T")[0];
+      // Fetch today's medication data using local date
       const response = await axios.get(
-        `${BASE_URL}/api/v1/regular-pills/daily/${userId}?date=${today}`,
+        `${BASE_URL}/api/v1/regular-pills/daily/${userId}?date=${todayFormatted}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -80,12 +87,33 @@ const MedicationStatus = () => {
     }
   };
 
-  // Use useFocusEffect to refresh data when the screen is focused
   useFocusEffect(
     useCallback(() => {
+      // ตรวจสอบว่าข้ามวัน
+      const todayFormatted = getTodayLocalDate();
+      if (currentDate !== todayFormatted) {
+        setCurrentDate(todayFormatted);
+      }
+
       checkMedicationStatus();
-    }, [])
+
+      // เพิ่มระบบตรวจสอบทุก 1 ชั่วโมง
+      const intervalCheck = setInterval(() => {
+        const newDate = getTodayLocalDate();
+        if (newDate !== currentDate) {
+          setCurrentDate(newDate);
+          checkMedicationStatus();
+        }
+      }, 3600000); // 1 ชั่วโมง
+
+      return () => clearInterval(intervalCheck);
+    }, [currentDate])
   );
+
+  // ตรวจสอบการเปลี่ยนวัน
+  useEffect(() => {
+    checkMedicationStatus();
+  }, [currentDate]);
 
   // Status messages
   const statusText = hasTakenMeds
