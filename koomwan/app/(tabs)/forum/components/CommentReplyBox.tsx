@@ -4,7 +4,9 @@ import {
     Image,
     Pressable,
     ImageSourcePropType,
-    TextInput
+    TextInput,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import Card from "../../../../global/components/Card";
 import React, { useState } from "react";
@@ -27,7 +29,7 @@ export default function CommentReplyCard({
     const [replyText, setReplyText] = useState(""); // เก็บค่าข้อความที่พิมพ์
     
     return (
-        <>
+
             <Card>
                 <View className="flex flex-row justify-evenly items-center">
                     <DoctorIcon doctorImage={profileImage} verify={!isOwner} />
@@ -44,9 +46,9 @@ export default function CommentReplyCard({
                 </View>
 
                 {/* กล่องพิมพ์ข้อความ */}
-                <View className=" border-b-4 w-full h-24 border-primary rounded-3xl px-3 py-2">
+                <View className=" border-b-4 w-full h-fit border-primary rounded-3xl px-3 py-2">
                     <TextInput
-                        className="font-sans text-body ml-3 mr-2"
+                        className="font-sans text-body ml-3 mr-2 h-fit"
                         placeholder="เพิ่มการตอบกลับ..."
                         value={replyText}
                         onChangeText={setReplyText}
@@ -54,15 +56,7 @@ export default function CommentReplyCard({
                     />
                 </View>
             </Card>
-        </>
     )
-}
-function replyBox(reply: string) {
-    return <View className="justify-start flex w-full mt-2">
-        <Text className="font-sans text-body ml-3 mr-2">
-            
-        </Text>
-    </View>;
 }
 
 function DoctorNameBox(username: string, isOwner: boolean) {
