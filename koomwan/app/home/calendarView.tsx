@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Alert,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Calendar, LocaleConfig } from "react-native-calendars";
 import { Image } from "react-native";
 import BackButton from "../../global/components/BackButton";
@@ -19,36 +20,15 @@ import { getEmotionImage } from "../../constant/emotion";
 import { calculateBMI } from "../../util/bmi";
 import { useCalendarData, HealthLog } from "../../hooks/useCalendar";
 import Loading from "../../global/components/Loading";
-
-const addThaiHours = (dateString: string): string => {
-  try {
-    const date = new Date(dateString);
-
-    // รูปแบบเวลา: HH:MM น.
-    return (
-      date.getHours().toString().padStart(2, "0") +
-      ":" +
-      date.getMinutes().toString().padStart(2, "0") +
-      " น."
-    );
-  } catch (error) {
-    console.error("Error formatting Thai time:", error);
-    return dateString; // คืนค่าเดิมถ้ามีข้อผิดพลาด
-  }
-};
-
-// เช็คว่าวันที่ที่ส่งมาอยู่ในอดีตหรือไม่
-const isDateInPast = (dateStr: string): boolean => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const compareDate = new Date(dateStr);
-  compareDate.setHours(0, 0, 0, 0);
-  return compareDate < today;
-};
+import {
+  getTodayLocalDate,
+  isDateInPast,
+  formatTimeToThai,
+} from "../../util/date";
 
 const CalendarScreen = () => {
   const router = useRouter();
-
+  const [selectedDate, setSelectedDate] = useState(getTodayLocalDate());
   // ตั้งค่าภาษาไทย
   LocaleConfig.locales["th"] = {
     monthNames: [
@@ -102,11 +82,25 @@ const CalendarScreen = () => {
     refreshCalendarData,
     handlePillStatusChange,
   } = useCalendarData();
-
-  // วันที่เลือกในปฏิทิน
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+  useFocusEffect(
+    React.useCallback(() => {
+      setSelectedDate(getTodayLocalDate());
+      refreshCalendarData();
+      return () => {};
+    }, [])
   );
+
+  useEffect(() => {
+    const checkDateInterval = setInterval(() => {
+      const currentDate = getTodayLocalDate();
+      if (currentDate !== selectedDate) {
+        setSelectedDate(currentDate);
+        refreshCalendarData();
+      }
+    }, 3600000);
+
+    return () => clearInterval(checkDateInterval);
+  }, [selectedDate]);
 
   // แสดงข้อผิดพลาด (ถ้ามี)
   if (error) {
@@ -240,7 +234,7 @@ const CalendarScreen = () => {
               เวลา{" "}
               {log.time.endsWith(" น.")
                 ? log.time
-                : `${addThaiHours(log.time)}`}
+                : `${formatTimeToThai(log.time)}`}
             </Text>
             {log.mood && log.mood !== "none" && (
               <Image
