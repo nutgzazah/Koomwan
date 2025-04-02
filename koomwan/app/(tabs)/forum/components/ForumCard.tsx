@@ -19,6 +19,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { AuthContext } from "../../../../context/authContext";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
+import CommentReplyCard from "./CommentReplyBox";
 
 dayjs.extend(relativeTime);
 dayjs.locale("th");
@@ -207,7 +208,22 @@ export default function ForumCard({
                     <CommentTrigger postId={postId} />
                 }
                 {comments === 0 && !viewComments && 
+                <>
                     <NoCommentsBox />
+                    {(state.user.username === userName || state.user.role === "doctor") && (
+                        <Pressable onPress={() => router.push({
+                            pathname: `/forum/post/${postId}`,
+                            params: { postId: postId },  // Add the postId as a parameter
+                        })}>
+                            <View className="flex flex-row justify-items-center mt-4 border border-primary rounded-full py-2 px-4 w-fit">
+                                <Image source={require("../../../../assets/Forum/Pen-bold.png")} className="w-6 h-6" />
+                                <Text className="font-sans text-description w-fit text-center px-2 color-primary font-bold">
+                                    ตอบกลับข้อความ
+                                </Text>
+                            </View>
+                        </Pressable>
+                    )}
+                </>
                 }
             </Card>
         </>
@@ -240,25 +256,39 @@ export default function ForumCard({
                     params: { postId: postId },  // Add the postId as a parameter
                 })}>
                     <Text className="font-sans text-tag text-primary font-bold">การตอบกลับ ({comments})</Text>
-                {doctorName && (
-                    <View className="flex flex-row items-center mt-4">
-                        <DoctorIcon doctorImage={doctorImage} />
-                        <View>
-                            <Text
-                                className="font-sans text-description"
-                                numberOfLines={1}
-                                ellipsizeMode='tail'
-                            >
-                                {doctorName}
-                            </Text>
-                            <View className="bg-primary rounded-3xl h-6 w-20 items-center">
-                                <Text className="text-white text-tag">
-                                    แพทย์
+                    {doctorName ? (
+                        <View className="flex flex-row items-center mt-4">
+                            <DoctorIcon doctorImage={doctorImage} verify={true} />
+                            <View>
+                                <Text
+                                    className="font-sans text-description"
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
+                                    {doctorName}
                                 </Text>
+                                <View className="bg-primary rounded-3xl h-6 w-20 items-center">
+                                    <Text className="text-white text-tag">แพทย์</Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                )}
+                    ) : (
+                        <View className="flex flex-row items-center mt-4">
+                            <DoctorIcon doctorImage={userimage} />
+                            <View>
+                                <Text
+                                    className="font-sans text-description"
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
+                                    {userName}
+                                </Text>
+                                <View className="rounded-3xl h-6 w-fititems-center">
+                                    <Text className="text-secondary font-sans text-tag ">ตอบกลับ {comments} ข้อความ</Text>
+                                </View>
+                            </View>
+                        </View>
+                    )}
                 </Pressable>
             </View>
         </>;
@@ -266,7 +296,7 @@ export default function ForumCard({
 
     function NoCommentsBox(): React.ReactNode {
         return <>
-            <BreakLine />
+            <BreakLine/>
             <View className="w-full ml-5">
                 <Text className="font-sans text-tag text-secondary">การตอบกลับ ({comments})</Text>
             </View>
