@@ -9,8 +9,11 @@ import {
     Platform,
 } from "react-native";
 import Card from "../../../../global/components/Card";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import DoctorIcon from "./DoctorIcon";
+import BASE_URL from "../../../../config"
+import { AuthContext } from "../../../../context/authContext";
+import axios from "axios";
 
 
 interface commentReplyCardProps {
@@ -18,6 +21,7 @@ interface commentReplyCardProps {
     username: string,
     imageContentSource: ImageSourcePropType
     isOwner: boolean, // เพิ่มค่า isOwner
+    postId: string; // เพิ่ม postId สำหรับใช้กับ API
 }
 
 export default function CommentReplyCard({
@@ -25,8 +29,31 @@ export default function CommentReplyCard({
     username,
     imageContentSource,
     isOwner, // รับ isOwner
+    postId, // รับ postId
 }: commentReplyCardProps) {
     const [replyText, setReplyText] = useState(""); // เก็บค่าข้อความที่พิมพ์
+    const [state] = useContext(AuthContext);
+    const token = state?.token;
+    console.log("State:",state)
+
+    const handleSubmit = async () => {
+        if (!token) {
+            console.error("No token found, user might not be logged in.");
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `${BASE_URL}/api/v1/forum/comment/${postId}`,
+                { answer: replyText },
+            );
+
+            console.log("Comment submitted:", response.data);
+            setReplyText(""); // ล้างช่องพิมพ์หลังส่งสำเร็จ
+        } catch (error) {
+            console.error("Error submitting comment:", error);
+        }
+    };
     
     return (
 
@@ -55,6 +82,14 @@ export default function CommentReplyCard({
                         multiline
                     />
                 </View>
+
+                {/* ปุ่มส่งความคิดเห็น */}
+                <Pressable 
+                    className="bg-primary mt-4 px-4 py-2 rounded-full items-center"
+                    onPress={handleSubmit}
+                >
+                    <Text className="text-white font-bold">ส่งความคิดเห็น</Text>
+                </Pressable>
             </Card>
     )
 }

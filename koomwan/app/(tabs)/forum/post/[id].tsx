@@ -242,6 +242,7 @@ export default function ForumScreen() {
               }
               imageContentSource={0} 
               isOwner={state.user.role !== "doctor"} 
+              postId={postData._id}
             />
             
             )}
