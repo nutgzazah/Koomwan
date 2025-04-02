@@ -6,10 +6,11 @@ import {
     ImageSourcePropType
 } from "react-native";
 import Card from "../../../../global/components/Card";
-import React from "react";
+import React, { useContext } from "react";
 import DoctorIcon from "./DoctorIcon";
 import DoctorProfileScreen from "./DoctorProfile";
 import { useState } from "react";
+import { AuthContext } from "../../../../context/authContext";
 import dayjs from 'dayjs'; // Import dayjs to handle date formatting
 
 // ฟังก์ชันที่ใช้ในการคำนวณเวลา
@@ -46,6 +47,9 @@ export default function CommentCard({
     isOwner, // รับ isOwner
 }: commentCardProps) {
     const [modalVisible, setModalVisible] = useState(false);
+    const [state] = useContext(AuthContext);
+    const token = state?.token;
+    console.log("State:",state)
     return (
         <>
             <DoctorProfileScreen

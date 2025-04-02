@@ -34,7 +34,7 @@ export default function CommentReplyCard({
     const [replyText, setReplyText] = useState(""); // เก็บค่าข้อความที่พิมพ์
     const [state] = useContext(AuthContext);
     const token = state?.token;
-    console.log("State:",state)
+    // console.log("State:",state)
 
     const handleSubmit = async () => {
         if (!token) {
