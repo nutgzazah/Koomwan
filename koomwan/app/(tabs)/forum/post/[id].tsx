@@ -51,6 +51,8 @@ const getProfileImageUrl = async (
   }
 };
 
+
+
 export default function ForumScreen() {
   const [state] = useContext(AuthContext)
   const { postId }  = useLocalSearchParams();
@@ -58,7 +60,7 @@ export default function ForumScreen() {
   const [comments, setComments] = useState<any[]>([]);  // เก็บข้อมูลคอมเมนต์
   const [loading, setLoading] = useState(true); // เพิ่มสถานะโหลด
   const [doctorImageUrl, setDoctorImageUrl] = useState<string | null>(null);
-
+  const [commentUpdated, setCommentUpdated] = useState(false); // 👈 ตัวแปร trigger fetch ใหม่
 
   useEffect(() => {
     
@@ -66,6 +68,7 @@ export default function ForumScreen() {
       axios.get(`${BASE_URL}/api/v1/forum/getPostById/${postId}`)
         .then(async (response) => {
           const post = response.data;
+          console.log("Post DATA",post)
 
           // ดึง URL รูปภาพโพสต์
           const imageContent = post.image ? await getImageUrl(post.image) : null;
@@ -154,7 +157,7 @@ export default function ForumScreen() {
       console.log("state.user.image: ",state.user.image)
     }
 
-      const fetchDoctorImage = async () => {
+    const fetchDoctorImage = async () => {
     if (state.user.role === "doctor") {
       if (state.user.image.startsWith("koomwanDoctorAvatar")) {
         setDoctorImageUrl(state.user.image);
@@ -171,7 +174,7 @@ export default function ForumScreen() {
 
   fetchDoctorImage();
 
-  }, [postId]);
+  }, [postId, commentUpdated]);
   if (!postData) {
     return (
       <SafeAreaView className="flex-1">
@@ -243,29 +246,32 @@ export default function ForumScreen() {
               imageContentSource={0} 
               isOwner={state.user.role !== "doctor"} 
               postId={postData._id}
+              onCommentAdded={() => setCommentUpdated(prev => !prev)} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
             />
             
             )}
           {comments.map((comment, index) => (
             <CommentCard
-            key={index}
-            profileImage={
-              comment.doctorImageUrl ? (
+              key={index}
+              profileImage={comment.doctorImageUrl ? (
                 comment.doctorImageUrl === "koomwanAvatar01.png" ? defaultUserAvatar01 :
-                comment.doctorImageUrl === "koomwanAvatar02.png" ? defaultUserAvatar02 :
-                comment.doctorImageUrl === "koomwanAvatar03.png" ? defaultUserAvatar03 :
-                comment.doctorImageUrl === "koomwanAvatar04.png" ? defaultUserAvatar04 :
-                comment.doctorImageUrl === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
-                comment.doctorImageUrl === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
-              { uri: comment.doctorImageUrl } 
-            ) : defaultDoctorAvatar01
-            }
-            doctorName={comment.doctorName} // ชื่อคุณหมอ
-            content={comment.answer}  // คอนเทนต์ของคอมเมนต์
-            imageContentSource={0} // ไม่มีข้อมูลรูปภาพในคอมเมนต์
-            commentTime={comment.date}
-            isOwner={comment.isOwner} // ✅ ส่งค่า isOwner ไปด้วย
-          />
+                  comment.doctorImageUrl === "koomwanAvatar02.png" ? defaultUserAvatar02 :
+                    comment.doctorImageUrl === "koomwanAvatar03.png" ? defaultUserAvatar03 :
+                      comment.doctorImageUrl === "koomwanAvatar04.png" ? defaultUserAvatar04 :
+                        comment.doctorImageUrl === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
+                          comment.doctorImageUrl === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
+                            { uri: comment.doctorImageUrl }
+              ) : defaultDoctorAvatar01}
+              doctorName={comment.doctorName} // ชื่อคุณหมอ
+              content={comment.answer} // คอนเทนต์ของคอมเมนต์
+              imageContentSource={0} // ไม่มีข้อมูลรูปภาพในคอมเมนต์
+              commentTime={comment.date}
+              isOwner={comment.isOwner} // ✅ ส่งค่า isOwner ไปด้วย
+              postId={postData._id}
+              commentId={comment._id}
+              onDeleteComment={() => setCommentUpdated(prev => !prev)} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
+              />
+
           ))}
         </View>
       </ScrollView>

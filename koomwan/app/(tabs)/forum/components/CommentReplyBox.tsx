@@ -22,6 +22,7 @@ interface commentReplyCardProps {
     imageContentSource: ImageSourcePropType
     isOwner: boolean, // เพิ่มค่า isOwner
     postId: string; // เพิ่ม postId สำหรับใช้กับ API
+    onCommentAdded: () => void; // ✅ เพิ่มอันนี้เข้าไป
 }
 
 export default function CommentReplyCard({
@@ -30,6 +31,7 @@ export default function CommentReplyCard({
     imageContentSource,
     isOwner, // รับ isOwner
     postId, // รับ postId
+    onCommentAdded
 }: commentReplyCardProps) {
     const [replyText, setReplyText] = useState(""); // เก็บค่าข้อความที่พิมพ์
     const [state] = useContext(AuthContext);
@@ -49,6 +51,7 @@ export default function CommentReplyCard({
             );
 
             console.log("Comment submitted:", response.data);
+            onCommentAdded(); // ✅ เรียกใช้งานเพื่อบังคับให้ ForumScreen โหลดคอมเมนต์ใหม่
             setReplyText(""); // ล้างช่องพิมพ์หลังส่งสำเร็จ
         } catch (error) {
             console.error("Error submitting comment:", error);
