@@ -10,6 +10,7 @@ import DoctorDisplayCard from "./components/DoctorDisplayCard";
 import BreakLine from "../../../global/components/BreakLine";
 import NotificationCard from "./components/NotificationCard";
 import TwoChoiceFilterBox from "../../../global/components/FilterBox";
+import { useRouter } from "expo-router";
 
 // Define the Notification interface
 interface Notification {
@@ -27,12 +28,13 @@ interface Notification {
 
 export default function NotificationScreen() {
   // Change here to change view, temporary roles
+  const router = useRouter();
   const role: string = "doctor";
   const [filter, setFilter] = useState(1);
 
   // onPress for each notification block
   const onPress = () => {
-    console.log("Notification pressed");
+    router.push("/notification/[id]");
   };
 
   // Interface for typescript typing in DoctorView, UserView
