@@ -6,7 +6,8 @@ import {
     ImageSourcePropType,
     TouchableOpacity,
     Modal,
-    Button
+    Button,
+    Alert
 } from "react-native";
 import Card from "../../../../global/components/Card";
 import React, { useContext } from "react";
@@ -69,12 +70,18 @@ export default function CommentCard({
     const handleDelete = async () => {
         try {
             const response = await axios.delete(`${BASE_URL}/api/v1/forum/comment/${postId}/${commentId}`);
-            alert("ความคิดเห็นถูกลบสำเร็จ");
+            Alert.alert(
+                "แจ้งเตือน", // ส่วนของ header หรือ title
+                "ความคิดเห็นถูกลบสำเร็จ", // ข้อความที่จะแสดง
+              );
             if (onDeleteComment) onDeleteComment();  // เรียกใช้ callback เมื่อทำการลบคอมเมนต์สำเร็จ
             setIsDeleteModalVisible(false); // ปิด modal หลังลบคอมเมนต์
         } catch (error) {
             console.error("Error deleting comment:", error);
-            alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+            Alert.alert(
+                "แจ้งเตือน", // ส่วนของ header หรือ title
+                "เกิดข้อผิดพลาดในการเชื่อมต่อ", // ข้อความที่จะแสดง
+              );
             setIsDeleteModalVisible(false); // ปิด modal ถ้ามีข้อผิดพลาด
         }
     };
@@ -127,7 +134,7 @@ export default function CommentCard({
                 {dropdownVisible && (
                     <View className="absolute bg-white border border-abnormal shadow-sm right-2 top-10 rounded-md p-3 mt-1">
                         <TouchableOpacity onPress={handleDelete} >
-                            <Pressable onPress={() => setIsDeleteModalVisible(true)}>
+                            <Pressable onPress={() => { setIsDeleteModalVisible(true); setDropdownVisible(!dropdownVisible); }}>
                                 <Text className="text-abnormal  font-bold font-sans">ลบความคิดเห็น</Text>
                             </Pressable>
                         </TouchableOpacity>
