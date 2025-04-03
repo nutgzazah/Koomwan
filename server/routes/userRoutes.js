@@ -15,6 +15,8 @@ const {
   deleteRecord,
   getRecord,
 } = require("../controllers/trackingController");
+const { sentHelpRequest } = require('../controllers/helpRequestController');
+const { sendReminder } = require('../controllers/notificationController');
 
 //router object
 const router = express.Router();
@@ -55,6 +57,12 @@ router.post("/addRecord" /*,requireSignIn*/, addRecord);
 router.put("/updateRecord/:recordId" /*,requireSignIn*/, updateRecord);
 //DELETE RECORD || DELETE
 router.delete("/deleteRecord/:recordId" /*,requireSignIn*/, deleteRecord);
+
+// Setting (Sent Help Request) || POST
+router.post("/sentHelpRequest",requireSignIn , sentHelpRequest);
+
+// Get Remider
+router.get('/sentMedicineNoti', requireSignIn, sendReminder);
 
 //export
 module.exports = router;

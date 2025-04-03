@@ -13,8 +13,17 @@ import { useRouter } from "expo-router";
 import PopupScreen from "../../../../global/components/PopupScreen";
 import DoctorIcon from "./DoctorIcon";
 
+import dayjs from "dayjs";
+import "dayjs/locale/th";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
+dayjs.locale("th");
+
+const defaultUserAvatar01 = require("../../../../assets/Avatars/koomwanAvatar01.png");
+
 interface forumCardProps {
-    imageContent: ImageSourcePropType
+    imageContent?: string | ImageSourcePropType | undefined; // รองรับทั้ง URL หรือไฟล์ท้องถิ่น
     like: number
     comments: number
     userimage: ImageSourcePropType
@@ -23,7 +32,25 @@ interface forumCardProps {
     doctorName: string
     content: string
     viewComments: boolean
+    posttime: string
+    postId: string; 
 }
+
+const formatPostTime = (posttime: string): string => {
+    const postDate = dayjs(posttime);
+    const now = dayjs();
+    const diffMinutes = now.diff(postDate, "minute");
+    const diffHours = now.diff(postDate, "hour");
+    const diffDays = now.diff(postDate, "day");
+    const diffWeeks = now.diff(postDate, "week");
+
+  
+    if (diffMinutes < 1) return "เมื่อสักครู่";
+    if (diffMinutes < 60) return `${diffMinutes} นาทีที่แล้ว`;
+    if (diffHours < 24) return `${diffHours} ชั่วโมงที่แล้ว`;
+    if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
+    return postDate.format("D MMMM ") + (postDate.year() + 543);
+  };
 
 export default function ForumCard({
     imageContent,
@@ -35,6 +62,8 @@ export default function ForumCard({
     doctorName,
     content,
     viewComments,
+    posttime,
+    postId,
 }: forumCardProps) {
     const [likes, setLikes] = useState(like);
     const [isLike, setIsLike] = useState(false);
@@ -71,7 +100,11 @@ export default function ForumCard({
             />
             <Card>
                 <View className="flex flex-row justify-evenly items-center">
-                    <Image source={userimage} className="rounded-full w-11 h-10 mr-2 ml-3" />
+                    <Image 
+                    source={userimage}
+                    resizeMode="cover"
+                    onError={() => console.error("Error loading image:", userimage)}
+                    className="rounded-full w-11 h-10 mr-2 ml-3" />
                     <View className="w-64">
                         <Text
                             className="font-sans text-description"
@@ -80,7 +113,7 @@ export default function ForumCard({
                         >
                             {userName}
                         </Text>
-                        <Text className="font-sans text-tag">10 นาทีที่แล้ว</Text>
+                        <Text className="font-sans text-tag">{formatPostTime(posttime)}</Text>
                     </View>
                     <View className="ml-7 w-10">
                         <Pressable
@@ -92,21 +125,25 @@ export default function ForumCard({
                     </View>
                 </View>
                 <View className="justify-start flex w-full mt-4">
-                    <Text className="font-sans text-tag ml-4 mr-2">
+                    <Text className="font-sans text-body ml-4 mr-2">
                         {content}
                     </Text>
                 </View>
                 {
-                    imageContent
-                        ?
+                    imageContent ? (
                         <View className="w-auto h-auto mt-6">
                             <Image
-                                className="max-w-[21rem] max-h-[21rem]"
-                                source={imageContent}
+                                style={{ width: 336, height: 336 }} // แก้ให้มีขนาดแน่นอน
+                                source={
+                                    typeof imageContent === "string"
+                                        ? { uri: imageContent }
+                                        : imageContent
+                                }
+                                resizeMode="cover"
+                                onError={() => console.error("Error loading image:", imageContent)}
                             />
                         </View>
-                        :
-                        <></>
+                    ) : null
                 }
                 <View className="flex flex-row-reverse justify-start w-full mt-5 mr-4">
                     <View className="flex items-center">
@@ -121,9 +158,9 @@ export default function ForumCard({
                     </View>
                 </View>
                 {comments !== 0 && !viewComments &&
-                    <CommentTrigger />
+                    <CommentTrigger postId={postId} />
                 }
-                {comments === 0 && !viewComments &&
+                {comments === 0 && !viewComments && 
                     <NoCommentsBox />
                 }
             </Card>
@@ -148,30 +185,35 @@ export default function ForumCard({
         </Pressable>;
     }
 
-    function CommentTrigger(): React.ReactNode {
+    function CommentTrigger({ postId }: { postId: string }): React.ReactNode {
         return <>
             <BreakLine />
             <View className="w-full ml-5">
-                <Pressable onPress={() => router.push("/forum/post/1", { relativeToDirectory: false })}>
+                <Pressable onPress={() => router.push({
+                    pathname: `/forum/post/${postId}`,
+                    params: { postId: postId },  // Add the postId as a parameter
+                })}>
                     <Text className="font-sans text-tag">การตอบกลับ ({comments})</Text>
                 </Pressable>
-                <View className="flex flex-row items-center mt-4">
-                    <DoctorIcon doctorImage={doctorImage} />
-                    <View>
-                        <Text
-                            className="font-sans text-description"
-                            numberOfLines={1}
-                            ellipsizeMode='tail'
-                        >
-                            {doctorName}
-                        </Text>
-                        <View className="bg-primary rounded-3xl h-6 w-20 items-center">
-                            <Text className="text-white text-tag">
-                                แพทย์
+                {doctorName && (
+                    <View className="flex flex-row items-center mt-4">
+                        <DoctorIcon doctorImage={doctorImage} />
+                        <View>
+                            <Text
+                                className="font-sans text-description"
+                                numberOfLines={1}
+                                ellipsizeMode='tail'
+                            >
+                                {doctorName}
                             </Text>
+                            <View className="bg-primary rounded-3xl h-6 w-20 items-center">
+                                <Text className="text-white text-tag">
+                                    แพทย์
+                                </Text>
+                            </View>
                         </View>
                     </View>
-                </View>
+                )}
             </View>
         </>;
     }

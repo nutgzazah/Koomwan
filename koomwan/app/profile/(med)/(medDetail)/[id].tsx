@@ -198,7 +198,7 @@ export default function PillDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <BackButton title="รายละเอียดยา" />
+      <BackButton title="ย้อนกลับ" />
 
       <ScrollView className="flex-1 px-4">
         <Card>

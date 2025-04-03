@@ -23,13 +23,6 @@ const notificationSchema = new mongoose.Schema({
         // enum: ['forum', 'general', 'medication', 'system'],
         required: true
     },
-    medicationDetails: {
-        pillId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'RegularPill'
-        },
-        pillName: String
-    },
     isRead: {
         type: Boolean,
         default: false

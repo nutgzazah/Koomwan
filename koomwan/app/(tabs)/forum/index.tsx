@@ -7,43 +7,181 @@ import {
   Pressable,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import ForumCard from "./components/ForumCard";
 import SearchBox from "../../../global/components/SearchBox";
-import { useState } from "react";
 import TwoChoiceFilterBox from "../../../global/components/FilterBox";
 import { useRouter } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import BASE_URL from "../../../config"
 
-const mockImageContent = require("../../../assets/Forum/forum-image.png")
+const defaultUserAvatar01 = require("../../../assets/Avatars/koomwanAvatar01.png");
+const defaultUserAvatar02 = require("../../../assets/Avatars/koomwanAvatar02.png");
+const defaultUserAvatar03 = require("../../../assets/Avatars/koomwanAvatar03.png");
+const defaultUserAvatar04 = require("../../../assets/Avatars/koomwanAvatar04.png");
+const defaultDoctorAvatar01 = require("../../../assets/Avatars/koomwanDoctorAvatar01.png");
+const defaultDoctorAvatar02 = require("../../../assets/Avatars/koomwanDoctorAvatar02.png");
+
+type Post = {
+  _id: string;
+  image: string;
+  likes: { count: number };
+  comments: { length: number };
+  title: string;
+  imageUrl: string | null;
+  postedBy: {
+    username: string;
+    image: string;  // เพิ่มฟิลด์รูปโปรไฟล์ของ user
+  };
+  userImage: string | null; // เก็บ URL รูปโปรไฟล์ของผู้ใช้
+  createdAt: string;
+  posttime: string;
+  doctorImage: string;
+  doctorName: string; 
+  postId: string;
+  
+};
 
 export default function ForumScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentFilterChoice, setCurrentFilterChoice] = useState(1);
-  const mockUsername = "อาทิตย์ สมใจ";
-  const mockProfile = require("../../../assets/Forum/user-mock.png");
-  const mockDoctor = require("../../../assets/Forum/doctor-profile-mock.png");
-  const mockDoctorName = "นายแพทย์ภูรินทร์ ดำรงค์ธรรม";
-  const mockTextContent =
-    `เอ่อช่วงนี้เลิกงานดึกประจำเลยทำให้ต้องออกกำลังกายตอนกลางคืนบ่อยๆ จะมีผลต่อระดับน้ำตาลในเลือดไหมครับ \nแล้วควรจะกินอะไรหลังออกกำลังกายดี?`;
-  const mockChoices: string[] = [
-    "สแปม",
-    "คำพูดรุนแรง",
-    "ข้อมูลเท็จ",
-    "การคุกคาม",
-    "เนื้อหาไม่เหมาะสม",
-    "อื่นๆ",
-  ];
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [currentFilterChoice]);
+
+  const fetchPosts = async () => {
+  try {
+    const response = await axios.get<Post[]>(`${BASE_URL}/api/v1/forum/getAllPost`);
+    let postsData = response.data;
+    
+     // กรองโพสต์เฉพาะภายใน 1 เดือนที่ผ่านมา
+     const oneMonthAgo = new Date();
+     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+ 
+     postsData = postsData.filter((post) => new Date(post.createdAt) >= oneMonthAgo);
+ 
+     // เรียงลำดับโพสต์ตามไลค์ ถ้าเลือก "ยอดนิยม"
+     if (currentFilterChoice === 2) {
+       postsData.sort((a, b) => b.likes.count - a.likes.count);
+     }
+
+    // ดึง URL สำหรับรูปภาพโพสต์และโปรไฟล์ของผู้ใช้
+    const urls = await Promise.all(
+      postsData.map(async (post) => {
+        const imageUrl = post.image
+          ? await getImageUrl(post.image)
+          : null;
+
+        let userImageUrl = null;
+          if (post.postedBy?.image) {
+            // Checking if the user image is one of the local avatar files
+            if (
+              post.postedBy.image.startsWith("koomwanAvatar")
+            ) {
+              // Set the local path for the avatar image
+              userImageUrl = post.postedBy.image;
+            } else {
+              // Fallback to fetching the image URL if not a local avatar
+              userImageUrl = await getProfileImageUrl(post.postedBy.image, "user");
+            }
+          }
+
+        // หาคอมเมนต์ล่าสุดที่เป็นของ Doctor
+        const latestDoctorComment = [...post.comments]
+          .reverse()
+          .find((comment) => comment.commenterModel === "Doctor");
+
+        let doctorImageUrl = null;
+        let doctorName = null;
+
+        if (latestDoctorComment) {
+          const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string }>(
+            `${BASE_URL}/api/v1/forum/getDoctorInfo`,
+            { params: { doctorId: latestDoctorComment.commenter } }
+          );
+
+          doctorName = doctorResponse.data.firstname+" "+doctorResponse.data.lastname;
+          if (doctorResponse.data?.image) {
+            if (
+            doctorResponse.data.image.startsWith("koomwanDoctorAvatar")
+            ) {
+              // Set the local path for the avatar image
+              doctorImageUrl = doctorResponse.data.image;
+            } else {
+              // Fallback to fetching the image URL if not a local avatar
+              doctorImageUrl = await getImageUrl(doctorResponse.data.image);
+            }
+          }
+        }
+
+        return {
+          _id: post._id,
+          imageUrl,
+          userImage: userImageUrl,
+          doctorImage: doctorImageUrl,
+          doctorName: doctorName,
+          postId: post._id,
+        };
+      })
+    );
+
+    // รวมข้อมูลที่อัปเดต
+    const postsWithImages = postsData.map((post) => ({
+      ...post,
+      imageUrl: urls.find((item) => item._id === post._id)?.imageUrl || null,
+      userImage: urls.find((item) => item._id === post._id)?.userImage || null,
+      doctorImage: urls.find((item) => item._id === post._id)?.doctorImage || null,
+      doctorName: urls.find((item) => item._id === post._id)?.doctorName || null,
+      posttime: post.createdAt, // 🟢 ใช้ createdAt เป็น posttime
+      postId: post._id, // Add postId
+    }));
+
+      setPosts(postsWithImages);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ฟังก์ชันดึง URL ของไฟล์จาก path
+  const getImageUrl = async (path: string): Promise<string | null> => {
+    try {
+      const res = await axios.get<{ url: string }>(
+        `${BASE_URL}/api/v1/storage/getFileUrlFromPath`,
+        { params: { path } }
+      );
+      return res.data.url;
+    } catch (error) {
+      console.error(`Error fetching image for path ${path}:`, error);
+      return null;
+    }
+  };
+
+  const getProfileImageUrl = async (fileName: string, folder: string, ) : Promise<string | null> => {
+    try {
+      const res = await axios.get<{ url: string }>(
+        `${BASE_URL}/api/v1/storage/getFileUrl`,
+        { params: { fileName,folder } }
+      );
+      return res.data.url;
+    } catch (error) {
+      console.error(`Error fetching image for path ${folder}/${fileName}:`, error);
+      return null;
+    }
+  };
 
   return (
     <SafeAreaProvider>
       <SafeAreaView className="flex-1">
-        <ScrollView
-          className="mb-24"
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView className="mb-24" showsVerticalScrollIndicator={false}>
           <View className="mx-6 my-4">
             <SearchBox
               value={searchQuery}
@@ -52,42 +190,55 @@ export default function ForumScreen() {
               onChangeText={setSearchQuery}
             />
           </View>
+
           <View className="mx-6 mb-4">
             <TwoChoiceFilterBox
               first_choice="ล่าสุด"
               second_choice="ยอดนิยม"
-              first_onPress={(() => setCurrentFilterChoice(1))}
-              second_onPress={(() => setCurrentFilterChoice(2))}
+              first_onPress={() => setCurrentFilterChoice(1)}
+              second_onPress={() => setCurrentFilterChoice(2)}
               current_choice={currentFilterChoice}
             />
           </View>
+
           <CreatePostTrigger />
-          <View>
-            <ForumCard
-              imageContent={mockImageContent}
-              like={1}
-              comments={2}
-              userimage={mockProfile}
-              userName={mockUsername}
-              doctorImage={mockDoctor}
-              doctorName={mockDoctorName}
-              content={mockTextContent}
-              viewComments={false}
-            />
-          </View>
-          <View>
-            <ForumCard
-              imageContent={{}}
-              like={0}
-              comments={0}
-              userimage={mockProfile}
-              userName={mockUsername}
-              doctorImage={mockDoctor}
-              doctorName={mockDoctorName}
-              content={mockTextContent}
-              viewComments={false}
-            />
-          </View>
+
+          {loading ? (
+            <ActivityIndicator size="large" color="#0000ff" />
+          ) : (
+            posts.map((post) => (
+              <ForumCard
+                key={post._id}
+                postId={post.postId}  // Pass postId
+                {...(post.imageUrl ? { imageContent: { uri: post.imageUrl } } : {})} // ส่ง imageContent เฉพาะที่มีค่า
+                like={post.likes.count}
+                comments={post.comments.length}
+                userimage={
+                  post.userImage ? (
+                    post.userImage === "koomwanAvatar01.png" ? defaultUserAvatar01 :
+                    post.userImage === "koomwanAvatar02.png" ? defaultUserAvatar02 :
+                    post.userImage === "koomwanAvatar03.png" ? defaultUserAvatar03 :
+                    post.userImage === "koomwanAvatar04.png" ? defaultUserAvatar04 :
+                    { uri: post.userImage } // ถ้าไม่ใช่ 4 avatar ข้างต้น ให้ใช้ URL ของ userImage
+                  ) : defaultUserAvatar01 // 🟢 ใช้รูป local ถ้า user ไม่มีรูป
+                }
+                userName={post.postedBy?.username || "ไม่ระบุชื่อ"}
+                doctorImage={
+                  post.doctorImage ? (
+                    post.doctorImage === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
+                    post.doctorImage === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
+                  { uri: post.doctorImage } 
+                ) : defaultDoctorAvatar01
+              }
+                doctorName={post.doctorName || null}
+                content={post.title}
+                viewComments={false}
+                posttime={post.posttime} // 🟢 ส่ง posttime ไปยัง ForumCard
+                
+              />
+            ))
+            
+          )}
         </ScrollView>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -102,13 +253,15 @@ export default function ForumScreen() {
         <View className="flex flex-row justify-between items-center">
           <Image
             className="w-12 h-12 self-start ml-5"
-            source={require("../../../assets/Login/user.png")} />
+            source={require("../../../assets/Login/user.png")}
+          />
           <Text className="font-sans text-description text-gray">
             คุณกำลังมีข้อสงสัยอะไรอยู่...
           </Text>
           <Image
             className="w-6 h-6 mr-6"
-            source={require("../../../assets/Forum/Pen-bold.png")} />
+            source={require("../../../assets/Forum/Pen-bold.png")}
+          />
         </View>
       </Pressable>
     );

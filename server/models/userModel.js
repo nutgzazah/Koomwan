@@ -32,7 +32,12 @@ const userSchema = new mongoose.Schema({
     image: {
         type: String,
         required: false,
-        default:'koomwanAvatar01.png'
+        default: () => {
+            const avatars = ['koomwanAvatar01.png', 'koomwanAvatar02.png', 'koomwanAvatar03.png', 'koomwanAvatar04.png'];
+            const randomIndex = Math.floor(Math.random() * avatars.length);
+            return avatars[randomIndex];
+        }
+    
     },
     healthinfo: {
         type: mongoose.Schema.Types.ObjectId,

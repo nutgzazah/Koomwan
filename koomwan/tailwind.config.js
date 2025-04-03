@@ -18,6 +18,7 @@ module.exports = {
         abnormal: "#FE5757", // For Unsuccess Status And Risk Status
         unread: "#D6E3FF",
         gray: "#CBCBCB",
+        orange: "#FFA600FF",
       },
       fontFamily: {
         sans: ["K2D-Regular", "K2D-Medium", "K2D-Bold"],
