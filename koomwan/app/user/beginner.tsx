@@ -42,6 +42,7 @@ export default function BeginnerSetupScreen() {
     height,
     weight,
     isLoading,
+    healthInfoId,
     setHeight,
     setWeight,
     handleNext,
@@ -103,7 +104,8 @@ export default function BeginnerSetupScreen() {
       case 4:
         return <WeightInput weight={weight} setWeight={setWeight} />;
       case 5:
-        return <MedicineInput />;
+        // ส่ง healthInfoId ไปให้ MedicineInput
+        return <MedicineInput healthInfoId={healthInfoId} />;
       case 2:
         return (
           <BirthdayInput

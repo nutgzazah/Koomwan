@@ -19,6 +19,7 @@ export const useBeginnerSetup = () => {
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [healthInfoId, setHealthInfoId] = useState<string | null>(null);
 
   // แปลงเดือนภาษาไทยเป็นตัวเลข
   const getMonthNumber = (monthName: string): number => {
@@ -64,7 +65,8 @@ export const useBeginnerSetup = () => {
     }
   };
 
-  const submitHealthInfo = async () => {
+  // Function to create healthInfo before the medication step
+  const createHealthInfo = async () => {
     try {
       setIsLoading(true);
       
@@ -103,7 +105,7 @@ export const useBeginnerSetup = () => {
       };
       
       // แสดงข้อมูลที่จะส่งไป API
-      console.log("Sending data to API:", JSON.stringify(data, null, 2));
+      console.log("Creating healthInfo with data:", JSON.stringify(data, null, 2));
       
       const response = await axios.post(
         `${BASE_URL}/api/v1/user/beginnerSetup`,
@@ -120,13 +122,17 @@ export const useBeginnerSetup = () => {
       console.log("API Response:", JSON.stringify(response.data, null, 2));
       
       if (response.data.success) {
+        // ดึง healthInfoId หลังจากสร้าง healthInfo สำเร็จ
+        if (response.data.healthInfo && response.data.healthInfo._id) {
+          setHealthInfoId(response.data.healthInfo._id);
+        }
         return true;
       } else {
         Alert.alert("เกิดข้อผิดพลาดในการส่งข้อมูล", "กรุณาลองใหม่อีกครั้ง");
         return false;
       }
     } catch (error) {
-      console.error('Error submitting health info:', error);
+      console.error('Error creating health info:', error);
       
       // Log ข้อผิดพลาด
       if (axios.isAxiosError(error)) {
@@ -150,22 +156,23 @@ export const useBeginnerSetup = () => {
       setCurrentStep(3);
     } else if (currentStep === 3 && height && isHeightValid(height)) {
       setCurrentStep(4);
-    } else if (currentStep === 4 && weight) {
-      setCurrentStep(5);
+    } else if (currentStep === 4 && weight && isWeightValid(weight)) {
+      // เมื่อผู้ใช้กรอกข้อมูลครบถึงน้ำหนัก ให้สร้าง healthInfo ก่อนไปหน้าเพิ่มยา
+      const success = await createHealthInfo();
+      if (success) {
+        setCurrentStep(5);
+      }
     } else if (currentStep === 5) {
-      console.log("======== BEGINNER SETUP DATA ========");
+      console.log("======== BEGINNER SETUP COMPLETED ========");
       console.log("User Type:", selections.userType);
       console.log("Gender:", selections.gender);
       console.log("Birthday:", selections.birthday);
       console.log("Height:", height);
       console.log("Weight:", weight);
+      console.log("HealthInfoId:", healthInfoId);
       console.log("Current Step:", currentStep);
       console.log("====================================");
-      const success = await submitHealthInfo();
-      console.log("Submit health info result:", success);
-      if (success) {
-        router.replace("/user/Success");
-      }
+      router.replace("/user/Success");
     }
   };
 
@@ -226,6 +233,7 @@ export const useBeginnerSetup = () => {
     height,
     weight,
     isLoading, 
+    healthInfoId,
     setHeight,
     setWeight,
     handleNext,
