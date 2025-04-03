@@ -6,7 +6,7 @@ export const steps = [
     title: "ฉันเป็น",
     options: [
       {
-        id: "new_user",
+        id: "user",
         icon: require("../assets/BeginnerSetup/normal.png"),
         label: "ผู้ใช้ทั่วไป",
       },
