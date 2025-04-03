@@ -9,7 +9,7 @@ import {
   Alert,
   Platform,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useGlobalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import BASE_URL from "../../../config";
@@ -25,7 +25,16 @@ type MedicationType = {
   addedAt: string;
 };
 
-export const MedicineInput = () => {
+// เพิ่ม Props interface สำหรับ MedicineInput component
+interface MedicineInputProps {
+  healthInfoId?: string | null;
+}
+
+// แก้ไข export เพื่อรับ props จาก parent component
+export const MedicineInput: React.FC<MedicineInputProps> = ({
+  healthInfoId: propHealthInfoId,
+}) => {
+  const params = useGlobalSearchParams();
   const [medications, setMedications] = useState<MedicationType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,12 +72,27 @@ export const MedicineInput = () => {
         }
       );
 
-      if (!userResponse.data.success || !userResponse.data.user.healthinfo) {
-        setError("No health information found.");
+      let healthInfoId;
+
+      // ตรวจสอบตามลำดับความสำคัญ:
+      // 1. ใช้ healthInfoId จาก props (ส่งมาจาก beginner.tsx)
+      // 2. ใช้ healthInfoId จาก URL params
+      // 3. ใช้ healthInfoId จาก user profile
+      if (propHealthInfoId) {
+        healthInfoId = propHealthInfoId;
+      } else if (params.healthInfoId) {
+        healthInfoId = params.healthInfoId;
+      } else if (
+        userResponse.data.success &&
+        userResponse.data.user.healthinfo
+      ) {
+        healthInfoId = userResponse.data.user.healthinfo._id;
+      } else {
+        console.log("No health information found.");
+        setMedications([]);
+        setLoading(false);
         return;
       }
-
-      const healthInfoId = userResponse.data.user.healthinfo._id;
 
       // get medication data
       const healthInfoResponse = await axios.get(
@@ -133,12 +157,22 @@ export const MedicineInput = () => {
         }
       );
 
-      if (!userResponse.data.success || !userResponse.data.user.healthinfo) {
+      let healthInfoId;
+
+      // ตรวจสอบตามลำดับความสำคัญ เหมือนกับใน fetchMedications
+      if (propHealthInfoId) {
+        healthInfoId = propHealthInfoId;
+      } else if (params.healthInfoId) {
+        healthInfoId = params.healthInfoId;
+      } else if (
+        userResponse.data.success &&
+        userResponse.data.user.healthinfo
+      ) {
+        healthInfoId = userResponse.data.user.healthinfo._id;
+      } else {
         Alert.alert("Error", "No health information found");
         return;
       }
-
-      const healthInfoId = userResponse.data.user.healthinfo._id;
 
       const response = await axios.put(
         `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}/remove-pills`,
@@ -183,6 +217,21 @@ export const MedicineInput = () => {
         },
       ]
     );
+  };
+
+  const handleAddMedication = () => {
+    // Pass the healthInfoId as a parameter when navigating to addMed
+    // ใช้ healthInfoId จาก prop ก่อน ถ้าไม่มีจึงใช้จาก params
+    const finalHealthInfoId = propHealthInfoId || params.healthInfoId;
+
+    if (finalHealthInfoId) {
+      router.push({
+        pathname: "/profile/addMed",
+        params: { healthInfoId: finalHealthInfoId },
+      });
+    } else {
+      router.push("/profile/addMed");
+    }
   };
 
   const renderMedicationItem = ({ item }: { item: MedicationType }) => (
@@ -240,7 +289,7 @@ export const MedicineInput = () => {
       <View className="w-full">
         <TouchableOpacity
           className="w-full flex-row items-center justify-between bg-background rounded p-4 mb-2"
-          onPress={() => router.push("/profile/addMed")}
+          onPress={handleAddMedication}
         >
           <Text className="text-gray pr-12 text-description font-regular">
             เพิ่มยาประจำของคุณ
