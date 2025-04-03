@@ -1,4 +1,3 @@
-// screens/BeginnerSetupScreen.tsx
 import React from "react";
 import {
   View,
@@ -10,6 +9,7 @@ import {
   Keyboard,
   Text,
 } from "react-native";
+import { router } from "expo-router";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import SelectionModal from "../../components/beginner/SelectionModal";
@@ -22,6 +22,7 @@ import { StepOption } from "../../components/beginner/StepOption";
 import { BeginnerBackButton } from "../../components/beginner/BackButton";
 import { NextButton } from "../../components/beginner/NextButton";
 import { useBeginnerSetup } from "../../hooks/useBeginnerSetup";
+import Loading from "../../global/components/Loading";
 import {
   steps,
   getStepMessage,
@@ -38,6 +39,7 @@ export default function BeginnerSetupScreen() {
     modalType,
     height,
     weight,
+    isLoading,
     setHeight,
     setWeight,
     handleNext,
@@ -80,6 +82,10 @@ export default function BeginnerSetupScreen() {
         ));
     }
   };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <KeyboardAvoidingView

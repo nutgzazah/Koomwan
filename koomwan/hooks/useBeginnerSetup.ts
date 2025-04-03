@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
+import BASE_URL from '../config';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 
 export type DateModalType = "day" | "month" | "year" | null;
 
@@ -14,6 +18,28 @@ export const useBeginnerSetup = () => {
   const [modalType, setModalType] = useState<DateModalType>(null);
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // แปลงเดือนภาษาไทยเป็นตัวเลข
+  const getMonthNumber = (monthName: string): number => {
+    const months = [
+      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+    return months.indexOf(monthName);
+  };
+
+  // แปลงปีพุทธศักราชเป็นคริสต์ศักราช พ.ศ. - 543 = ค.ศ.
+  const convertToGregorianYear = (buddhistYear: string): number => {
+    return parseInt(buddhistYear) - 543;
+  };
+
+  // สร้างวันที่โดยกำหนดเวลาเป็น 00:00:00
+  const createDateWithoutTime = (day: number, month: number, year: number): string => {
+    // สร้างวันที่ในรูปแบบ ISO string ที่เวลาเป็น 00:00:00
+    const date = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+    return date.toISOString();
+  };
 
   const isHeightValid = (height: string) => {
     const heightNum = parseInt(height);
@@ -38,7 +64,88 @@ export const useBeginnerSetup = () => {
     }
   };
 
-  const handleNext = () => {
+  const submitHealthInfo = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get authentication data from AsyncStorage
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        console.log("No authentication data found.");
+        return false;
+      }
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+      const user = auth.user;
+      const userId = user._id;
+      
+      if (!userId || !token) {
+        Alert.alert("ข้อผิดพลาด", "กรุณาเข้าสู่ระบบอีกครั้ง");
+        router.replace('/user/login');
+        return false;
+      }
+      
+      // สร้างวันที่จากข้อมูลที่ผู้ใช้เลือก (โดยตั้งเวลาเป็น 00:00:00)
+      const day = parseInt(selections.birthday.day);
+      const month = getMonthNumber(selections.birthday.month);
+      const year = convertToGregorianYear(selections.birthday.year);
+      const birthdateString = createDateWithoutTime(day, month, year);
+      
+      // ข้อมูลสำหรับส่งไปยัง API
+      const data = {
+        userId: userId,
+        diabetestype: selections.userType === 'diabetic' ? 'diabetes' : 'none',
+        gender: selections.gender,
+        birthdate: birthdateString,
+        height: parseInt(height),
+        weight: parseInt(weight),
+        // regularpill เพิ่มข้อมูลแยกอีกไฟล์แล้ว
+      };
+      
+      // แสดงข้อมูลที่จะส่งไป API
+      console.log("Sending data to API:", JSON.stringify(data, null, 2));
+      
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/user/beginnerSetup`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      // Log ผลลัพธ์จาก API
+      console.log("API Response:", JSON.stringify(response.data, null, 2));
+      
+      if (response.data.success) {
+        return true;
+      } else {
+        Alert.alert("เกิดข้อผิดพลาดในการส่งข้อมูล", "กรุณาลองใหม่อีกครั้ง");
+        return false;
+      }
+    } catch (error) {
+      console.error('Error submitting health info:', error);
+      
+      // Log ข้อผิดพลาด
+      if (axios.isAxiosError(error)) {
+        console.log("API Error Response:", JSON.stringify(error.response?.data, null, 2));
+        console.log("API Error Status:", error.response?.status);
+      } 
+      
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        Alert.alert("เกิดข้อผิดพลาด", 'กรุณาลองใหม่อีกครั้ง');
+      } else {
+        Alert.alert('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'กรุณาลองใหม่อีกครั้ง');
+      }
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
     if (currentStep === 2 && isBirthdayComplete()) {
       setCurrentStep(3);
     } else if (currentStep === 3 && height && isHeightValid(height)) {
@@ -46,7 +153,19 @@ export const useBeginnerSetup = () => {
     } else if (currentStep === 4 && weight) {
       setCurrentStep(5);
     } else if (currentStep === 5) {
-      router.push("/user/Success");
+      console.log("======== BEGINNER SETUP DATA ========");
+      console.log("User Type:", selections.userType);
+      console.log("Gender:", selections.gender);
+      console.log("Birthday:", selections.birthday);
+      console.log("Height:", height);
+      console.log("Weight:", weight);
+      console.log("Current Step:", currentStep);
+      console.log("====================================");
+      const success = await submitHealthInfo();
+      console.log("Submit health info result:", success);
+      if (success) {
+        router.replace("/user/Success");
+      }
     }
   };
 
@@ -106,6 +225,7 @@ export const useBeginnerSetup = () => {
     modalType,
     height,
     weight,
+    isLoading, 
     setHeight,
     setWeight,
     handleNext,
