@@ -10,13 +10,26 @@ import {
 import Card from "../../../../global/components/Card";
 import BreakLine from "../../../../global/components/BreakLine";
 import BackButton from "../../../../global/components/BackButton";
+import ProblemDropdown from "../../../../components/profile/problemDropdown";
+import { PROBLEM_TYPES } from "../../../../constant/problem";
 
 export default function OtherHelpScreen() {
-  const [problemDetail, setProblemDetail] = useState("");
+  const [problemDetail, setProblemDetail] = useState<string>("");
+  const [problemType, setProblemType] = useState<string>("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const handleSelectType = (selectedType: string) => {
+    setProblemType(selectedType);
+    setIsDropdownOpen(false);
+  };
 
   const handleSubmit = () => {
-    // Handle form submission
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     console.log("Problem detail:", problemDetail);
+    // Add your form submission logic here (e.g., API call)
+    setIsSubmitting(false); // Re-enable after submission
   };
 
   return (
@@ -32,6 +45,19 @@ export default function OtherHelpScreen() {
               </Text>
 
               <BreakLine />
+
+              {/* Type Selection */}
+              <View className="mt-4">
+                <Text className="text-description text-secondary font-regular mb-2">
+                  ประเภท (Optional)
+                </Text>
+                <ProblemDropdown
+                  value={problemType}
+                  options={PROBLEM_TYPES}
+                  onSelect={handleSelectType}
+                  disabled={isSubmitting}
+                />
+              </View>
 
               <Text className="text-description font-regular text-secondary mb-4">
                 กรุณากรอกรายละเอียดของปัญหา
@@ -49,6 +75,7 @@ export default function OtherHelpScreen() {
               <TouchableOpacity
                 className="w-full bg-primary py-4 rounded mt-6"
                 onPress={handleSubmit}
+                disabled={isSubmitting} // Disable button during submission
               >
                 <Text className="text-card text-center font-bold text-button">
                   ส่ง
