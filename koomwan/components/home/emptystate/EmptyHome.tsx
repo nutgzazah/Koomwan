@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 interface EmptyStateProps {
+  header?: string;
   title?: string;
   subtitle?: string;
   buttonText?: string;
@@ -12,6 +13,7 @@ interface EmptyStateProps {
 }
 
 const EmptyHomeCard = ({
+  header = "สุขภาพโดยรวม",
   title = "ยังไม่มีข้อมูลสุขภาพ",
   subtitle = "กรุณาบันทึกข้อมูลสุขภาพเพื่อแสดงผลการวิเคราะห์",
   buttonText = "บันทึกข้อมูลสุขภาพ",
@@ -23,15 +25,15 @@ const EmptyHomeCard = ({
   return (
     <Card>
       <View className="w-full justify-center items-center">
-        <Text className="text-title font-bold text-secondary">
-          สุขภาพโดยรวม
+        <Text className="text-title font-bold text-secondary text-center">
+          {header}
         </Text>
         <BreakLine />
 
         <View className="py-6 px-6 items-center">
           <Image
             source={icon}
-            className="w-[180px] h-[180px] "
+            className="w-[150px] h-[150px] mb-2"
             resizeMode="contain"
           />
           <Text className="text-body font-medium text-secondary mb-2 text-center">
