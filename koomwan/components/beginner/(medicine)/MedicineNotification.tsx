@@ -24,14 +24,14 @@ const MedicineNotification = () => {
   const [showDayPicker, setShowDayPicker] = useState<boolean>(false);
 
   const dayMap: Record<string, string> = {
-    วันจันทร์: "Mon",
-    วันอังคาร: "Tue",
-    วันพุธ: "Wed",
-    วันพฤหัสบดี: "Thu",
-    วันศุกร์: "Fri",
-    วันเสาร์: "Sat",
-    วันอาทิตย์: "Sun",
-    ทุกวัน: "Everyday",
+    วันจันทร์: "monday",
+    วันอังคาร: "tuesday",
+    วันพุธ: "wednesday",
+    วันพฤหัสบดี: "thursday",
+    วันศุกร์: "friday",
+    วันเสาร์: "satuarday",
+    วันอาทิตย์: "sunday",
+    ทุกวัน: "everyday",
   };
 
   const days = Object.keys(dayMap); // ["วันจันทร์", "วันอังคาร", ..., "ทุกวัน"]
