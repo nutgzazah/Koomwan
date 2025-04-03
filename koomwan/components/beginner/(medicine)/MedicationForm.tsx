@@ -436,7 +436,16 @@ export default function MedicationForm() {
                           className="w-5 h-5 mr-2"
                         />
                         <Text className="text-description text-secondary font-regular">
-                          {time.replace("/", " เวลา ")}
+                          {time
+                            .replace("/", " เวลา ")
+                            .replace("monday", "วันจันทร์")
+                            .replace("tuesday", "วันอังคาร")
+                            .replace("wednesday", "วันพุธ")
+                            .replace("thursday", "วันพฤหัสบดี")
+                            .replace("friday", "วันศุกร์")
+                            .replace("saturday", "วันเสาร์")
+                            .replace("sunday", "วันอาทิตย์")
+                            .replace("everyday", "ทุกวัน")}
                         </Text>
                       </View>
                       <View>

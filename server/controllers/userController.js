@@ -1,6 +1,7 @@
 const userModel = require("../models/userModel");
 const doctorModel = require("../models/doctorModel");
 const healthInfoModel = require("../models/healthInfoModel");
+const regularPillTrackingModel = require("../models/regularPillTrackingModel");
 
 //BEGINNER SETUp
 // ฟังก์ชันเช็คว่า userId มี healthinfo แล้วหรือยัง (รองรับทั้ง userModel และ doctorModel)
@@ -381,10 +382,8 @@ const updateHealthInfo = async (req, res) => {
   }
 };
 
-// ฟังก์ชันลบยาประจำจาก healthinfo
+// ฟังก์ชันลบยาประจำจาก healthinfo และลบใน tracking
 /**
- * Removes selected medications from user's health information.
- *
  * @param {Object} req - The request object.
  * @param {Object} req.params - The request parameters.
  * @param {string} req.params.healthInfoId - The ID of the health information to update.
@@ -430,9 +429,38 @@ const removeRegularPills = async (req, res) => {
     healthInfo.regularpill = updatedPills;
     await healthInfo.save();
 
+    // Delete tracking records for each removed pill
+    const userId = healthInfo.user.toString();
+    const deleteResults = [];
+
+    for (const pillId of removePills) {
+      try {
+        // ลบรายการติดตามที่เกี่ยวข้องกับยาที่ถูกลบ
+        const result = await regularPillTrackingModel.deleteMany({
+          user: userId,
+          pillId: pillId,
+        });
+
+        deleteResults.push({
+          pillId,
+          deletedCount: result.deletedCount,
+        });
+
+        console.log(
+          `Deleted ${result.deletedCount} tracking records for pill ${pillId}`
+        );
+      } catch (error) {
+        console.error(
+          `Error deleting tracking records for pill ${pillId}:`,
+          error
+        );
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: "Medications removed successfully",
+      deletedTrackings: deleteResults,
     });
   } catch (error) {
     console.error("Error in removeRegularPills:", error);
@@ -496,6 +524,7 @@ const addRegularPill = async (req, res) => {
       description: description || "",
       pillImage: pillImage || null,
       reminderTimes: reminderTimes || [],
+      addedAt: new Date(),
     };
 
     // Add the new pill to the regularpill array
