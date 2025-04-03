@@ -7,6 +7,7 @@ import BASE_URL from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useFocusEffect } from "expo-router";
 import Loading from "../../global/components/Loading";
+import EmptyHomeCard from "./emptystate/EmptyHome";
 
 interface BloodSugarData {
   bloodsugar: number;
@@ -40,6 +41,7 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
   const [status, setStatus] = useState<"none" | "normal" | "risk" | "diabetes">(
     "none"
   );
+  const [hasRecords, setHasRecords] = useState(false);
 
   // Fetch blood sugar data function
   const fetchBloodSugarData = async () => {
@@ -77,6 +79,17 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
           response.data.message || "Failed to fetch blood sugar data"
         );
       }
+
+      // Check if there are any records
+      if (!response.data.records || response.data.records.length === 0) {
+        setHasRecords(false);
+        setStatus("none");
+        setLoading(false);
+        return;
+      }
+
+      // User has at least one record
+      setHasRecords(true);
 
       if (response.data.records.length > 0) {
         // Sort records by date to get the most recent
@@ -248,6 +261,32 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
     );
   }
 
+  // Show empty state if no records found
+  if (!hasRecords) {
+    return (
+      <EmptyHomeCard
+        header="ระดับน้ำตาลในเลือดล่าสุด"
+        title="ยังไม่มีข้อมูลน้ำตาลในเลือด"
+        subtitle="กรุณาบันทึกข้อมูลสุขภาพเพื่อติดตามความเสี่ยงของคุณ"
+        buttonText="บันทึกข้อมูลสุขภาพ"
+        navigateTo="/(tabs)/tracking"
+        icon={require("../../assets/Home/a1c-none.png")}
+      />
+    );
+  }
+
+  // Show no blood sugar data state
+  if (status === "none" && hasRecords) {
+    return (
+      <EmptyHomeCard
+        title="ยังไม่มีข้อมูลค่าน้ำตาลในเลือด"
+        subtitle="คุณมีข้อมูลบันทึกสุขภาพแล้ว แต่ยังไม่มีข้อมูลน้ำตาลในเลือด กรุณาบันทึกข้อมูลเพิ่มเติม"
+        buttonText="บันทึกข้อมูลสุขภาพ"
+        navigateTo="/(tabs)/tracking"
+      />
+    );
+  }
+
   if (error) {
     return (
       <Card>
@@ -288,7 +327,6 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
         </Text>
       )}
 
-      {/* A1C Value - Commented out as in your original code */}
       {/* {bloodSugarData?.a1c && (
         <Text className="text-headline font-bold text-center mt-1">
           <Text className="text-secondary">ค่า A1C: </Text>
