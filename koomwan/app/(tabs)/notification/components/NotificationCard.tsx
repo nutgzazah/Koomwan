@@ -2,24 +2,26 @@ import { Text, Image, Pressable, View } from "react-native";
 import React from "react";
 import BreakLine from "../../../../global/components/BreakLine";
 
-// Future interface implement to handle notification model
-export interface notificationCardProps {
-    user: string,
-    createdAt: Date,
-    title: string,
-    detail: string,
-    notificationType: string,
-    pillId: string,
-    pillName: string,
-    isRead: boolean
+// Define the Notification interface
+interface Notification {
+    user: string; // Assuming user ID is a string
+    createdAt: Date;
+    title: string;
+    detail: string;
+    notificationType: string; // Consider using a union type if the types are fixed
+    medicationDetails?: {
+        pillId?: string; // Assuming pill ID is a string
+        pillName?: string;
+    };
+    isRead: boolean;
 }
 
-export interface notificationInterface {
-    notification: notificationCardProps
-    onPress: () => void
+export interface NotificationInterface {
+    notification: Notification; // Use the Notification interface here
+    onPress: () => void;
 }
 
-export default function NotificationCard({notification, onPress}: notificationInterface) {
+export default function NotificationCard({ notification, onPress }: NotificationInterface) {
 
     // Map icon according to notification type
     function iconMap(notificationType: string) {
@@ -33,7 +35,7 @@ export default function NotificationCard({notification, onPress}: notificationIn
             case "system":
                 return require("../../../../assets/Notification/information.png");
             default:
-                console.log("An unknown bug occured");
+                console.log("An unknown bug occurred");
                 break;
         }
     }
@@ -68,7 +70,7 @@ export default function NotificationCard({notification, onPress}: notificationIn
                 "July", "August", "September", "October", "November", "December"];
             const day = targetDate.getDate();
             const month = monthNames[targetDate.getMonth()];
-            if (now.getFullYear() !== targetDate.getFullYear()){
+            if (now.getFullYear() !== targetDate.getFullYear()) {
                 const year = targetDate.getFullYear();
                 return `${day} ${transformMonthToThai(month)} ${year} เมื่อ ${formatTime(targetDate)}`;
             }
@@ -99,7 +101,6 @@ export default function NotificationCard({notification, onPress}: notificationIn
         // Return the Thai month or a fallback if the input is invalid
         return monthMapping[formattedMonth] || "Invalid month";
     }
-
 
     return (
         <Pressable
@@ -133,6 +134,5 @@ export default function NotificationCard({notification, onPress}: notificationIn
                 </View>
             </View>
         </Pressable>
-    )
+    );
 }
-
