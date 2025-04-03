@@ -38,6 +38,30 @@ export default function UserLoginScreen() {
     return thaiMobileRegex.test(cleanPhone);
   };
 
+  // Check if user has health info
+  const checkHealthInfoExists = async (userId: string): Promise<boolean> => {
+    try {
+      const authData = await AsyncStorage.getItem("@auth");
+      const auth = authData ? JSON.parse(authData) : null;
+      const token = auth.token;
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/user/profile/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Check if healthinfo exists and is not null
+      return response.data?.user?.healthinfo != null;
+    } catch (error) {
+      console.error("Error checking health info:", error);
+      // If there's an error, we'll assume user needs to go through setup
+      return false;
+    }
+  };
+
   const handleLogin = async () => {
     console.log("Login function called");
     try {
@@ -66,7 +90,29 @@ export default function UserLoginScreen() {
         await AsyncStorage.setItem("userId", response.data.user._id);
         await AsyncStorage.setItem("token", response.data.token);
         console.log("Login response data:", response.data);
-        router.replace("/user/beginner");
+
+        // Check if user has health info
+        const hasHealthInfo = await checkHealthInfoExists(
+          response.data.user._id
+        );
+
+        if (hasHealthInfo) {
+          // User has health info, route to main tabs
+          Toast.show({
+            type: "success",
+            text1: "เข้าสู่ระบบสำเร็จ",
+            text2: "ยินดีต้อนรับกลับมา!",
+          });
+          router.replace("/(tabs)");
+        } else {
+          // User needs to complete beginner setup
+          Toast.show({
+            type: "info",
+            text1: "เข้าสู่ระบบสำเร็จ",
+            text2: "โปรดตั้งค่าข้อมูลสุขภาพเบื้องต้น",
+          });
+          router.replace("/user/beginner");
+        }
       }
     } catch (error) {
       // ตรวจสอบว่าคือ AxiosError หรือไม่
