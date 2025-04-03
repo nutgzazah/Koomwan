@@ -10,6 +10,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../config";
 import Loading from "../../global/components/Loading";
+import EmptyHomeCard from "./emptystate/EmptyHome";
 
 // Define mood type
 type Mood =
@@ -42,6 +43,7 @@ const Overview = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [weeklyData, setWeeklyData] = useState<WeeklyDataItem[]>([]);
+  const [hasRecords, setHasRecords] = useState(false);
 
   // Function to get text color based on BMI value
   const getBMIColor = (bmi: string | number) => {
@@ -76,6 +78,8 @@ const Overview = () => {
 
     // Map the records to the days
     if (records && records.length > 0) {
+      setHasRecords(true);
+
       records.forEach((record) => {
         // ปรับเวลาของข้อมูลให้เป็น GMT+7 เช่นกัน
         const recordTime = new Date(record.recordtime);
@@ -96,6 +100,8 @@ const Overview = () => {
           }
         });
       });
+    } else {
+      setHasRecords(false);
     }
 
     // Reverse to display Sunday first
@@ -148,7 +154,7 @@ const Overview = () => {
       setWeeklyData(processedData);
     } catch (error) {
       console.error("Error fetching emotion data:", error);
-      Alert.alert("Error", "Failed to load emotion data");
+      setHasRecords(false);
     } finally {
       setLoading(false);
     }
@@ -177,6 +183,20 @@ const Overview = () => {
         <BreakLine />
         <Loading />
       </Card>
+    );
+  }
+
+  // Show empty state if no records
+  if (!hasRecords) {
+    return (
+      <EmptyHomeCard
+        header="มุมมองปฏิทิน"
+        title="ยังไม่มีข้อมูลภาพรวม"
+        subtitle="บันทึกข้อมูลสุขภาพของคุณเพื่อดูภาพรวมสุขภาพรายวันในรูปแบบปฏิทิน"
+        buttonText="บันทึกข้อมูลสุขภาพ"
+        navigateTo="/(tabs)/tracking"
+        icon={require("../../assets/Home/calendar-none.png")}
+      />
     );
   }
 
@@ -233,8 +253,15 @@ const Overview = () => {
 
       {/* Calendar Button */}
       <TouchableOpacity
-        className="w-full bg-primary py-4 rounded-lg flex-row justify-center items-center"
-        onPress={() => router.push("/home/calendarView")}
+        className={`w-full py-4 rounded-lg flex-row justify-center items-center ${
+          hasRecords ? "bg-primary" : "bg-gray"
+        }`}
+        onPress={() => {
+          if (hasRecords) {
+            router.push("/home/calendarView");
+          }
+        }}
+        disabled={!hasRecords}
       >
         <Text className="text-button font-bold text-card mr-2">
           มุมมองปฏิทิน
