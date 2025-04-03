@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Alert,
 } from "react-native";
 import React, { useContext, useState } from "react";
 import { useRouter } from "expo-router";
@@ -98,36 +99,20 @@ export default function UserLoginScreen() {
 
         if (hasHealthInfo) {
           // User has health info, route to main tabs
-          Toast.show({
-            type: "success",
-            text1: "เข้าสู่ระบบสำเร็จ",
-            text2: "ยินดีต้อนรับกลับมา!",
-          });
+
           router.replace("/(tabs)");
         } else {
           // User needs to complete beginner setup
-          Toast.show({
-            type: "info",
-            text1: "เข้าสู่ระบบสำเร็จ",
-            text2: "โปรดตั้งค่าข้อมูลสุขภาพเบื้องต้น",
-          });
           router.replace("/user/beginner");
         }
       }
     } catch (error) {
       // ตรวจสอบว่าคือ AxiosError หรือไม่
       if (axios.isAxiosError(error)) {
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: error.response?.data.message || "Unknown error occurred",
-        });
+        Alert.alert("เกิดข้อผิดพลาด", "กรุณาลองใหม่อีกครั้ง");
+        console.log("API Error Response:", error.response?.data.message);
       } else {
-        Toast.show({
-          type: "error",
-          text1: "Unexpected Error",
-          text2: "An unexpected error occurred",
-        });
+        Alert.alert("เกิดข้อผิดพลาด", "กรุณาลองใหม่อีกครั้ง");
       }
       console.error("Error to login:", error);
     }
