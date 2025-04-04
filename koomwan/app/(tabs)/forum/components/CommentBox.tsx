@@ -42,8 +42,12 @@ interface commentCardProps {
     imageContentSource: ImageSourcePropType
     commentTime: string // รับเวลา commentTime จาก props
     isOwner: boolean, // เพิ่มค่า isOwner
-    postId: string
-    commentId: string
+    postId: string,
+    commentId: string,
+    hospital: string,
+    expert: string,
+    occupation: string,
+    email: string,
     onDeleteComment?: () => void;
     
 }
@@ -57,6 +61,10 @@ export default function CommentCard({
     isOwner, // รับ isOwner
     postId,
     commentId,
+    hospital,
+    expert,
+    occupation,
+    email,
     onDeleteComment,  // รับ props onDeleteComment
 }: commentCardProps) {
     const [modalVisible, setModalVisible] = useState(false);
@@ -112,18 +120,27 @@ export default function CommentCard({
             <DoctorProfileScreen
                 header="ข้อมูลส่วนตัวแพทย์"
                 modalVisible={modalVisible}
+                DoctorImage={profileImage}
+                DoctorName={doctorName}
                 setModalVisible={(() => setModalVisible(!setModalVisible))}
-            />
+                hospital={hospital}
+                expert={expert} 
+                occupation={occupation} 
+                email={email}            />
             <Card>
                 <View className="flex flex-row pt-2">
                     <View className="w-min-fit">
                         <View className="flex flex-row justify-evenly items-center">
-                            <Pressable onPress={(() => setModalVisible(true))}>
-                            <DoctorIcon doctorImage={profileImage} verify={!isOwner} />
-                            </Pressable>
+                            {(occupation || expert) ? (
+                                <Pressable onPress={() => setModalVisible(true)}>
+                                    <DoctorIcon doctorImage={profileImage} verify={!isOwner} />
+                                </Pressable>
+                            ) : (
+                                    <DoctorIcon doctorImage={profileImage} verify={!isOwner} />
+                            )}
                             {DoctorNameBox(doctorName, isOwner)}
                         </View>
-                        <Text className="font-sans text-tag w-full text-left ml-6 mt-1">ตอบกลับเมื่อ {formatPostTime(commentTime)}</Text>
+                        <Text className="font-sans text-tag w-full text-left  mt-2">ตอบกลับเมื่อ {formatPostTime(commentTime)}</Text>
                     </View>
                     {isOwnerComment && (
                         <TouchableOpacity onPress={() => setDropdownVisible(!dropdownVisible)}>

@@ -44,13 +44,22 @@ exports.getDoctorInfo = async (req, res) => {
           return res.status(400).json({ error: "Doctor ID is required" });
         }
     
-        const doctor = await Doctor.findById(doctorId).select("firstname lastname image");
+        const doctor = await Doctor.findById(doctorId).select("firstname lastname image hospital expert occupation email");
     
         if (!doctor) {
           return res.status(404).json({ error: "Doctor not found" });
         }
     
-        res.status(200).json({ firstname: doctor.firstname,lastname: doctor.lastname, image: doctor.image });
+        res.status(200).json({
+            firstname: doctor.firstname,
+            lastname: doctor.lastname,
+            image: doctor.image,
+            hospital: doctor.hospital,
+            expert: doctor.expert,
+            occupation: doctor.occupation,
+            email: doctor.email
+          });
+  
       } catch (error) {
         console.error("Error fetching doctor info:", error);
         res.status(500).json({ error: "Internal server error" });

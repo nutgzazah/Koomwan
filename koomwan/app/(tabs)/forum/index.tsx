@@ -252,7 +252,7 @@ export default function ForumScreen() {
             />
           </View>
 
-          <CreatePostTrigger />
+          {state.user.role !== "doctor" && <CreatePostTrigger />}
 
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />

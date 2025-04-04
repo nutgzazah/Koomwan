@@ -97,6 +97,10 @@ export default function ForumScreen() {
               let doctorName = "คุณหมอ";
               let doctorImageUrl = null;
               let isOwner = false;
+              let doctorHospital = null
+              let doctorExpert = null
+              let doctorOccupation = null
+              let doctorEmail = null
 
               if (comment.role === "owner") {
                 doctorName = post.postedBy.username ;
@@ -113,12 +117,16 @@ export default function ForumScreen() {
                 isOwner = true; // ✅ 
               }else if (comment.role === "doctor") {
                 try {
-                  const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string }>(
+                  const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string; hospital: string; expert: string; occupation: string; email: string; }>(
                     `${BASE_URL}/api/v1/forum/getDoctorInfo`,
                     { params: { doctorId: comment.commenter } }
                   );
 
                   doctorName = `${doctorResponse.data.firstname} ${doctorResponse.data.lastname}`;
+                  doctorHospital = doctorResponse.data.hospital 
+                  doctorExpert = doctorResponse.data.expert
+                  doctorOccupation = doctorResponse.data.occupation 
+                  doctorEmail = doctorResponse.data.email
                   if (doctorResponse.data?.image) {
                     if (doctorResponse.data.image.startsWith("koomwanDoctorAvatar")) {
                       doctorImageUrl = doctorResponse.data.image; // ใช้ local path
@@ -135,6 +143,10 @@ export default function ForumScreen() {
               return {
                 ...comment,
                 doctorName,
+                doctorHospital,
+                doctorExpert,
+                doctorOccupation,
+                doctorEmail,
                 doctorImageUrl,
                 isOwner, // ✅ เพิ่มฟิลด์ isOwner ลงไป
               };
@@ -143,8 +155,7 @@ export default function ForumScreen() {
           );
 
           setComments(commentsWithDoctorInfo);
-          console.log(commentsWithDoctorInfo)
-          console.log("comments Data:",comments)
+          console.log("comments Data:",commentsWithDoctorInfo)
 
         })
         .catch(error => {
@@ -153,19 +164,15 @@ export default function ForumScreen() {
     }
     if (state.token) {
       console.log("State: ",state)
-      console.log("state.user.role: ",state.user.role)
-      console.log("state.user.image: ",state.user.image)
     }
 
     const fetchDoctorImage = async () => {
     if (state.user.role === "doctor") {
       if (state.user.image.startsWith("koomwanDoctorAvatar")) {
         setDoctorImageUrl(state.user.image);
-        console.log("this doctorImageUrl :", state.user.image);
+        console.log("doctorImageUrl :", state.user.image);
       } else {
-        console.log("this state.user.image:", state.user.image);
         const fetchedImageUrl = await getImageUrl(state.user.image);
-        console.log("this doctorImageUrl 2:", fetchedImageUrl);
         setDoctorImageUrl(fetchedImageUrl);
         console.log("doctorImageUrl:", doctorImageUrl);
       }
@@ -270,6 +277,10 @@ export default function ForumScreen() {
               postId={postData._id}
               commentId={comment._id}
               onDeleteComment={() => setCommentUpdated(prev => !prev)} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
+              hospital= {comment.doctorHospital}
+              expert= {comment.doctorExpert}
+              occupation= {comment.doctorOccupation}
+              email= {comment.doctorEmail}
               />
 
           ))}

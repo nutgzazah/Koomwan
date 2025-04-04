@@ -8,14 +8,14 @@ interface doctorIconProps {
 
 export default function DoctorIcon({ doctorImage, verify }: doctorIconProps) {
     return (
-        <View className="w-10 h-10 mr-4 flex flex-shrink-0">
+        <View className="w-12 h-12 mr-4 flex flex-shrink-0">
             <Image
                 className="rounded-full w-full h-full"
                 source={doctorImage}
             />
             {verify && (
                 <Image
-                    className="w-4 h-4 left-[1.625rem] bottom-[0.875rem]"
+                    className="w-6 h-6 left-[2rem] bottom-[0.975rem]"
                     source={require("../../../../assets/Forum/verify.png")}
                 />
             )}
