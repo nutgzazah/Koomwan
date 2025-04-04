@@ -101,6 +101,7 @@ export default function ForumScreen() {
               let doctorExpert = null
               let doctorOccupation = null
               let doctorEmail = null
+              let doctorDocumentUrl = null
 
               if (comment.role === "owner") {
                 doctorName = post.postedBy.username ;
@@ -117,7 +118,7 @@ export default function ForumScreen() {
                 isOwner = true; // ✅ 
               }else if (comment.role === "doctor") {
                 try {
-                  const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string; hospital: string; expert: string; occupation: string; email: string; }>(
+                  const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string; hospital: string; expert: string; occupation: string; email: string; document: string}>(
                     `${BASE_URL}/api/v1/forum/getDoctorInfo`,
                     { params: { doctorId: comment.commenter } }
                   );
@@ -134,8 +135,11 @@ export default function ForumScreen() {
                       doctorImageUrl = await getImageUrl(doctorResponse.data.image);
                     }
                   }
+                  if (doctorResponse.data?.document) {
+                    doctorDocumentUrl = await getImageUrl(doctorResponse.data.document);
+                  }
                 } catch (error) {
-                  console.error(`Error fetching doctor info for ID ${comment.commenter}:`, error);
+                  console.error(`Error fetching doctor Document info for ID ${comment.commenter}:`, error);
                 }
               }
               
@@ -147,6 +151,7 @@ export default function ForumScreen() {
                 doctorExpert,
                 doctorOccupation,
                 doctorEmail,
+                doctorDocumentUrl,
                 doctorImageUrl,
                 isOwner, // ✅ เพิ่มฟิลด์ isOwner ลงไป
               };
@@ -218,7 +223,7 @@ export default function ForumScreen() {
               viewComments={true}
               posttime={postData.date}
               postId={postData._id}
-              handlePostDeleted={() =>  router.push("/forum")} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
+              handlePostDeleted={() =>  router.back()} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
             />
 
             {state.token && (state.user._id === postData.postedBy._id || state.user.role === "doctor") && (
@@ -278,11 +283,11 @@ export default function ForumScreen() {
               postId={postData._id}
               commentId={comment._id}
               onDeleteComment={() => setCommentUpdated(prev => !prev)} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
-              hospital= {comment.doctorHospital}
-              expert= {comment.doctorExpert}
-              occupation= {comment.doctorOccupation}
-              email= {comment.doctorEmail}
-              />
+              hospital={comment.doctorHospital}
+              expert={comment.doctorExpert}
+              occupation={comment.doctorOccupation}
+              email={comment.doctorEmail} 
+              document={comment.doctorDocumentUrl}/>
 
           ))}
         </View>

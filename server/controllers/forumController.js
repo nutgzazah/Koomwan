@@ -44,7 +44,7 @@ exports.getDoctorInfo = async (req, res) => {
           return res.status(400).json({ error: "Doctor ID is required" });
         }
     
-        const doctor = await Doctor.findById(doctorId).select("firstname lastname image hospital expert occupation email");
+        const doctor = await Doctor.findById(doctorId).select("firstname lastname image hospital expert occupation email document");
     
         if (!doctor) {
           return res.status(404).json({ error: "Doctor not found" });
@@ -57,7 +57,8 @@ exports.getDoctorInfo = async (req, res) => {
             hospital: doctor.hospital,
             expert: doctor.expert,
             occupation: doctor.occupation,
-            email: doctor.email
+            email: doctor.email,
+            document: doctor.document
           });
   
       } catch (error) {

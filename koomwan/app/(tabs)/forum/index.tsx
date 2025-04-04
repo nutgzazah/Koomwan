@@ -289,7 +289,7 @@ export default function ForumScreen() {
                 content={post.title}
                 viewComments={false}
                 posttime={post.posttime} // 🟢 ส่ง posttime ไปยัง ForumCard
-                handlePostDeleted={() => {router.push("/forum"); fetchPosts() }} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
+                handlePostDeleted={() =>  fetchPosts() } // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
                 
               />
             ))

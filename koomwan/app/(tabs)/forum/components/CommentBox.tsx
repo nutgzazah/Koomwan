@@ -48,6 +48,7 @@ interface commentCardProps {
     expert: string,
     occupation: string,
     email: string,
+    document: string,
     onDeleteComment?: () => void;
     
 }
@@ -65,6 +66,7 @@ export default function CommentCard({
     expert,
     occupation,
     email,
+    document,
     onDeleteComment,  // รับ props onDeleteComment
 }: commentCardProps) {
     const [modalVisible, setModalVisible] = useState(false);
@@ -126,7 +128,8 @@ export default function CommentCard({
                 hospital={hospital}
                 expert={expert} 
                 occupation={occupation} 
-                email={email}            />
+                email={email}
+                document={document}/>
             <Card>
                 <View className="flex flex-row pt-2">
                     <View className="w-min-fit">

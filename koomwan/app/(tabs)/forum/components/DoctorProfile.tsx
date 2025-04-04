@@ -6,10 +6,13 @@ import {
     Image,
     Pressable,
     ImageSourcePropType,
+    ActivityIndicator,
 } from "react-native";
 import React from "react";
 import BreakLine from "../../../../global/components/BreakLine";
 import { useState } from "react";
+import BASE_URL from "../../../../config"
+import WebView from "react-native-webview";
 
 interface doctorProfileScreenProps {
     header: string,
@@ -20,6 +23,7 @@ interface doctorProfileScreenProps {
     expert: string,
     occupation: string,
     email: string,
+    document: string,
     setModalVisible: (visible: boolean) => void,
 }
 
@@ -33,6 +37,7 @@ export default function DoctorProfileScreen({
     expert,
     occupation,
     email,
+    document,
 }: doctorProfileScreenProps) {
     const [showCertificate, setShowCertificate] = useState(false);
 
@@ -139,18 +144,36 @@ export default function DoctorProfileScreen({
     }
 
     function CertificationBox() {
-        return <View className="flex-1 items-end justify-end right-16 bottom-56">
-            <View className="rounded-2xl bg-card items-center w-[13.875rem] h-[19rem]">
-                <Pressable
-                    className="flex flex-col justify-between items-center w-full"
-                    onPress={() => setShowCertificate(false)}
-                >
-                    <Image
-                        className="w-full h-full"
-                        source={require("../../../../assets/Forum/certificate-mock.png")} />
-                </Pressable>
+        const googleDocViewerURL = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(document)}`;
+    
+        return (
+            <View className="flex-1 items-end justify-end right-[35px] bottom-56">
+                <View className="rounded-2xl bg-card items-center w-[360px] h-[590px] overflow-hidden">
+                    <Pressable
+                        className="absolute z-10 top-1 right-1"
+                        onPress={() => setShowCertificate(false)}
+                    >
+                        <Image
+                            className="w-8 h-8 mt-4 mr-4"
+                            source={require("../../../../assets/close-circle.png")}
+                        />
+                    </Pressable>
+                    <WebView
+                        source={{ uri: googleDocViewerURL }}
+                        style={{ width: 420, height: 590 }} // match 13.875rem x 19rem
+                        javaScriptEnabled
+                        domStorageEnabled
+                        startInLoadingState
+                        renderLoading={() => (
+                            <View className="flex-1 justify-center items-center">
+                                <ActivityIndicator size="large" color="#007AFF" />
+                                <Text className="mt-2 text-secondary font-sans">กำลังโหลดเอกสาร...</Text>
+                            </View>
+                        )}
+                    />
+                </View>
             </View>
-        </View>;
+        );
     }
 
     function HospitalBox({ hospital }: hospitalBoxProps) {
@@ -219,7 +242,7 @@ export default function DoctorProfileScreen({
                     className="w-4 h-4 ml-[0.59375rem] mr-1"
                     source={require("../../../../assets/Forum/document-text.png")} />
                 <Text className="text-white text-sub-button text-[0.625rem] mr-[0.59375rem]">
-                    คลิกเพื่อดูรายละเอียด
+                    กดเพื่อดูรายละเอียด
                 </Text>
             </Pressable>
         </View>;
