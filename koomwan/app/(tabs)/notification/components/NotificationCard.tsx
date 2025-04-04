@@ -40,41 +40,43 @@ export default function NotificationCard({notification, onPress}: notificationIn
 
     // Calculate Time difference between present and event times
     function formatDateDifference(targetDate: Date): string {
+        const date = new Date(targetDate);  // Ensure targetDate is a Date object
         const now = new Date();
-        const diffInMilliseconds = now.getTime() - targetDate.getTime();
+        const diffInMilliseconds = now.getTime() - date.getTime();
         const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
         const diffInHours = Math.floor(diffInMilliseconds / (1000 * 60 * 60));
         const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
-
+    
         const formatTime = (date: Date): string => {
             let hours = date.getHours();
             const minutes = date.getMinutes();
             const minutesStr = minutes < 10 ? '0' + minutes : minutes;
             return `${hours}:${minutesStr}`;
         };
-
+    
         if (diffInMinutes < 60) {
             return `เมื่อ ${diffInMinutes} นาทีก่อน`;
         } else if (diffInHours < 24) {
             return `เมื่อ ${diffInHours} ชั่วโมงก่อน`;
         } else if (diffInDays === 1) {
-            return `เมื่อวาน ${formatTime(targetDate)}`;
+            return `เมื่อวาน ${formatTime(date)}`;
         } else if (diffInDays < 7) {
-            return `${diffInDays} วันก่อนเมื่อ ${formatTime(targetDate)}`;
+            return `${diffInDays} วันก่อนเมื่อ ${formatTime(date)}`;
         } else if (diffInDays < 14) {
-            return `สัปดาห์ก่อนเมื่อ ${formatTime(targetDate)}`;
+            return `สัปดาห์ก่อนเมื่อ ${formatTime(date)}`;
         } else {
             const monthNames = ["January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"];
-            const day = targetDate.getDate();
-            const month = monthNames[targetDate.getMonth()];
-            if (now.getFullYear() !== targetDate.getFullYear()){
-                const year = targetDate.getFullYear();
-                return `${day} ${transformMonthToThai(month)} ${year} เมื่อ ${formatTime(targetDate)}`;
+            const day = date.getDate();
+            const month = monthNames[date.getMonth()];
+            if (now.getFullYear() !== date.getFullYear()){
+                const year = date.getFullYear();
+                return `${day} ${transformMonthToThai(month)} ${year} เมื่อ ${formatTime(date)}`;
             }
-            return `${day} ${transformMonthToThai(month)} เมื่อ ${formatTime(targetDate)}`;
+            return `${day} ${transformMonthToThai(month)} เมื่อ ${formatTime(date)}`;
         }
     }
+    
 
     // Convert month in English to Thai
     function transformMonthToThai(monthInEnglish: string): string {
