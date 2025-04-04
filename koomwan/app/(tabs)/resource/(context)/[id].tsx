@@ -27,13 +27,27 @@ interface Blog {
 }
 
 function formatDate(date: Date): string {
+  const thaiWeekdays = [
+    "อาทิตย์",
+    "จันทร์",
+    "อังคาร",
+    "พุธ",
+    "พฤหัส",
+    "ศุกร์",
+    "เสาร์",
+  ];
+
   const options: Intl.DateTimeFormatOptions = {
-    weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   };
-  return new Intl.DateTimeFormat('th-TH', options).format(date);
+
+  const formattedDate = new Intl.DateTimeFormat('th-TH', options).format(date);
+  const weekdayIndex = date.getDay();
+  const thaiWeekday = thaiWeekdays[weekdayIndex];
+
+  return `${thaiWeekday}, ${formattedDate}`;
 }
 
 function ArticleStructure({
