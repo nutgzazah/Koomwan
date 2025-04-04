@@ -8,7 +8,7 @@ import React, { useContext, useEffect, useState } from "react";
 import ForumCard from "../components/ForumCard";
 import CommentCard from "../components/CommentBox";
 import CommentReplyCard from "../components/CommentReplyBox";
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import axios from "axios";
 import BASE_URL from "../../../../config"
 import { AuthContext } from "../../../../context/authContext";
@@ -218,6 +218,7 @@ export default function ForumScreen() {
               viewComments={true}
               posttime={postData.date}
               postId={postData._id}
+              handlePostDeleted={() =>  router.push("/forum")} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
             />
 
             {state.token && (state.user._id === postData.postedBy._id || state.user.role === "doctor") && (
