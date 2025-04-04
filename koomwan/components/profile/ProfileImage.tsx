@@ -24,7 +24,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
       try {
         if (!imageFileName) {
           // Use default image if no filename provided
-          setImageUrl(require("../../assets/Avatars/koomwanAvatar01.png"));
+          setImageUrl(`${BASE_URL}/uploads/koomwanAvatar01.png`);
           setLoading(false);
           return;
         }
@@ -43,7 +43,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
         // Get auth token for API request
         const authData = await AsyncStorage.getItem("@auth");
         if (!authData) {
-          setImageUrl(require("../../assets/Avatars/koomwanAvatar01.png"));
+          setImageUrl(`${BASE_URL}/uploads/koomwanAvatar01.png`);
           setLoading(false);
           return;
         }
@@ -74,7 +74,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
       } catch (error) {
         console.error("Error fetching image URL:", error);
         // Fallback to default image on error
-        setImageUrl(require("../../assets/Avatars/koomwanAvatar01.png"));
+        setImageUrl(`${BASE_URL}/uploads/koomwanAvatar01.png`);
       } finally {
         setLoading(false);
       }
