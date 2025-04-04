@@ -246,6 +246,7 @@ export default function ForumCard({
                     imageContent ? (
                         <View className="w-auto h-auto mt-6">
                             <Image
+                                className="rounded-2xl"
                                 style={{ width: 336, height: 336 }} // แก้ให้มีขนาดแน่นอน
                                 source={
                                     typeof imageContent === "string"
