@@ -257,7 +257,11 @@ export default function ForumScreen() {
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />
           ) : (
-            posts.map((post) => (
+            posts
+            .filter((post) =>
+              post.title.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((post) => (
               <ForumCard
                 key={post._id}
                 postId={post.postId}  // Pass postId
