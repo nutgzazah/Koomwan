@@ -313,7 +313,7 @@ export default function UserProfileScreen() {
                 label="อีเมล"
                 value={profileData.email || "เพิ่มอีเมล"}
                 isButton={!profileData.email}
-                onPress={() => router.push("/profile/editProfile")}
+                onPress={() => router.push("profile/editprofile")}
               />
 
               <InfoRow
