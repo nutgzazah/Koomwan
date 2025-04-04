@@ -42,6 +42,7 @@ const Overview = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [weeklyData, setWeeklyData] = useState<WeeklyDataItem[]>([]);
+  const [hasRecords, setHasRecords] = useState(false);
 
   // Function to get text color based on BMI value
   const getBMIColor = (bmi: string | number) => {
@@ -76,6 +77,7 @@ const Overview = () => {
 
     // Map the records to the days
     if (records && records.length > 0) {
+      setHasRecords(true);
       records.forEach((record) => {
         // ปรับเวลาของข้อมูลให้เป็น GMT+7 เช่นกัน
         const recordTime = new Date(record.recordtime);
@@ -96,6 +98,8 @@ const Overview = () => {
           }
         });
       });
+    } else {
+      setHasRecords(false);
     }
 
     // Reverse to display Sunday first
@@ -147,8 +151,8 @@ const Overview = () => {
       console.log("Processed weekly data:", processedData);
       setWeeklyData(processedData);
     } catch (error) {
+      setHasRecords(false);
       console.error("Error fetching emotion data:", error);
-      Alert.alert("Error", "Failed to load emotion data");
     } finally {
       setLoading(false);
     }
@@ -176,6 +180,34 @@ const Overview = () => {
         <Text className="text-title text-secondary font-regular">ภาพรวม</Text>
         <BreakLine />
         <Loading />
+      </Card>
+    );
+  }
+
+  if (!hasRecords) {
+    return (
+      <Card>
+        <Text className="text-title text-secondary font-regular">ภาพรวม</Text>
+        <BreakLine />
+        <Text className="text-body font-medium text-secondaryfont-regular mb-4">
+          ยังไม่มีข้อมูลการบันทึกในสัปดาห์นี้
+        </Text>
+        <Text className="text-description font-regular text-secondary text-center mb-4">
+          กรุณาบันทึกข้อมูลสุขภาพเพื่อดูข้อมูลรายสัปดาห์
+        </Text>
+        <TouchableOpacity
+          className="w-full bg-primary py-4 rounded-lg flex-row justify-center items-center"
+          onPress={() => router.push("/home/calendarView")}
+        >
+          <Text className="text-button font-bold text-card mr-2">
+            มุมมองปฏิทิน
+          </Text>
+          <Image
+            source={require("../../assets/Home/calendar.png")}
+            className="w-6 h-6"
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
       </Card>
     );
   }

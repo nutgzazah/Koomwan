@@ -236,7 +236,7 @@ export default function IndexProfileScreen() {
               />
               <TouchableOpacity
                 className="absolute bottom-0 right-0"
-                onPress={() => router.push("/profile/editProfile")}
+                onPress={() => router.push("profile/editprofile")}
               >
                 <Image
                   source={require("../../assets/Profile/edit.png")}

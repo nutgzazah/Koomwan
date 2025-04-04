@@ -12,7 +12,7 @@ import { router } from "expo-router";
 
 export default function MedicationSuccessScreen() {
   const handleStartRecording = () => {
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/tracking");
   };
 
   return (

@@ -313,7 +313,7 @@ export default function UserProfileScreen() {
                 label="อีเมล"
                 value={profileData.email || "เพิ่มอีเมล"}
                 isButton={!profileData.email}
-                onPress={() => router.push("/profile/editProfile")}
+                onPress={() => router.push("profile/editprofile")}
               />
 
               <InfoRow
@@ -328,7 +328,7 @@ export default function UserProfileScreen() {
         {/* Edit Profile Button */}
         <TouchableOpacity
           className="bg-primary mx-6 py-4 rounded-lg my-4"
-          onPress={() => router.push("/profile/editProfile")}
+          onPress={() => router.push("profile/editprofile")}
         >
           <Text className="text-card text-center font-bold text-button">
             แก้ไขโปรไฟล์

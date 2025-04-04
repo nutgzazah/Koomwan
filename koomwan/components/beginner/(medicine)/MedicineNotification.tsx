@@ -14,10 +14,11 @@ import DateTimePicker, {
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import BackButton from "../../../global/components/BackButton";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 const MedicineNotification = () => {
   const router = useRouter();
+  const { healthInfoId } = useLocalSearchParams();
   const [selectedDay, setSelectedDay] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<Date>(new Date());
   const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
@@ -71,10 +72,18 @@ const MedicineNotification = () => {
 
     console.log("Reminder:", reminderFormat);
 
+    // เตรียม params ที่จะส่งกลับไป
+    const params: Record<string, string> = { reminderFormat };
+
+    // ส่ง healthInfoId กลับไปด้วยถ้ามี
+    if (healthInfoId) {
+      params.healthInfoId = healthInfoId as string;
+    }
+
     // ส่งค่ากลับไปยังหน้า MedicationForm
     router.dismissTo({
       pathname: "/profile/addMed",
-      params: { reminderFormat },
+      params,
     });
   };
 

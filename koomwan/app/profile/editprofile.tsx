@@ -28,6 +28,8 @@ import ProfileImageHandler from "../../util/ProfileImageHandler";
 // Define available options
 const GENDER_OPTIONS = ["ชาย", "หญิง"];
 const STATUS_OPTIONS = ["ผู้ป่วยเบาหวาน", "ผู้ใช้ทั่วไป"];
+const DEFAULT_AVATAR_FILENAME = "koomwanAvatar01.png";
+const DEFAULT_AVATAR = require("../../assets/Avatars/koomwanAvatar01.png");
 
 interface UserUpdateData {
   email: string;
@@ -58,10 +60,15 @@ export default function EditProfileScreen() {
 
   // Image Picker
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedImageFile, setSelectedImageFile] = useState<any>(null); // สำหรับเก็บไฟล์รูปภาพที่เลือก
+  const [selectedImageFile, setSelectedImageFile] = useState<any>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [healthInfoId, setHealthInfoId] = useState<string | null>(null);
   const [userToken, setUserToken] = useState<string | null>(null);
+
+  // Manage image delete state
+  const [isDefaultImage, setIsDefaultImage] = useState(false);
+  const [markedForDeletion, setMarkedForDeletion] = useState(false);
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -106,7 +113,12 @@ export default function EditProfileScreen() {
       const username = user.username || "";
       const email = user.email || "";
       const phone = user.phone || "";
-      const profileImage = user.image || "koomwanAvatar01.png";
+      const profileImage = user.image || DEFAULT_AVATAR;
+
+      // Save original image and check if using default
+      setOriginalImage(profileImage);
+      setIsDefaultImage(profileImage === DEFAULT_AVATAR);
+      setMarkedForDeletion(false);
 
       // Default values for health info
       let height = "";
@@ -309,41 +321,111 @@ export default function EditProfileScreen() {
   // เลือกรูปภาพจากคลังรูปภาพ
   const pickImage = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (status !== "granted") {
+      // ถ้ากำลังรอการลบรูปภาพอยู่ ให้ถามก่อนว่าต้องการยกเลิกการลบหรือไม่
+      if (markedForDeletion) {
         Alert.alert(
-          "ต้องการการอนุญาต",
-          "แอพต้องการสิทธิ์ในการเข้าถึงคลังรูปภาพของคุณ"
+          "ยกเลิกการลบรูปภาพ",
+          "คุณได้เลือกที่จะลบรูปโปรไฟล์ไว้แล้ว คุณต้องการเลือกรูปใหม่แทนหรือไม่?",
+          [
+            {
+              text: "ยกเลิก",
+              style: "cancel",
+            },
+            {
+              text: "เลือกรูปใหม่",
+              onPress: async () => {
+                // ยกเลิกการลบและเลือกรูปใหม่แทน
+                setMarkedForDeletion(false);
+                await selectNewImage();
+              },
+            },
+          ]
         );
         return;
       }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.6,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const selectedAsset = result.assets[0];
-
-        // แสดงรูปภาพที่เลือกในหน้าจอ (UI preview)
-        setSelectedImage(selectedAsset.uri);
-
-        // เก็บข้อมูลไฟล์รูปภาพไว้สำหรับการอัพโหลดเมื่อกดบันทึก
-        setSelectedImageFile({
-          uri: selectedAsset.uri,
-          type: selectedAsset.mimeType || "image/jpeg",
-          name: selectedAsset.uri.split("/").pop() || "profile.jpg",
-        });
-      }
+      // เลือกรูปภาพตามปกติ
+      await selectNewImage();
     } catch (error) {
       console.error("Error picking image:", error);
       Alert.alert("ข้อผิดพลาด", "ไม่สามารถเลือกรูปภาพได้");
     }
+  };
+
+  // ฟังก์ชันสำหรับเลือกรูปภาพใหม่
+  const selectNewImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert(
+        "ต้องการการอนุญาต",
+        "แอพต้องการสิทธิ์ในการเข้าถึงคลังรูปภาพของคุณ"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.6,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const selectedAsset = result.assets[0];
+
+      // แสดงรูปภาพที่เลือกในหน้าจอ (UI preview)
+      setSelectedImage(selectedAsset.uri);
+
+      // เก็บข้อมูลไฟล์รูปภาพไว้สำหรับการอัพโหลดเมื่อกดบันทึก
+      setSelectedImageFile({
+        uri: selectedAsset.uri,
+        type: selectedAsset.mimeType || "image/jpeg",
+        name: selectedAsset.uri.split("/").pop() || "profile.jpg",
+      });
+
+      // ไม่ใช่รูป default แล้ว
+      setIsDefaultImage(false);
+    }
+  };
+
+  // ทำเครื่องหมายลบรูปภาพ (เฉพาะ UI ชั่วคราว)
+  const markProfileImageForDeletion = () => {
+    // ถ้าเป็นรูป default อยู่แล้ว ไม่ต้องทำอะไร
+    if (isDefaultImage) {
+      return;
+    }
+
+    // ถ้ามีการเลือกรูปใหม่ไว้แล้ว ไม่ต้องแสดง dialog เพราะรูปเก่าจะถูกแทนที่อยู่แล้ว
+    if (selectedImage) {
+      return;
+    }
+
+    // แสดง confirmation dialog
+    Alert.alert(
+      "ลบรูปโปรไฟล์",
+      "คุณต้องการลบรูปโปรไฟล์และใช้รูปเริ่มต้นหรือไม่?",
+      [
+        {
+          text: "ยกเลิก",
+          style: "cancel",
+        },
+        {
+          text: "ลบรูปภาพ",
+          style: "destructive",
+          onPress: () => {
+            // ทำเครื่องหมายว่ารูปนี้จะถูกลบเมื่อกดบันทึก
+            setMarkedForDeletion(true);
+
+            // ปรับให้ UI แสดงรูป default ชั่วคราว
+            setFormData({ ...formData, profileImage: DEFAULT_AVATAR_FILENAME });
+            setIsDefaultImage(true);
+
+            Alert.alert("ตั้งค่าสำเร็จ", "รูปภาพจะถูกลบเมื่อคุณกดปุ่มบันทึก");
+          },
+        },
+      ]
+    );
   };
 
   // Handle save profile
@@ -379,11 +461,18 @@ export default function EditProfileScreen() {
         Alert.alert("ข้อผิดพลาด", "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (10 หลัก)");
         return;
       }
+
       setUpdating(true);
 
-      // Handle profile image change if a new image was selected
-      let newImageFileName = null;
+      // Prepare user data
+      const userData: UserUpdateData = {
+        email: formData.email,
+        phone: formData.phone,
+      };
+
+      // Handle profile image changes
       if (selectedImageFile) {
+        // กรณีที่มีการเลือกรูปภาพใหม่
         const result = await ProfileImageHandler.changeProfileImage(
           userId,
           selectedImageFile,
@@ -391,19 +480,38 @@ export default function EditProfileScreen() {
         );
 
         if (result.success) {
-          newImageFileName = result.newImageFileName;
-          console.log("Profile image updated successfully:", newImageFileName);
+          console.log(
+            "Profile image updated successfully:",
+            result.newImageFileName
+          );
         } else {
           console.error("Failed to update profile image");
-          // Continue with the rest of the profile update even if image update failed
+        }
+      } else if (
+        markedForDeletion &&
+        originalImage &&
+        originalImage !== DEFAULT_AVATAR_FILENAME
+      ) {
+        // กรณีที่มีการกดเครื่องหมายลบรูปภาพ (และมีรูปเดิมที่ไม่ใช่ default)
+        console.log("Deleting profile image:", originalImage);
+
+        try {
+          // ลบรูปภาพเดิมจาก Cloudflare R2
+          await ProfileImageHandler.deleteProfileImage(
+            originalImage,
+            userToken
+          );
+
+          // อัพเดทข้อมูลใน database ให้ใช้รูป default
+          userData.image = DEFAULT_AVATAR_FILENAME;
+        } catch (deleteError) {
+          console.error("Error deleting profile image:", deleteError);
+          Alert.alert(
+            "เกิดข้อผิดพลาดในการลบรูปโปรไฟล์",
+            "กรุณาลองใหม่อีกครั้ง"
+          );
         }
       }
-
-      // Prepare user data (email and phone)
-      const userData: UserUpdateData = {
-        email: formData.email,
-        phone: formData.phone,
-      };
 
       console.log("Updating user data:", userData);
 
@@ -479,7 +587,7 @@ export default function EditProfileScreen() {
         }
       }
 
-      // Update data in AsyncStorage (but skip the image update since that's already handled)
+      // Update data in AsyncStorage
       try {
         const authData = await AsyncStorage.getItem("@auth");
         if (authData) {
@@ -488,6 +596,11 @@ export default function EditProfileScreen() {
           // Update basic info
           auth.user.email = formData.email;
           auth.user.phone = formData.phone;
+
+          // Update image if it was changed to default
+          if (markedForDeletion) {
+            auth.user.image = DEFAULT_AVATAR_FILENAME;
+          }
 
           // Health info ID update
           if (healthInfoId) {
@@ -553,7 +666,7 @@ export default function EditProfileScreen() {
               </Text>
               <BreakLine />
 
-              {/* Profile Image Section - ใช้ ProfileImage Component */}
+              {/* Profile Image Section with Edit and Delete buttons */}
               <View className="relative mb-4">
                 {selectedImage ? (
                   // ถ้ามีการเลือกรูปภาพใหม่ ให้แสดงรูปภาพนั้น
@@ -561,17 +674,40 @@ export default function EditProfileScreen() {
                     source={{ uri: selectedImage }}
                     className="w-[150px] h-[150px] rounded-full"
                   />
+                ) : markedForDeletion ? (
+                  // ถ้ามีการทำเครื่องหมายลบรูปภาพ ให้แสดงรูป default
+                  <Image
+                    source={DEFAULT_AVATAR}
+                    className="w-[150px] h-[150px] rounded-full"
+                  />
                 ) : (
-                  // ถ้าไม่มีการเลือกรูปภาพใหม่ ให้ใช้ ProfileImage Component
+                  // กรณีอื่นๆ ใช้ ProfileImage Component
                   <ProfileImage
                     imageFileName={formData.profileImage}
                     size="large"
                     style={{ width: 150, height: 150 }}
                   />
                 )}
+
+                {/* Delete Image Button - Top Right (แสดงเฉพาะเมื่อไม่ใช่รูป default และไม่ได้มีการเลือกรูปใหม่) */}
+                {!isDefaultImage && !markedForDeletion && (
+                  <TouchableOpacity
+                    className="absolute top-0 right-0"
+                    onPress={markProfileImageForDeletion}
+                    disabled={updating}
+                  >
+                    <Image
+                      source={require("../../assets/BeginnerSetup/trash.png")}
+                      className="w-10 h-10 bg-secondary rounded-full p-2"
+                    />
+                  </TouchableOpacity>
+                )}
+
+                {/* Edit Image Button - Bottom Right */}
                 <TouchableOpacity
                   className="absolute bottom-0 right-0"
                   onPress={pickImage}
+                  disabled={updating}
                 >
                   <Image
                     source={require("../../assets/Profile/edit.png")}

@@ -46,7 +46,7 @@ router.post(
 );
 
 //BEGGINER SETUP|| POST
-router.post("/beginnerSetup" /*,requireSignIn*/, beginnerSetup);
+router.post("/beginnerSetup", requireSignIn, beginnerSetup);
 
 //TRACKING
 //GET ROCORD || GET
