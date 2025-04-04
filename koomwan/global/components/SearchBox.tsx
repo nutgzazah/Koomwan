@@ -1,5 +1,5 @@
 import React from "react";
-import { View, TextInput, Image } from "react-native";
+import { View, TextInput, Image, Pressable } from "react-native";
 
 interface searchBoxProps {
     value: string,
@@ -24,7 +24,7 @@ export default function SearchBox({
                 source={require("../../assets/Resource/search-normal.png")}
             />
             <TextInput
-                className={`pl-2 font-sans text-description text-secondary overflow-x-scroll w-52 pt-[0.125rem] pb-[0.125rem]`}
+                className={`pl-2 font-sans text-description text-secondary overflow-x-scroll w-72 pt-[0.125rem] pb-[0.125rem]`}
                 numberOfLines={1}
                 value={value}
                 placeholder={placeholder}
@@ -32,6 +32,15 @@ export default function SearchBox({
                 secureTextEntry={false}
                 onChangeText={onChangeText}
             />
+             {/* ปุ่ม X เคลียร์ข้อความ */}
+             {value.length > 0 && (
+                <Pressable onPress={() => onChangeText("")}>
+                    <Image
+                        className="w-6 h-6 ml-2 right-0"
+                        source={require("../../assets/Resource/close.png")} // 🔁 เพิ่มไอคอน X ใน assets
+                    />
+                </Pressable>
+            )}
         </View>
     )
 }
