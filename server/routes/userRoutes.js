@@ -15,7 +15,7 @@ const {
   deleteRecord,
   getRecord,
 } = require("../controllers/trackingController");
-const { sentHelpRequest } = require('../controllers/helpRequestController');
+const { sentHelpRequest, getHelpRequest, getAllHelpRequest } = require('../controllers/helpRequestController');
 const { sendReminder, getAllNotification } = require('../controllers/notificationController');
 
 //router object
@@ -65,5 +65,9 @@ router.post("/sentHelpRequest",requireSignIn , sentHelpRequest);
 router.get('/sentMedicineNoti', requireSignIn, sendReminder);
 
 router.get('/getAllNotification', requireSignIn, getAllNotification);
+
+router.get('/getAllProblem', requireSignIn, getAllHelpRequest);
+
+router.get('/getProblem/:problemId',requireSignIn, getHelpRequest); 
 //export
 module.exports = router;
