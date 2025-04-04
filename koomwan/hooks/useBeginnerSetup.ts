@@ -123,8 +123,20 @@ export const useBeginnerSetup = () => {
       
       if (response.data.success) {
         // ดึง healthInfoId หลังจากสร้าง healthInfo สำเร็จ
-        if (response.data.healthInfo && response.data.healthInfo._id) {
-          setHealthInfoId(response.data.healthInfo._id);
+        const newHealthInfoId = response.data.healthInfo?._id || response.data.healthInfoId;
+        setHealthInfoId(newHealthInfoId);
+        
+        // อัพเดท healthinfo ใน AsyncStorage
+        try {
+          const authData = await AsyncStorage.getItem("@auth");
+          if (authData) {
+            const auth = JSON.parse(authData);
+            auth.user.healthinfo = newHealthInfoId;  
+            await AsyncStorage.setItem("@auth", JSON.stringify(auth));
+            console.log("Updated user healthinfo in AsyncStorage:", newHealthInfoId);
+          }
+        } catch (storageError) {
+          console.error("Error updating healthinfo in AsyncStorage:", storageError);
         }
         return true;
       } else {
@@ -141,7 +153,7 @@ export const useBeginnerSetup = () => {
       } 
       
       if (axios.isAxiosError(error) && error.response?.data?.message) {
-        Alert.alert("เกิดข้อผิดพลาด", 'กรุณาลองใหม่อีกครั้ง');
+        Alert.alert("เกิดข้อผิดพลาด", "กรุณาลองใหม่อีกครั้ง");
       } else {
         Alert.alert('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'กรุณาลองใหม่อีกครั้ง');
       }
