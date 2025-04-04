@@ -9,14 +9,16 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import ForumCard from "./components/ForumCard";
 import SearchBox from "../../../global/components/SearchBox";
 import TwoChoiceFilterBox from "../../../global/components/FilterBox";
 import { useRouter } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { AuthContext } from "../../../context/authContext";
 import BASE_URL from "../../../config"
+import { useFocusEffect } from "@react-navigation/native";
 
 const defaultUserAvatar01 = require("../../../assets/Avatars/koomwanAvatar01.png");
 const defaultUserAvatar02 = require("../../../assets/Avatars/koomwanAvatar02.png");
@@ -47,19 +49,68 @@ type Post = {
 
 export default function ForumScreen() {
   const router = useRouter();
+  const [state] = useContext(AuthContext)
+  const token = state?.token;
   const [searchQuery, setSearchQuery] = useState("");
   const [currentFilterChoice, setCurrentFilterChoice] = useState(1);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  console.log("State2: ",state)
+  console.log("State Image: ",state.user.image)
+
+  // ใช้ useFocusEffect เพื่อรีโหลดโพสต์ทุกครั้งที่หน้าถูกเรียกใหม่
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPosts();
+    }, [])
+  );
 
   useEffect(() => {
+    if (!state?.user?.image) return; // ป้องกัน state.user.image เป็น null หรือ undefined
+
+    console.log("State User Role:", state?.user.role);
+    console.log("State User Image:", state?.user.image);
+
+    if (state?.user.image.startsWith("koomwanAvatar")) {
+      setProfileImageUrl(
+        state.user.image === "koomwanAvatar01.png" ? defaultUserAvatar01 :
+        state.user.image === "koomwanAvatar02.png" ? defaultUserAvatar02 :
+        state.user.image === "koomwanAvatar03.png" ? defaultUserAvatar03 :
+        state.user.image === "koomwanAvatar04.png" ? defaultUserAvatar04 :
+        defaultUserAvatar01
+      );
+    } else if (state?.user.image.startsWith("koomwanDoctorAvatar")) {
+      setProfileImageUrl(
+        state.user.image === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
+        state.user.image === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
+        defaultDoctorAvatar01
+      );
+    }else if (state?.user.role === "doctor") {
+      console.log("Fetching doctor image...");
+      getImageUrl(state.user.image).then((url) => {
+        console.log("Doctor Image URL:", url);
+        setProfileImageUrl(url);
+      }).catch((error) => {
+        console.error("Error fetching doctor image:", error);
+      });
+    } else if (state?.user.role === "user") {
+      console.log("Fetching user image...");
+      getProfileImageUrl(state.user.image, "user").then((url) => { 
+        console.log("User Image URL:", url);
+        setProfileImageUrl(url);
+      }).catch((error) => {
+        console.error("Error fetching user image:", error);
+      });
+    }
     fetchPosts();
-  }, [currentFilterChoice]);
+  }, [currentFilterChoice, state?.user.image]);
 
   const fetchPosts = async () => {
   try {
     const response = await axios.get<Post[]>(`${BASE_URL}/api/v1/forum/getAllPost`);
     let postsData = response.data;
+
     
      // กรองโพสต์เฉพาะภายใน 1 เดือนที่ผ่านมา
      const oneMonthAgo = new Date();
@@ -150,7 +201,7 @@ export default function ForumScreen() {
       setLoading(false);
     }
   };
-
+  
   // ฟังก์ชันดึง URL ของไฟล์จาก path
   const getImageUrl = async (path: string): Promise<string | null> => {
     try {
@@ -234,6 +285,7 @@ export default function ForumScreen() {
                 content={post.title}
                 viewComments={false}
                 posttime={post.posttime} // 🟢 ส่ง posttime ไปยัง ForumCard
+                handlePostDeleted={() => fetchPosts()} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
                 
               />
             ))
@@ -247,13 +299,25 @@ export default function ForumScreen() {
   function CreatePostTrigger() {
     return (
       <Pressable
-        className={"rounded-md bg-card mx-6 px-3 pt-4 pb-3"}
+        className={"rounded-2xl bg-card mx-6 px-3 pt-4 pb-3"}
         onPress={() => router.push("/forum/create")}
       >
         <View className="flex flex-row justify-between items-center">
-          <Image
-            className="w-12 h-12 self-start ml-5"
-            source={require("../../../assets/Login/user.png")}
+        <Image
+            className="w-12 h-12 self-start ml-5 rounded-full"
+            source={
+              state?.user.image.startsWith("koomwanAvatar") 
+              ? state.user.image === "koomwanAvatar01.png" ? defaultUserAvatar01 :
+                state.user.image === "koomwanAvatar02.png" ? defaultUserAvatar02 :
+                state.user.image === "koomwanAvatar03.png" ? defaultUserAvatar03 :
+                state.user.image === "koomwanAvatar04.png" ? defaultUserAvatar04 :
+                defaultUserAvatar01 // fallback หากไม่ตรงกับที่กำหนด
+              : state?.user.image.startsWith("koomwanDoctorAvatar") 
+                ? state.user.image === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
+                  state.user.image === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
+                  defaultDoctorAvatar01 // fallback หากไม่ตรงกับที่กำหนด
+                : state?.user.role === "doctor" ? { uri: profileImageUrl } : { uri: profileImageUrl } // ใช้ getProfileImageUrl หากเป็น user
+            }
           />
           <Text className="font-sans text-description text-gray">
             คุณกำลังมีข้อสงสัยอะไรอยู่...

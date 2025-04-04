@@ -39,6 +39,7 @@ interface forumCardProps {
     viewComments: boolean
     posttime: string
     postId: string; 
+    handlePostDeleted?: () => void;
 }
 
 const formatPostTime = (posttime: string): string => {
@@ -71,6 +72,7 @@ export default function ForumCard({
     viewComments,
     posttime,
     postId,
+    handlePostDeleted,
 }: forumCardProps) {
     
     const [state] = useContext(AuthContext)
@@ -200,10 +202,37 @@ export default function ForumCard({
                         <Text className="font-sans text-tag">{formatPostTime(posttime)}</Text>
                     </View>
                     <View className="ml-7 w-10">
-                        <Pressable
-                            className="w-6 h-6"
-                            onPress={() => setModalVisible(true)}
-                        >
+                    <Pressable
+                        className="w-6 h-6"
+                        onPress={() => {
+                            if (state.user.username === userName) {
+                                // ถ้าเป็นเจ้าของโพสต์ ให้แสดง Modal ลบโพสต์
+                                Alert.alert(
+                                    "ยืนยันการลบโพสต์",
+                                    "คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?",
+                                    [
+                                        { text: "ยกเลิก", style: "cancel" },
+                                        {
+                                            text: "ลบโพสต์",
+                                            onPress: async () => {
+                                                try {
+                                                    await axios.delete(`${BASE_URL}/api/v1/forum/deletePost/${postId}`);
+                                                    if (handlePostDeleted) handlePostDeleted();
+                                                    Alert.alert("ลบโพสต์สำเร็จ");
+                                                } catch (error) {
+                                                    Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถลบโพสต์ได้");
+                                                }
+                                            },
+                                            style: "destructive"
+                                        }
+                                    ]
+                                );
+                            } else {
+                                // ถ้าไม่ใช่เจ้าของโพสต์ ให้แสดง Modal รายงานโพสต์
+                                setModalVisible(true);
+                            }
+                        }}
+                    >
                             <Image source={require("../../../../assets/Forum/option.png")} className="w-full h-full" />
                         </Pressable>
                     </View>

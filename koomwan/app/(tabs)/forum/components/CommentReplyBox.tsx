@@ -25,6 +25,8 @@ interface commentReplyCardProps {
     onCommentAdded: () => void; // ✅ เพิ่มอันนี้เข้าไป
 }
 
+const MAX_LENGTH = 500;
+
 export default function CommentReplyCard({
     profileImage,
     username,
@@ -38,9 +40,24 @@ export default function CommentReplyCard({
     const token = state?.token;
     // console.log("State:",state)
 
+    const remainingChars = MAX_LENGTH - replyText.length;
+    const charColor =
+        remainingChars > 50 ? "text-primary" : remainingChars > 10 ? "text-warning" : "text-abnormal";
+
+
     const handleSubmit = async () => {
         if (!token) {
             console.error("No token found, user might not be logged in.");
+            return;
+        }
+
+        if (replyText.trim() === "") {
+            alert("กรุณากรอกข้อความ");
+            return;
+        }
+
+        if (replyText.length > MAX_LENGTH) {
+            alert("ข้อความต้องไม่เกิน 300 อักขระ");
             return;
         }
 
@@ -81,9 +98,16 @@ export default function CommentReplyCard({
                         className="font-sans text-body ml-3 mr-2 h-fit"
                         placeholder="เพิ่มการตอบกลับ..."
                         value={replyText}
-                        onChangeText={setReplyText}
+                        onChangeText={(text) => {
+                            if (text.length <= MAX_LENGTH) {
+                                setReplyText(text.replace(/\n/g, " "));
+                            }
+                        }}
                         multiline
                     />
+                    <Text className={`text-right mt-2 font-sans text-tag ${charColor}`}>
+                    เหลือ {remainingChars} อักขระ
+                    </Text>
                 </View>
 
                 {/* ปุ่มส่งความคิดเห็น */}
