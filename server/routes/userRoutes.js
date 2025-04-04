@@ -16,7 +16,7 @@ const {
   getRecord,
 } = require("../controllers/trackingController");
 const { sentHelpRequest } = require('../controllers/helpRequestController');
-const { sendReminder } = require('../controllers/notificationController');
+const { sendReminder, getAllNotification } = require('../controllers/notificationController');
 
 //router object
 const router = express.Router();
@@ -64,5 +64,6 @@ router.post("/sentHelpRequest",requireSignIn , sentHelpRequest);
 // Get Remider
 router.get('/sentMedicineNoti', requireSignIn, sendReminder);
 
+router.get('/getAllNotification', requireSignIn, getAllNotification);
 //export
 module.exports = router;

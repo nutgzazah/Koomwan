@@ -77,10 +77,41 @@ const sendReminder = async () => {
     }
 };
 
+const getAllNotification = async (req, res) => {
+    try {
+      const userId = req.auth._id;
+      console.log(userId); 
+  
+      // Retrieve all notifications for the specific user
+      const notifications = await Notification.find({ user: userId }).lean();
+  
+      if (!notifications || notifications.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "No notifications found for this user",
+        });
+      }
+  
+      return res.status(200).json({
+        success: true,
+        message: 'Notifications retrieved successfully',
+        notifications,
+      });
+    } catch (error) {
+      console.error("Error in getAllNotification:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error retrieving notifications",
+        error: error.message,
+      });
+    }
+  };
+  
+  
 // ใช้ cron เพื่อเรียก `sendReminder` ทุกๆ นาที
 cron.schedule('* * * * *', async () => {  // ทุกๆ นาที
     console.log("Running cron job to check medication reminders...");
     await sendReminder();
 });
 
-module.exports = { sendReminder };
+module.exports = { sendReminder, getAllNotification };
