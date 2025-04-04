@@ -1,36 +1,66 @@
+import React, { useEffect, useState } from 'react';
 import {
   Text,
   SafeAreaView,
   View,
   ScrollView,
   Image,
-  Modal,
-} from "react-native";
-import React, { useState } from "react";
-import { useRouter } from "expo-router";
-import Card from "../../../global/components/Card";
-import BreakLine from "../../../global/components/BreakLine";
-import { ShortButton } from "../tracking/components/ShortButton";
-import SlideCardImg from "./components/SlideCardImg";
-import ArticleCard from "./components/ArticleCard"; 
-import FullCardView from "./components/FullCardView"; 
-import healthData  from "./data/healthData";
-import recommendationData from "./data/recommendationData"; 
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import axios from 'axios';
+import Card from '../../../global/components/Card';
+import BreakLine from '../../../global/components/BreakLine';
+import { ShortButton } from '../tracking/components/ShortButton';
+import AdviceCard from './components/AdviceCard';
+
+interface SuggestionResultData {
+  health_score: number;
+  diabetes_risk_percent: number;
+  diabetes_risk: string;
+  summary: string;
+  motivation: string;
+  healthAdvice: {
+    food: { title: string; description: string }[];
+    exercise: { title: string; description: string }[];
+    blog: { title: string; description: string }[];
+  };
+}
 
 export default function SuggestionResult() {
   const router = useRouter();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [result, setResult] = useState<SuggestionResultData | null>(null);
 
-  const openFullCard = (cardData: any) => {
-    setSelectedCard(cardData);  
-    setModalVisible(true);  
-  };
+  useEffect(() => {
+    const fetchSuggestion = async () => {
+      try {
+        const response = await axios.post(
+          'http://192.168.182.141:8080/api/v1/ai/predict',
+          {
+            userId: '66144c9e33fa4a7b12345698',
+            gender: 'male',
+            age: 55,
+            bmi: 31,
+            blood_glucose_level: 195,
+            HbA1c_level: 7.2,
+            systolic_bp: 145,
+            diastolic_bp: 95,
+          }
+        );
+        setResult(response.data);
+      } catch (err) {
+        console.error('Error fetching prediction:', err);
+      }
+    };
+    fetchSuggestion();
+  }, []);
 
-  const closeModal = () => {
-    setModalVisible(false);  
-    setSelectedCard(null); 
-  };
+  if (!result) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center">
+        <Text>กำลังประเมินผลสุขภาพ...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1">
@@ -42,65 +72,63 @@ export default function SuggestionResult() {
           <BreakLine />
 
           <Image
-            source={require("../../../assets/Suggestion/heart-primary.png")}
+            source={require('../../../assets/Suggestion/heart-primary.png')}
             className="w-32 h-32 mx-auto mb-1"
           />
 
           <Text className="text-headline font-bold font-sans text-secondary text-center mb-1 ">
-            คะแนนสุขภาพ 
+            คะแนนสุขภาพ
             <Text className="text-display font-bold font-sans text-primary text-center ">
-              {healthData.healthScore}
+              {result.health_score}
             </Text>
             <Text className="text-body font-sans text-secondary">/10</Text>
           </Text>
 
           <Text className="text-headline font-bold font-sans text-secondary text-center mb-2">
-            ความเสี่ยงเบาหวาน 
+            ความเสี่ยงเบาหวาน
             <Text className="text-display font-bold font-sans text-primary text-center ">
-              {healthData.diabetesRisk.percentage}%
+              {result.diabetes_risk_percent}%
             </Text>
-            <Text className="text-body font-sans text-secondary"> ({healthData.diabetesRisk.level})</Text>
+            <Text className="text-body font-sans text-secondary">
+              {' '}
+              ({result.diabetes_risk})
+            </Text>
           </Text>
           <BreakLine />
 
           <Text className="text-description font-sans text-secondary text-center mb-4">
-            {healthData.summary.join("\n")}
+            {result.summary}
           </Text>
 
           <View className="bg-background p-4 rounded-lg mb-4 ">
             <Text className="text-tag font-sans text-secondary text-center">
-              {healthData.recommendation.join("\n")}
+              {result.motivation}
             </Text>
           </View>
-          
+
           <ShortButton
             title="สร้างการประเมินใหม่"
-            onPress={() => router.push("/suggestion")}
-            iconSrc={require("../../../assets/Suggestion/rotate-left.png")}
+            onPress={() => router.push('/suggestion')}
+            iconSrc={require('../../../assets/Suggestion/rotate-left.png')}
             iconPosition="left"
             className="mt-2 mb-1"
           />
         </Card>
 
         {/* Recommended Food */}
-        <View className="px-6" >
+        <View className="px-6">
           <Text className="text-headline font-bold font-sans text-secondary mt-1 mb-1">
             เมนูอาหารที่แนะนำ
           </Text>
         </View>
-        
-        <ScrollView
-          horizontal
-          className="mt-4 px-4 "
-          showsHorizontalScrollIndicator={false}
-        >
-          {recommendationData.food.map((item, index) => (
-            <SlideCardImg
+
+        <ScrollView horizontal className="mt-4 px-4 " showsHorizontalScrollIndicator={false}>
+          {result.healthAdvice.food.map((item, index) => (
+            <AdviceCard
               key={index}
               title={item.title}
               description={item.description}
-              imageSrc={item.imageSrc}
-              onPress={() => openFullCard(item)}
+              image={require('../../../assets/Suggestion/people-healthy.png')}
             />
           ))}
         </ScrollView>
@@ -112,18 +140,13 @@ export default function SuggestionResult() {
           </Text>
         </View>
 
-        <ScrollView
-          horizontal
-          className="mt-4 px-4"
-          showsHorizontalScrollIndicator={false}
-        >
-          {recommendationData.exercise.map((item, index) => (
-            <SlideCardImg
+        <ScrollView horizontal className="mt-4 px-4" showsHorizontalScrollIndicator={false}>
+          {result.healthAdvice.exercise.map((item, index) => (
+            <AdviceCard
               key={index}
               title={item.title}
               description={item.description}
-              imageSrc={item.imageSrc}
-              onPress={() => openFullCard(item)}
+              image={require('../../../assets/Suggestion/people-exercise.png')}
             />
           ))}
         </ScrollView>
@@ -134,20 +157,14 @@ export default function SuggestionResult() {
             บทความที่แนะนำ
           </Text>
         </View>
-        
-        <ScrollView
-          horizontal
-          className="mt-4 px-1"
-          showsHorizontalScrollIndicator={false}
-        >
-          {recommendationData.articles.map((item, index) => (
-            <ArticleCard
+
+        <ScrollView horizontal className="mt-4 px-1" showsHorizontalScrollIndicator={false}>
+          {result.healthAdvice.blog.map((item, index) => (
+            <AdviceCard
               key={index}
               title={item.title}
-              author={item.author}
-              category={item.category}
-              tags={item.tags}
-              imageSrc={item.imageSrc}
+              description={item.description}
+              image={require('../../../assets/Suggestion/people-yoga.png')}
             />
           ))}
         </ScrollView>
