@@ -43,6 +43,7 @@ export default function BeginnerSetupScreen() {
     weight,
     isLoading,
     healthInfoId,
+    healthInfoCreated,
     setHeight,
     setWeight,
     handleNext,
@@ -128,6 +129,10 @@ export default function BeginnerSetupScreen() {
     }
   };
 
+  // กำหนดเงื่อนไขการแสดงปุ่ม Back
+  // ไม่แสดงปุ่ม Back เมื่อได้สร้าง healthInfo แล้ว (อยู่ที่หน้า MedicineInput)
+  const shouldShowBackButton = currentStep > 0 && !healthInfoCreated;
+
   if (isLoading) {
     return <Loading />;
   }
@@ -140,7 +145,8 @@ export default function BeginnerSetupScreen() {
       <SafeAreaView className="flex-1 bg-background">
         <StatusBar barStyle="dark-content" backgroundColor="#F8F8F8" />
 
-        {currentStep > 0 && <BeginnerBackButton onPress={handleBack} />}
+        {/* แสดงปุ่ม Back ตามเงื่อนไข */}
+        {shouldShowBackButton && <BeginnerBackButton onPress={handleBack} />}
 
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View className="flex-1 justify-center px-4">

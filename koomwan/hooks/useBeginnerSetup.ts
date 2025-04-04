@@ -20,6 +20,7 @@ export const useBeginnerSetup = () => {
   const [weight, setWeight] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [healthInfoId, setHealthInfoId] = useState<string | null>(null);
+  const [healthInfoCreated, setHealthInfoCreated] = useState(false); // เพิ่ม state เพื่อติดตามว่าสร้าง healthinfo แล้วหรือยัง
 
   // แปลงเดือนภาษาไทยเป็นตัวเลข
   const getMonthNumber = (monthName: string): number => {
@@ -65,6 +66,49 @@ export const useBeginnerSetup = () => {
     }
   };
 
+  // Function to show confirmation dialog before creating healthInfo
+  const confirmHealthInfoCreation = () => {
+    return new Promise<boolean>((resolve) => {
+      // แปลงค่าวันเกิดเป็นรูปแบบที่อ่านง่าย
+      const birthDay = selections.birthday.day;
+      const birthMonth = selections.birthday.month;
+      const birthYear = selections.birthday.year;
+      
+      // แปลงค่าประเภทผู้ใช้เป็นภาษาไทย
+      const userTypeText = selections.userType === 'diabetic' ? 'ผู้ป่วยเบาหวาน' : 'ผู้ใช้ทั่วไป';
+      // แปลงค่าเพศเป็นภาษาไทย
+      const genderText = selections.gender === 'male' ? 'ชาย' : 'หญิง';
+
+      // ข้อความแสดงข้อมูลทั้งหมดที่จะบันทึก
+      const message = `กรุณาตรวจสอบข้อมูลของคุณ
+      
+ประเภทผู้ใช้: ${userTypeText}
+เพศ: ${genderText}
+วันเกิด: ${birthDay} ${birthMonth} ${birthYear}
+ส่วนสูง: ${height} ซม.
+น้ำหนัก: ${weight} กก.
+
+หลังจากยืนยันข้อมูลแล้ว คุณจะไม่สามารถย้อนกลับมาแก้ไขได้`;
+
+      Alert.alert(
+        "ยืนยันข้อมูล",
+        message,
+        [
+          {
+            text: "ยกเลิก",
+            style: "cancel",
+            onPress: () => resolve(false)
+          },
+          {
+            text: "ยืนยัน",
+            onPress: () => resolve(true)
+          }
+        ],
+        { cancelable: false }
+      );
+    });
+  };
+
   // Function to create healthInfo before the medication step
   const createHealthInfo = async () => {
     try {
@@ -97,7 +141,7 @@ export const useBeginnerSetup = () => {
       const data = {
         userId: userId,
         diabetestype: selections.userType === 'diabetic' ? 'diabetes' : 'none',
-        gender: selections.gender,
+        gender: selections.gender === 'male' ? 'male' : 'female',
         birthdate: birthdateString,
         height: parseInt(height),
         weight: parseInt(weight),
@@ -125,6 +169,7 @@ export const useBeginnerSetup = () => {
         // ดึง healthInfoId หลังจากสร้าง healthInfo สำเร็จ
         const newHealthInfoId = response.data.healthInfo?._id || response.data.healthInfoId;
         setHealthInfoId(newHealthInfoId);
+        setHealthInfoCreated(true); // กำหนดค่า healthInfoCreated เป็น true
         
         // อัพเดท healthinfo ใน AsyncStorage
         try {
@@ -169,10 +214,14 @@ export const useBeginnerSetup = () => {
     } else if (currentStep === 3 && height && isHeightValid(height)) {
       setCurrentStep(4);
     } else if (currentStep === 4 && weight && isWeightValid(weight)) {
-      // เมื่อผู้ใช้กรอกข้อมูลครบถึงน้ำหนัก ให้สร้าง healthInfo ก่อนไปหน้าเพิ่มยา
-      const success = await createHealthInfo();
-      if (success) {
-        setCurrentStep(5);
+      // แสดง Alert ยืนยันข้อมูลก่อนสร้าง healthInfo
+      const confirmed = await confirmHealthInfoCreation();
+      if (confirmed) {
+        // เมื่อผู้ใช้กรอกข้อมูลครบถึงน้ำหนัก ให้สร้าง healthInfo ก่อนไปหน้าเพิ่มยา
+        const success = await createHealthInfo();
+        if (success) {
+          setCurrentStep(5);
+        }
       }
     } else if (currentStep === 5) {
       console.log("======== BEGINNER SETUP COMPLETED ========");
@@ -189,6 +238,12 @@ export const useBeginnerSetup = () => {
   };
 
   const handleBack = () => {
+    // ถ้า healthInfo ถูกสร้างแล้ว ไม่อนุญาตให้กลับไปหน้าก่อนหน้า
+    if (healthInfoCreated) {
+      Alert.alert("ไม่สามารถย้อนกลับได้", "คุณไม่สามารถย้อนกลับไปแก้ไขข้อมูลได้หลังจากยืนยันข้อมูลเรียบร้อยแล้ว");
+      return;
+    }
+    
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
     } else {
@@ -246,6 +301,7 @@ export const useBeginnerSetup = () => {
     weight,
     isLoading, 
     healthInfoId,
+    healthInfoCreated, 
     setHeight,
     setWeight,
     handleNext,
