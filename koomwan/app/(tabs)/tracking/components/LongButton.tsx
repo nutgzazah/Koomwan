@@ -1,8 +1,5 @@
 import React from "react";
-import { 
-  TouchableOpacity, 
-  Text 
-} from "react-native";
+import { TouchableOpacity, Text } from "react-native";
 
 interface LongButtonProps {
   title: string;
@@ -25,7 +22,7 @@ export const LongButton: React.FC<LongButtonProps> = ({
       activeOpacity={0.7}
       disabled={disabled}
       className={`w-full h-14 rounded-lg flex-row items-center justify-center mt-1
-        ${isCompleted ? "bg-blue-600" : "bg-gray-300"}
+        ${isCompleted ? "bg-primary" : "bg-gray"}
         ${disabled ? "opacity-50" : ""}
         ${customStyle}`}
     >

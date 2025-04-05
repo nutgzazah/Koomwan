@@ -43,7 +43,7 @@ const InputFieldOne: React.FC<InputFieldOneProps> = ({
 }) => {
   return (
     <View className={`mb-2 px-1 py-1 w-full ${className}`}>
-      <Text className="text-description font-bold font-sans text-secondary mb-2 w-full ">
+      <Text className="text-description font-bold text-secondary mb-2 w-full ">
         {label}
       </Text>
 
