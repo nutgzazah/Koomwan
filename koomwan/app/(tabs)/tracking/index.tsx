@@ -331,7 +331,7 @@ export default function TrackingScreen() {
                 label="น้ำหนัก"
                 value={formData.weight}
                 onChangeText={(value) => handleChange("weight", value)}
-                placeholder={formData.weight}
+                placeholder=" เช่น 60"
                 keyboardType="numeric"
                 errorMessage={errorMessages.weight}
               />
@@ -342,7 +342,7 @@ export default function TrackingScreen() {
                 label="ส่วนสูง"
                 value={formData.height}
                 onChangeText={(value) => handleChange("height", value)}
-                placeholder={formData.height}
+                placeholder="เช่น 160"
                 keyboardType="numeric"
                 errorMessage={errorMessages.height}
               />
