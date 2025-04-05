@@ -19,6 +19,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthContext } from "../../../context/authContext";
 import BASE_URL from "../../../config"
 import { useFocusEffect } from "@react-navigation/native";
+import ThreeChoiceFilterBox from "../../../global/components/ThreeFilterBox";
 
 const defaultUserAvatar01 = require("../../../assets/Avatars/koomwanAvatar01.png");
 const defaultUserAvatar02 = require("../../../assets/Avatars/koomwanAvatar02.png");
@@ -62,6 +63,7 @@ export default function ForumScreen() {
   // ใช้ useFocusEffect เพื่อรีโหลดโพสต์ทุกครั้งที่หน้าถูกเรียกใหม่
   useFocusEffect(
     React.useCallback(() => {
+      setCurrentFilterChoice(currentFilterChoice)
       fetchPosts();
     }, [])
   );
@@ -115,14 +117,24 @@ export default function ForumScreen() {
      // กรองโพสต์เฉพาะภายใน 1 เดือนที่ผ่านมา
      const oneMonthAgo = new Date();
      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+     console.log("currentFilterChoice:",currentFilterChoice)
  
-     postsData = postsData.filter((post) => new Date(post.createdAt) >= oneMonthAgo);
- 
-     // เรียงลำดับโพสต์ตามไลค์ ถ้าเลือก "ยอดนิยม"
-     if (currentFilterChoice === 2) {
-       postsData.sort((a, b) => b.likes.count - a.likes.count);
-     }
-
+     if (currentFilterChoice === 1) {
+      // โชว์โพสต์ทุกโพสต์ เรียงจากวันล่าสุดไปเก่า
+      postsData = postsData.filter((post) => new Date(post.createdAt))
+    } else if (currentFilterChoice === 2) {
+      // ฟิลเตอร์โพสต์ใน 1 เดือนที่ผ่านมา แล้วเรียงตามจำนวนไลค์มากสุด -> น้อยสุด
+      postsData = postsData
+        .filter((post) => new Date(post.createdAt) >= oneMonthAgo)
+        .sort((a, b) => b.likes.count - a.likes.count);
+    } else if (currentFilterChoice === 3) {
+      postsData = postsData.filter(
+        (post) => post.postedBy?._id === state.user._id
+      );
+    } else {
+      postsData = postsData.filter((post) => new Date(post.createdAt))
+    }
+    
     // ดึง URL สำหรับรูปภาพโพสต์และโปรไฟล์ของผู้ใช้
     const urls = await Promise.all(
       postsData.map(async (post) => {
@@ -243,14 +255,35 @@ export default function ForumScreen() {
           </View>
 
           <View className="mx-6 mb-4">
-            <TwoChoiceFilterBox
-              first_choice="ล่าสุด"
-              second_choice="ยอดนิยม"
-              first_onPress={() => setCurrentFilterChoice(1)}
-              second_onPress={() => setCurrentFilterChoice(2)}
-              current_choice={currentFilterChoice}
-            />
-          </View>
+            {state.user.role === 'doctor' ? (
+              <TwoChoiceFilterBox
+                first_choice="ล่าสุด"
+                second_choice="ยอดนิยม"
+                first_onPress={() => setCurrentFilterChoice(1)}
+                second_onPress={() => setCurrentFilterChoice(2)}
+                current_choice={currentFilterChoice}
+              />
+            ) : state.user.role === 'user' ? (
+              <ThreeChoiceFilterBox
+                first_choice="ล่าสุด"
+                second_choice="ยอดนิยม"
+                third_choice="โพสของฉัน"
+                first_onPress={() => setCurrentFilterChoice(1)}
+                second_onPress={() => setCurrentFilterChoice(2)}
+                third_onPress={() => setCurrentFilterChoice(3)}
+                current_choice={currentFilterChoice}
+              />
+            ) : 
+              <ThreeChoiceFilterBox
+                first_choice="ล่าสุด"
+                second_choice="ยอดนิยม"
+                third_choice="โพสของฉัน"
+                first_onPress={() => setCurrentFilterChoice(1)}
+                second_onPress={() => setCurrentFilterChoice(2)}
+                third_onPress={() => setCurrentFilterChoice(3)}
+                current_choice={currentFilterChoice}
+              />}
+            </View>
 
           {state.user.role !== "doctor" && <CreatePostTrigger />}
 

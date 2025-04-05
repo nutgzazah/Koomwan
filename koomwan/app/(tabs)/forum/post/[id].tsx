@@ -12,6 +12,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import axios from "axios";
 import BASE_URL from "../../../../config"
 import { AuthContext } from "../../../../context/authContext";
+import BackButton from "../../../../global/components/BackButton";
 
 const defaultUserAvatar01 = require("../../../../assets/Avatars/koomwanAvatar01.png");
 const defaultUserAvatar02 = require("../../../../assets/Avatars/koomwanAvatar02.png");
@@ -203,6 +204,7 @@ export default function ForumScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View>
+          <BackButton title="ย้อนกลับ" />
           <ForumCard
               imageContent={postData.imageContent}  // รูปภาพของโพสต์
               like={postData.likes.count}  // จำนวนไลก์
