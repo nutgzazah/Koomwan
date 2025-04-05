@@ -131,25 +131,30 @@ export default function CommentCard({
                 email={email}
                 document={document}/>
             <Card>
-                <View className="flex flex-row pt-2">
-                    <View className="w-min-fit">
-                        <View className="flex flex-row justify-evenly items-center">
-                            {(occupation || expert) ? (
-                                <Pressable onPress={() => setModalVisible(true)}>
-                                    <DoctorIcon doctorImage={profileImage} verify={!isOwner} />
-                                </Pressable>
-                            ) : (
-                                    <DoctorIcon doctorImage={profileImage} verify={!isOwner} />
-                            )}
-                            {DoctorNameBox(doctorName, isOwner)}
-                        </View>
-                        <Text className="font-sans text-tag w-full text-left  mt-2">ตอบกลับเมื่อ {formatPostTime(commentTime)}</Text>
-                    </View>
-                    {isOwnerComment && (
-                        <TouchableOpacity onPress={() => setDropdownVisible(!dropdownVisible)}>
-                            <Image source={require("../../../../assets/Forum/option.png")} className="w-6 h-6" />
-                        </TouchableOpacity>
+            <View className="flex flex-row justify-between pt-2 items-start ">
+                {/* ฝั่งซ้าย */}
+                <View className="flex-1 pl-2">
+                    <View className="flex flex-row justify-start items-center flex-wrap ">
+                    {(occupation || expert) ? (
+                        <Pressable onPress={() => setModalVisible(true)}>
+                        <DoctorIcon doctorImage={profileImage} verify={!isOwner} />
+                        </Pressable>
+                    ) : (
+                        <DoctorIcon doctorImage={profileImage} verify={!isOwner} />
                     )}
+                    {DoctorNameBox(doctorName, isOwner)}
+                    </View>
+                    <Text className="font-sans text-tag w-fit text-left mt-2">
+                    ตอบกลับเมื่อ {formatPostTime(commentTime)}
+                    </Text>
+                </View>
+
+                {/* ฝั่งขวา (option) */}
+                {isOwnerComment && (
+                    <TouchableOpacity onPress={() => setDropdownVisible(!dropdownVisible)}>
+                    <Image source={require("../../../../assets/Forum/option.png")} className="w-6 h-6" />
+                    </TouchableOpacity>
+                )}
                 </View>
                 {dropdownVisible && (
                     <View className="absolute bg-white border border-abnormal shadow-sm right-2 top-10 rounded-md p-3 mt-1">
@@ -183,9 +188,9 @@ function ContentBox(content: string) {
 
 function DoctorNameBox(doctorName: string, isOwner: boolean) {
     return (
-        <View className="w-72 mr-7">
+        <View className="w-fit mr-7 ">
             <Text
-                className="font-sans text-description"
+                className="font-sans text-description "
                 numberOfLines={1}
                 ellipsizeMode='tail'
             >

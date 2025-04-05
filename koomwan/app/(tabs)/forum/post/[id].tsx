@@ -3,8 +3,10 @@ import {
   SafeAreaView,
   ScrollView,
   Text,
+  TouchableOpacity,
+  Image,
 } from "react-native";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import ForumCard from "../components/ForumCard";
 import CommentCard from "../components/CommentBox";
 import CommentReplyCard from "../components/CommentReplyBox";
@@ -55,6 +57,7 @@ const getProfileImageUrl = async (
 
 
 export default function ForumScreen() {
+  const scrollRef = useRef<ScrollView>(null);
   const [state] = useContext(AuthContext)
   const { postId }  = useLocalSearchParams();
   const [postData, setPostData] = useState<any>(null);  // เก็บข้อมูลโพสต์
@@ -200,6 +203,7 @@ export default function ForumScreen() {
   return (
     <SafeAreaView className="flex-1">
       <ScrollView 
+        ref={scrollRef}
         className="mb-24"
         showsVerticalScrollIndicator={false}
       >
@@ -294,6 +298,21 @@ export default function ForumScreen() {
           ))}
         </View>
       </ScrollView>
+      <TouchableOpacity
+        onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
+        style={{
+          position: "absolute",
+          bottom: 125,
+          right: 30,
+          elevation: 5,
+        }}
+        className="bg-secondary rounded-full border-1 w-12 h-12 shadow-sm p-[12px] justify-center items-center"
+      >
+        <Image
+          className="w-8 h-8"
+          source={require("../../../../assets/Forum/arrow-up.png")}
+        />
+      </TouchableOpacity>
     </SafeAreaView> 
   );
 }
