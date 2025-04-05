@@ -279,8 +279,8 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
   if (status === "none" && hasRecords) {
     return (
       <EmptyHomeCard
-        title="ยังไม่มีข้อมูลค่าน้ำตาลในเลือด"
-        subtitle="คุณมีข้อมูลบันทึกสุขภาพแล้ว แต่ยังไม่มีข้อมูลน้ำตาลในเลือด กรุณาบันทึกข้อมูลเพิ่มเติม"
+        title="ยังไม่มีข้อมูลค่าน้ำตาลในเลือดล่าสุด"
+        subtitle="คุณมีข้อมูลบันทึกสุขภาพแล้ว แต่ยังไม่มีข้อมูลน้ำตาลในเลือดล่าสุด กรุณาบันทึกข้อมูลเพิ่มเติม"
         buttonText="บันทึกข้อมูลสุขภาพ"
         navigateTo="/(tabs)/tracking"
       />

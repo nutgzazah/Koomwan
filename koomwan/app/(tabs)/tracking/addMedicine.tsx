@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,24 +6,29 @@ import {
   Image,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
-import InputFieldOne from "./components/InputFieldOne";
-import InputFieldLong from "./components/InputFieldLong";
-import Dropdown from "./components/DropDown";
 import BackButton from "../../../global/components/BackButton";
-
+import MedDropdown from "../../../components/beginner/(medicine)/MedDropdown";
+import ImageUploaderWithPreview from "../../../global/components/ImageUploader";
+import { MEDICATION_TYPES } from "../../../constant/medication";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import BASE_URL from "../../../config";
 
 interface Medicine {
   id: string;
   name: string;
   type: string;
   details: string;
-  image: string;
+  image: string | null;
 }
 
 const AddMedicineScreen: React.FC = () => {
@@ -35,145 +40,377 @@ const AddMedicineScreen: React.FC = () => {
     name: (params.name as string) || "",
     type: (params.type as string) || "",
     details: (params.details as string) || "",
-    image: (params.image as string) || "",
+    image: (params.image as string) || null,
   });
 
-  // Permission Required Image From User Gallery
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission required", "กรุณาอนุญาตให้เข้าถึงรูปภาพ");
-      return;
+  const [localImageUri, setLocalImageUri] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [signedImageUrl, setSignedImageUrl] = useState<string | null>(null);
+
+  // Effect to load signed URL for image when component mounts
+  useEffect(() => {
+    if (medicine.image && !medicine.image.startsWith("file://")) {
+      fetchSignedImageUrl(medicine.image);
     }
+  }, [medicine.image]);
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+  // Handle selecting medication type
+  const handleSelectType = (selectedType: string) => {
+    setMedicine((prev) => ({ ...prev, type: selectedType }));
+    setIsDropdownOpen(false);
+  };
 
-    if (!result.canceled && result.assets?.[0]) {
-      setMedicine((prev) => ({ ...prev, image: result.assets[0].uri }));
+  // Function to extract folder and filename from path
+  const extractFolderAndFilename = (
+    path: string
+  ): { folder: string; fileName: string } | null => {
+    try {
+      // If it's a full URL (from local server)
+      if (path.includes(`${BASE_URL}/uploads/`)) {
+        const parts = path.split("/");
+        const fileName = parts.pop() || "";
+        return { folder: "uploads", fileName };
+      }
+
+      // If it's a path with folder/filename format
+      if (path.includes("/") && !path.startsWith("file://")) {
+        const parts = path.split("/");
+        const fileName = parts.pop() || "";
+        const folder = parts.pop() || "pill-images";
+        return { folder, fileName };
+      }
+
+      // If it's just a filename
+      if (!path.includes("/")) {
+        return { folder: "pill-images", fileName: path };
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error extracting folder and filename:", error);
+      return null;
     }
   };
 
-  const handleSubmit = () => {
+  // Fetch signed URL for an image
+  const fetchSignedImageUrl = async (imagePath: string) => {
+    try {
+      // Don't get signed URL for local files
+      if (imagePath.startsWith("file://")) {
+        return imagePath;
+      }
+
+      // Skip for already complete URLs
+      if (
+        imagePath.startsWith("http") &&
+        !imagePath.includes(`${BASE_URL}/uploads/`)
+      ) {
+        return imagePath;
+      }
+
+      setIsLoadingImage(true);
+
+      // Get auth token
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        console.error("No auth data found");
+        return null;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // Extract folder and filename
+      const pathInfo = extractFolderAndFilename(imagePath);
+      if (!pathInfo) {
+        console.error(
+          "Could not extract folder and filename from path:",
+          imagePath
+        );
+        return null;
+      }
+
+      // Request signed URL
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/storage/getFileUrl`,
+        {
+          params: {
+            fileName: pathInfo.fileName,
+            folder: pathInfo.folder,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success && response.data.url) {
+        console.log("Image signed URL fetched successfully");
+        setSignedImageUrl(response.data.url);
+        return response.data.url;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error fetching signed image URL:", error);
+      return null;
+    } finally {
+      setIsLoadingImage(false);
+    }
+  };
+
+  // Upload image to server function
+  const uploadImageToServer = async (imageUri: string) => {
+    try {
+      setIsUploading(true);
+
+      // Get auth token
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        Alert.alert("เซสชันหมดอายุ", "กรุณาเข้าสู่ระบบใหม่อีกครั้ง");
+        router.push("/user/login");
+        return null;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // Create FormData
+      const formData = new FormData();
+
+      // Add image file
+      const filename = imageUri.split("/").pop();
+      const match = /\.(\w+)$/.exec(filename || "");
+      const type = match ? `image/${match[1]}` : `image`;
+
+      formData.append("file", {
+        uri: imageUri,
+        type,
+        name: filename,
+      } as any);
+
+      // Add folder to upload to
+      formData.append("folder", "pill-images");
+
+      // Send to image upload API
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/storage/uploadFile`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data && response.data.R2filePath) {
+        return response.data.R2filePath;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถอัพโหลดรูปภาพได้");
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (isSubmitting) {
+      return; // Prevent double submission
+    }
+
+    // Validate required fields
     if (!medicine.name.trim()) {
-      Alert.alert("กรุณากรอกชื่อยา");
+      Alert.alert("กรุณากรอกชื่อยา", "ชื่อยาไม่สามารถเว้นว่างได้");
       return;
     }
 
     if (!medicine.type.trim()) {
-      Alert.alert("กรุณาเลือกประเภทของยา");
+      Alert.alert("กรุณาเลือกประเภทของยา", "ประเภทยาไม่สามารถเว้นว่างได้");
       return;
     }
 
-    const newMedicine = {
-      id: medicine.id || Date.now().toString(),
-      name: medicine.name,
-      type: medicine.type,
-      details: medicine.details,
-      image: medicine.image,
-    };
+    setIsSubmitting(true);
 
-    router.push({
-      pathname: "./medicineCollected",
-      params: {
-        id: newMedicine.id,
-        name: newMedicine.name,
-        type: newMedicine.type,
-        details: newMedicine.details,
-        image: newMedicine.image,
-        isEdit: params.isEdit || "false",
-      },
-    });
+    try {
+      // Handle image upload if a local image is available
+      let finalImagePath = medicine.image;
+
+      if (localImageUri) {
+        // Upload the image
+        const uploadedImagePath = await uploadImageToServer(localImageUri);
+        if (uploadedImagePath) {
+          finalImagePath = uploadedImagePath;
+        } else {
+          console.warn("Failed to upload image, proceeding without image");
+        }
+      }
+
+      // Create the medicine object with the updated image path
+      const newMedicine = {
+        id: medicine.id || Date.now().toString(),
+        name: medicine.name,
+        type: medicine.type,
+        details: medicine.details,
+        image: finalImagePath,
+      };
+
+      console.log("New Medicine:", newMedicine);
+
+      // Navigate back to medicine collection screen with the new/edited medicine
+      router.dismissTo({
+        pathname: "./medicineCollected",
+        params: {
+          id: newMedicine.id,
+          name: newMedicine.name,
+          type: newMedicine.type,
+          details: newMedicine.details,
+          image: newMedicine.image,
+          isEdit: params.isEdit || "false",
+        },
+      });
+    } catch (error) {
+      console.error("Error submitting medicine:", error);
+      Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลยาได้");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Get image to display in uploader
+  const getImageForUploader = () => {
+    // If a local image has been selected, use that
+    if (localImageUri) {
+      return localImageUri;
+    }
+
+    // If we have a signed URL, use that
+    if (signedImageUrl) {
+      return signedImageUrl;
+    }
+
+    // Otherwise use the original image path
+    return medicine.image;
   };
 
   return (
     <SafeAreaView className="flex-1">
       <BackButton title="ย้อนกลับ" />
-      <ScrollView className="mb-24">
-        <Card>
-        <Text className="font-sans text-title font-bold text-center mt-2 text-secondary">
-          {params.isEdit === "true" ? "ยาเพิ่มเติม" : "เพิ่มยาเพิ่มเติม"}
-        </Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
+        <ScrollView className="mb-24">
+          <Card>
+            <Text className="font-sans text-title font-bold text-center mt-2 text-secondary">
+              {params.isEdit === "true" ? "แก้ไขยาเพิ่มเติม" : "ยาเพิ่มเติม"}
+            </Text>
 
-          <BreakLine />
+            <BreakLine />
 
-          <TouchableOpacity
-            onPress={pickImage}
-            className="bg-background border border-gray rounded-lg items-center justify-center mb-3 py-5 px-5"
-            style={{ width: "100%", height: 200 }}
-          >
-            {medicine.image ? (
-              <Image
-                source={{ uri: medicine.image }}
-                className="w-40 h-40 rounded-lg"
-              />
+            {/* Image Uploader with loading indicator */}
+            {isUploading || isLoadingImage ? (
+              <View className="w-full h-[150px] bg-background rounded-lg items-center justify-center border border-gray">
+                <ActivityIndicator size="large" color="#3972F0" />
+                <Text className="text-description text-secondary font-regular mt-2">
+                  {isUploading ? "กำลังอัพโหลดรูปภาพ..." : "กำลังโหลดรูปภาพ..."}
+                </Text>
+              </View>
             ) : (
-              <Image
-                source={require("../../../assets/Tracking/add-image.png")}
-                className="w-20 h-20 mb-2"
-                style={{ width: "100%", height: "100%" }}
-                resizeMode="contain"
+              <ImageUploaderWithPreview
+                imageUrl={getImageForUploader()}
+                setImageUrl={(url) =>
+                  setMedicine((prev) => ({ ...prev, image: url }))
+                }
+                localImage={localImageUri}
+                setLocalImage={setLocalImageUri}
+                disabled={isSubmitting}
               />
             )}
-          </TouchableOpacity>
 
-          {/* For Create Additional Medicine */}
-          <InputFieldOne
-            label="ชื่อยา"
-            value={medicine.name}
-            onChangeText={(text) =>
-              setMedicine((prev) => ({ ...prev, name: text }))
-            }
-            placeholder="ระบุชื่อยา"
-          />
+            {/* Medicine Name */}
+            <View className="mt-4 w-full">
+              <Text className="text-description text-secondary font-regular mb-2">
+                ชื่อยา
+              </Text>
+              <TextInput
+                value={medicine.name}
+                onChangeText={(text) =>
+                  setMedicine((prev) => ({ ...prev, name: text }))
+                }
+                placeholder="ระบุชื่อยา"
+                className="w-full bg-background border border-gray rounded p-3 px-4 text-description font-regular h-12"
+                editable={!isSubmitting}
+              />
+            </View>
 
-          {/* Medicine Type */}
-          <Text className="font-sans text-description font-bold text-secondary self-start pl-1 mb-1">
-            ประเภท
-          </Text>
-          <Dropdown
-            choices={[
-              "ยาเฉพาะโรค",
-              "ยาสามัญประจำบ้าน",
-              "ยาใช้ภายนอก",
-              "ยาบำรุง",
-              "ยาวิตามินและเกลือแร่เสริม",
-              "อื่นๆ",
-            ]}
-            selectedChoice={medicine.type}
-            onChoiceChange={(choice) => {
-              setMedicine((prev) => ({ ...prev, type: choice }));
-            }}
-            dropdownStyle={{ width: "99%"}}
-            closeOnSelect={true}
-          />
+            {/* Medicine Type */}
+            <View className="mt-4">
+              <Text className="text-description text-secondary font-regular mb-2">
+                ประเภท
+              </Text>
+              <MedDropdown
+                value={medicine.type}
+                options={MEDICATION_TYPES}
+                onSelect={handleSelectType}
+                disabled={isSubmitting}
+              />
+            </View>
 
-          {/* Medicine Detail */}
-          <InputFieldLong
-            label="รายละเอียด (Optional)"
-            value={medicine.details}
-            onChangeText={(text) =>
-              setMedicine((prev) => ({ ...prev, details: text }))
-            }
-            placeholder="ระบุรายละเอียดยา"
-            editable
-          />
+            {/* Medicine Description */}
+            <View className="mt-4 w-full">
+              <Text className="text-description text-secondary font-regular mb-2">
+                รายละเอียด (Optional)
+              </Text>
+              <TextInput
+                value={medicine.details}
+                onChangeText={(text) =>
+                  setMedicine((prev) => ({ ...prev, details: text }))
+                }
+                placeholder="ระบุรายละเอียดยา"
+                multiline
+                numberOfLines={4}
+                className="w-full bg-background border border-gray rounded p-3 px-4 text-description font-regular h-32"
+                textAlignVertical="top"
+                editable={!isSubmitting}
+              />
+            </View>
 
-          {/* Submit Button */}
-          <TouchableOpacity
-            onPress={handleSubmit}
-            className="bg-primary rounded-lg px-20 py-3.5 mt-5"
-          >
-            <Text className="font-sans font-bold text-button text-card text-center">
-              {params.isEdit === "true" ? "บันทึกการแก้ไข" : "เพิ่มยาเพิ่มเติม"}
-            </Text>
-          </TouchableOpacity>
-        </Card>
-      </ScrollView>
+            {/* Submit Button */}
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={isSubmitting || isUploading || isLoadingImage}
+              className={`rounded-lg py-4 mt-6 w-full ${
+                isSubmitting || isUploading || isLoadingImage
+                  ? "bg-gray"
+                  : "bg-primary"
+              }`}
+            >
+              {isSubmitting ? (
+                <View className="flex-row items-center justify-center">
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <Text className="font-sans font-bold text-button text-card text-center ml-2">
+                    กำลังบันทึก...
+                  </Text>
+                </View>
+              ) : (
+                <Text className="font-sans font-bold text-button text-card text-center">
+                  {params.isEdit === "true"
+                    ? "บันทึกการแก้ไข"
+                    : "เพิ่มยาเพิ่มเติม"}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

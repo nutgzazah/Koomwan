@@ -10,9 +10,8 @@ export default function ResetPasswordHelpScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <BackButton title="ย้อนกลับ" />
       <ScrollView>
-        <BackButton title="ย้อนกลับ" />
-
         <View className="w-full px-4">
           <Card>
             <View className="w-full">

@@ -30,7 +30,7 @@ const MedicineNotification = () => {
     วันพุธ: "wednesday",
     วันพฤหัสบดี: "thursday",
     วันศุกร์: "friday",
-    วันเสาร์: "satuarday",
+    วันเสาร์: "saturday",
     วันอาทิตย์: "sunday",
     ทุกวัน: "everyday",
   };

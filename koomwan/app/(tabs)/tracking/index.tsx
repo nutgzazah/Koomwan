@@ -1,19 +1,27 @@
-import { 
-  Text, 
-  SafeAreaView, 
-  ScrollView, 
-  View, 
-  TouchableOpacity, 
+import {
+  Text,
+  SafeAreaView,
+  ScrollView,
+  View,
+  TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState} from "react"; 
+import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import { LongButton } from "./components/LongButton";
 import MoodSelecter from "./components/MoodSelecter";
 import InputFieldOne from "./components/InputFieldOne";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import BASE_URL from "../../../config";
+import Loading from "../../../global/components/Loading";
 
 // To Format Global To Thai Date
 const formatThaiDate = (date: Date): string => {
@@ -25,24 +33,50 @@ const formatThaiDate = (date: Date): string => {
 
 // To Format Global To Thai Timing
 const formatTime = (date: Date): string => {
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes} น.`;
+};
+
+// แปลงวันที่ไทยเป็น Date object
+const parseThaiDate = (thaiDateStr: string): Date | null => {
+  try {
+    const [day, month, thaiYear] = thaiDateStr.split("/").map(Number);
+    if (!day || !month || !thaiYear) return null;
+
+    const gregorianYear = thaiYear - 543;
+    return new Date(gregorianYear, month - 1, day);
+  } catch (error) {
+    console.error("Error parsing Thai date:", error);
+    return null;
+  }
+};
+
+// เปรียบเทียบวันที่กับวันปัจจุบัน (ไม่รวมเวลา)
+const isDateInPast = (dateToCheck: Date): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dateToCheckClone = new Date(dateToCheck);
+  dateToCheckClone.setHours(0, 0, 0, 0);
+  return dateToCheckClone < today;
 };
 
 export default function TrackingScreen() {
   const router = useRouter();
-  
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
-    date: "",
-    time: "",
+    date: formatThaiDate(new Date()),
+    time: formatTime(new Date()),
     weight: "",
     height: "",
     bloodSugar: "",
     a1c: "",
     bloodPressure: {
       systolic: "",
-      diastolic: ""
+      diastolic: "",
     },
-    mood: ""
+    mood: "",
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -55,15 +89,110 @@ export default function TrackingScreen() {
     a1c: "",
     bloodPressure: {
       systolic: "",
-      diastolic: ""
+      diastolic: "",
     },
+    date: "",
   });
+
+  // Fetch user's health info initially
+  useEffect(() => {
+    const fetchHealthInfo = async () => {
+      try {
+        setLoading(true);
+        // Get token and user info
+        const authData = await AsyncStorage.getItem("@auth");
+
+        if (!authData) {
+          /* Alert.alert("Session Expired ", "Please login again"); */
+          router.push("/user/login");
+          return;
+        }
+
+        const auth = JSON.parse(authData);
+        const token = auth.token;
+        const userId = auth.user._id;
+        const healthInfoId = auth.user.healthinfo;
+
+        // Get health info data
+        const response = await axios.get(
+          `${BASE_URL}/api/v1/user/profile/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success && response.data.user.healthinfo) {
+          const healthInfo = response.data.user.healthinfo;
+
+          // Fill form with health info data
+          setFormData((prev) => ({
+            ...prev,
+            height: healthInfo.height ? healthInfo.height.toString() : "",
+            weight: healthInfo.weight ? healthInfo.weight.toString() : "",
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching health info:", error);
+        Alert.alert("ข้อผิดพลาด", "ไม่สามารถดึงข้อมูลสุขภาพได้");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHealthInfo();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // เคลียร์ข้อมูลเมื่อกลับมาที่หน้านี้
+      const clearPreviousData = async () => {
+        await AsyncStorage.removeItem("trackingFormData");
+        await AsyncStorage.removeItem("selectedMedicines");
+
+        // ตั้งค่าข้อมูลเริ่มต้นใหม่
+        setFormData({
+          date: formatThaiDate(new Date()),
+          time: formatTime(new Date()),
+          weight: "",
+          height: "",
+          bloodSugar: "",
+          a1c: "",
+          bloodPressure: {
+            systolic: "",
+            diastolic: "",
+          },
+          mood: "",
+        });
+
+        // เคลียร์ข้อความข้อผิดพลาด
+        setErrorMessages({
+          weight: "",
+          height: "",
+          bloodSugar: "",
+          a1c: "",
+          bloodPressure: {
+            systolic: "",
+            diastolic: "",
+          },
+          date: "",
+        });
+      };
+      clearPreviousData();
+
+      return () => {
+        // ฟังก์ชันนี้จะทำงานเมื่อออกจากหน้า
+      };
+    }, [])
+  );
 
   // Validation for required fields
   const requiredFields = ["date", "time", "weight", "height"];
-  const isFormComplete = requiredFields.every(
-    (field) => formData[field as keyof typeof formData] !== ""
-  );
+  const isFormComplete =
+    requiredFields.every(
+      (field) => formData[field as keyof typeof formData] !== ""
+    ) && errorMessages.date === "";
 
   // Validation For Input
   const ranges: Record<string, [number, number]> = {
@@ -84,62 +213,120 @@ export default function TrackingScreen() {
       bloodSugar: "น้ำตาลในเลือด",
       a1c: "ค่า HbA1c",
       bloodPressureSystolic: "ความดันตัวบน",
-      bloodPressureDiastolic: "ความดันตัวล่าง"
+      bloodPressureDiastolic: "ความดันตัวล่าง",
     };
 
-    if (!/^\d*\.?\d*$/.test(value) || (ranges[name] && (numValue < ranges[name][0] || numValue > ranges[name][1]))) {
+    if (
+      !/^\d*\.?\d*$/.test(value) ||
+      (ranges[name] &&
+        (numValue < ranges[name][0] || numValue > ranges[name][1]))
+    ) {
       return `กรุณากรอก ${fieldNames[name] || name} ให้ถูกต้อง`;
     }
     return "";
   };
 
   // Handle Input Change
-  const handleChange = (field: string, value: string | { systolic: string; diastolic: string }) => {
+  const handleChange = (
+    field: string,
+    value: string | { systolic: string; diastolic: string }
+  ) => {
     if (field === "bloodPressure" && typeof value === "object") {
-      const systolicError = validateInput("bloodPressureSystolic", value.systolic);
-      const diastolicError = validateInput("bloodPressureDiastolic", value.diastolic);
+      const systolicError = validateInput(
+        "bloodPressureSystolic",
+        value.systolic
+      );
+      const diastolicError = validateInput(
+        "bloodPressureDiastolic",
+        value.diastolic
+      );
 
       setErrorMessages((prev) => ({
         ...prev,
         bloodPressure: {
           systolic: systolicError,
-          diastolic: diastolicError
-        }
+          diastolic: diastolicError,
+        },
       }));
 
       setFormData((prev) => ({
         ...prev,
-        bloodPressure: { ...prev.bloodPressure, ...value }
+        bloodPressure: { ...prev.bloodPressure, ...value },
       }));
     } else {
       const error = validateInput(field, value as string);
 
       setErrorMessages((prev) => ({
         ...prev,
-        [field]: error
+        [field]: error,
       }));
 
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
   };
 
- 
-   // Validation Before Submit
-   const handleSubmit = () => {
+  // ตรวจสอบวันที่ (ไม่ให้บันทึกวันในอดีต)
+  const validateDate = (dateStr: string): string => {
+    const dateObj = parseThaiDate(dateStr);
+    if (!dateObj) return "วันที่ไม่ถูกต้อง";
+
+    if (isDateInPast(dateObj)) {
+      return "ไม่สามารถบันทึกข้อมูลย้อนหลังได้";
+    }
+
+    return "";
+  };
+
+  // Validation Before Submit
+  const handleSubmit = () => {
     const requiredFields = ["date", "time", "weight", "height"];
-    if (requiredFields.some((field) => !formData[field as keyof typeof formData])) {
+    if (
+      requiredFields.some((field) => !formData[field as keyof typeof formData])
+    ) {
       Alert.alert("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
 
-    console.log("Sending Data:", formData); // Debug log
-    router.push({ pathname: "./medicineCollected", params: { formData: JSON.stringify(formData) } });
-  };  
+    // ตรวจสอบวันที่อีกครั้งก่อนส่งข้อมูล
+    const dateError = validateDate(formData.date);
+    if (dateError) {
+      setErrorMessages((prev) => ({ ...prev, date: dateError }));
+      Alert.alert("ข้อผิดพลาด", dateError);
+      return;
+    }
+
+    // Store form data to pass to next screen
+    AsyncStorage.setItem("trackingFormData", JSON.stringify(formData))
+      .then(() => {
+        router.push({
+          pathname: "tracking/medicineCollected",
+        });
+      })
+      .catch((error) => {
+        console.error("Error saving form data:", error);
+        Alert.alert("ข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้");
+      });
+  };
 
   // Date And Time Picker Handle
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleDateChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
     setShowDatePicker(false);
     if (selectedDate) {
+      // ตรวจสอบว่าวันที่ที่เลือกไม่ใช่วันในอดีต
+      if (isDateInPast(selectedDate)) {
+        setErrorMessages((prev) => ({
+          ...prev,
+          date: "ไม่สามารถบันทึกข้อมูลย้อนหลังได้",
+        }));
+        Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลย้อนหลังได้");
+        return;
+      } else {
+        setErrorMessages((prev) => ({ ...prev, date: "" }));
+      }
+
       setFormData((prev) => ({
         ...prev,
         date: formatThaiDate(selectedDate),
@@ -147,7 +334,10 @@ export default function TrackingScreen() {
     }
   };
 
-  const handleTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
+  const handleTimeChange = (
+    event: DateTimePickerEvent,
+    selectedTime?: Date
+  ) => {
     setShowTimePicker(false);
     if (selectedTime) {
       setFormData((prev) => ({
@@ -157,26 +347,39 @@ export default function TrackingScreen() {
     }
   };
 
+  if (loading) {
+    return <Loading />;
+  }
+
   return (
     <SafeAreaView className="flex-1">
       <ScrollView className="mb-24">
         {/* Card One - Date And Time Input */}
         <Card>
-          <Text className="text-display font-bold font-sans text-secondary text-center mt-1">บันทึกข้อมูลสุขภาพ</Text>
+          <Text className="text-display font-bold font-sans text-secondary text-center mt-1">
+            บันทึกข้อมูลสุขภาพ
+          </Text>
 
           {/* Date */}
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} className="mt-2">
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            className="mt-2"
+          >
             <InputFieldOne
               label="วันที่"
               value={formData.date}
               placeholder="เลือกวันที่"
               editable={false}
               rightIcon={require("../../../assets/Tracking/calendar.png")}
+              errorMessage={errorMessages.date}
             />
           </TouchableOpacity>
 
           {/* Time */}
-          <TouchableOpacity onPress={() => setShowTimePicker(true)} className="mb-1">
+          <TouchableOpacity
+            onPress={() => setShowTimePicker(true)}
+            className="mb-1"
+          >
             <InputFieldOne
               label="เวลา"
               value={formData.time}
@@ -189,7 +392,9 @@ export default function TrackingScreen() {
 
         {/* Card Two - Health Information */}
         <Card>
-          <Text className="text-title font-sans text-secondary text-center mt-1">ข้อมูลสุขภาพ</Text>
+          <Text className="text-title font-sans text-secondary text-center mt-1">
+            ข้อมูลสุขภาพ
+          </Text>
           <BreakLine />
 
           {/* Weight And Height With The Same Line */}
@@ -243,7 +448,12 @@ export default function TrackingScreen() {
               <InputFieldOne
                 label="ค่าความดันตัวบน (Optional)"
                 value={formData.bloodPressure.systolic}
-                onChangeText={(value) => handleChange("bloodPressure", { ...formData.bloodPressure, systolic: value })}
+                onChangeText={(value) =>
+                  handleChange("bloodPressure", {
+                    ...formData.bloodPressure,
+                    systolic: value,
+                  })
+                }
                 placeholder="เช่น 120"
                 keyboardType="numeric"
                 errorMessage={errorMessages.bloodPressure.systolic}
@@ -254,7 +464,12 @@ export default function TrackingScreen() {
               <InputFieldOne
                 label="ค่าความดันตัวล่าง (Optional)"
                 value={formData.bloodPressure.diastolic}
-                onChangeText={(value) => handleChange("bloodPressure", { ...formData.bloodPressure, diastolic: value })}
+                onChangeText={(value) =>
+                  handleChange("bloodPressure", {
+                    ...formData.bloodPressure,
+                    diastolic: value,
+                  })
+                }
                 placeholder="เช่น 80"
                 keyboardType="numeric"
                 errorMessage={errorMessages.bloodPressure.diastolic}
@@ -265,39 +480,51 @@ export default function TrackingScreen() {
 
         {/* Card Three - ข้อมูลอารมณ์ */}
         <Card>
-          <Text className="text-title font-sans text-secondary text-center mt-1">ข้อมูลอารมณ์</Text>
+          <Text className="text-title font-sans text-secondary text-center mt-1">
+            ข้อมูลอารมณ์
+          </Text>
           <BreakLine />
 
-          <Text className="text-description font-sans font-bold text-secondary text-center mb-1">วันนี้คุณรู้สึกอย่างไร . . . (Optional)</Text>
-          <MoodSelecter selectedMood={formData.mood} onSelect={(mood) => handleChange("mood", mood)} />
+          <Text className="text-description font-sans font-bold text-secondary text-center mb-1">
+            วันนี้คุณรู้สึกอย่างไร . . . (Optional)
+          </Text>
+          <MoodSelecter
+            selectedMood={formData.mood}
+            onSelect={(mood) => handleChange("mood", mood)}
+          />
         </Card>
 
         {/* Go To The MedicineCollected */}
-        <View className="items-center w-full px-4">
+        <View className="items-center w-full px-4 mb-4">
           <LongButton
             title="ถัดไป"
             onPress={handleSubmit}
-            disabled={!isFormComplete}
+            disabled={!isFormComplete || loading}
             isCompleted={isFormComplete}
-            customStyle={isFormComplete ? "bg-blue-600" : "bg-gray"}
+            customStyle={isFormComplete ? "bg-primary" : "bg-gray"}
           />
         </View>
 
         {/* Date Picker - Replaces Input field with picker */}
         {showDatePicker && (
-          <View style={{ position: "absolute", top: 115, left: 24, width: "100%" }}>
+          <View
+            style={{ position: "absolute", top: 115, left: 24, width: "100%" }}
+          >
             <DateTimePicker
               value={new Date()}
               mode="date"
               display="compact"
               onChange={handleDateChange}
+              minimumDate={new Date()} // ไม่อนุญาตให้เลือกวันในอดีต
             />
           </View>
         )}
 
         {/* Time Picker - Replaces Input field with picker */}
         {showTimePicker && (
-          <View style={{ position: "absolute", top: 205, left: 22, width: "100%" }}>
+          <View
+            style={{ position: "absolute", top: 205, left: 22, width: "100%" }}
+          >
             <DateTimePicker
               value={new Date()}
               mode="time"

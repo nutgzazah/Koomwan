@@ -698,7 +698,8 @@ export default function EditProfileScreen() {
                   >
                     <Image
                       source={require("../../assets/BeginnerSetup/trash.png")}
-                      className="w-10 h-10 bg-secondary rounded-full p-2"
+                      className="w-9 h-9 bg-secondary rounded-full "
+                      resizeMode="cover"
                     />
                   </TouchableOpacity>
                 )}

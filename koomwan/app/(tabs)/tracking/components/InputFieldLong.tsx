@@ -1,10 +1,10 @@
 import React from "react";
-import { 
-    View, 
-    Text, 
-    TextInput, 
-    Image, 
-    KeyboardTypeOptions 
+import {
+  View,
+  Text,
+  TextInput,
+  Image,
+  KeyboardTypeOptions,
 } from "react-native";
 import DropdownChoice from "./DropDown";
 
@@ -37,11 +37,13 @@ const InputFieldLong: React.FC<InputFieldLongProps> = ({
   choices,
   selectedChoice,
   onChoiceChange,
-  onOtherTextChange
+  onOtherTextChange,
 }) => {
   return (
     <View className="mb-2 px-1 w-full ">
-      <Text className="text-description font-bold font-sans text-secondary mb-1 w-full ">{label}</Text>
+      <Text className="text-description font-bold font-sans text-secondary mb-1 w-full ">
+        {label}
+      </Text>
 
       {choices ? (
         <DropdownChoice
@@ -51,42 +53,38 @@ const InputFieldLong: React.FC<InputFieldLongProps> = ({
           onOtherTextChange={onOtherTextChange}
         />
       ) : (
-        <View className={`mb-1 w-full bg-background border ${errorMessage ? 'border-red-500' : 'border-gray'} rounded-lg flex-row items-center`}>
+        <View
+          className={`mb-1 w-full bg-background border ${
+            errorMessage ? "border-abnormal" : "border-gray"
+          } rounded-lg flex-row items-center`}
+        >
           <TextInput
-           value={value}
-           onChangeText={onChangeText}
-           placeholder={placeholder}
-           placeholderTextColor="gray"
-           keyboardType={keyboardType}
-           maxLength={maxLength}
-           editable={editable}
-           multiline={true}
-           className="font-sans text-description flex-1 mx-1 w-full"
-           style={{
-            height: 135,
-            textAlignVertical: "top", 
-            paddingTop: 2, 
-            paddingLeft: 1, 
-            marginTop: 0, 
-            flex: 0, 
-           }}
-           />
-     {rightIcon && (
-       <Image
-        source={rightIcon}
-        className="w-7 h-7 mr-3"
-        />
-      )}
-   </View>
-
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor="gray"
+            keyboardType={keyboardType}
+            maxLength={maxLength}
+            editable={editable}
+            multiline={true}
+            className="font-sans text-description mx-1 w-full h-32"
+            style={{
+              textAlignVertical: "top",
+              paddingTop: 2,
+              paddingLeft: 1,
+            }}
+          />
+          {rightIcon && <Image source={rightIcon} className="w-7 h-7 mr-3" />}
+        </View>
       )}
 
-      {errorMessage && <Text className="font-sans text-red-500 text-description absolute bottom-[-15px] left-1"
-       style={{ fontSize: 12 }}
-       
-      >{errorMessage}</Text>}
+      {errorMessage && (
+        <Text className="font-sans text-abnormal text-description ">
+          {errorMessage}
+        </Text>
+      )}
     </View>
   );
 };
 
-export default InputFieldLong
+export default InputFieldLong;

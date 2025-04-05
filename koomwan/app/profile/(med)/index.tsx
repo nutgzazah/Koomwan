@@ -247,9 +247,8 @@ export default function RegularMedScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <BackButton title="อัพเดทข้อมูลยาประจำ" />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <BackButton title="อัพเดทข้อมูลยาประจำ" />
-
         <Card>
           {/* Card Header */}
           <View className="flex-col items-center w-full mb-4">

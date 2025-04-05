@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Modal,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -17,11 +20,128 @@ import EmotionDisplay from "../../../components/home/healthinfo/EmotionDisplay";
 import { calculateBMI, getBMICategory } from "../../../util/bmi";
 import BMISection from "../../../components/home/healthinfo/BMISection";
 import Loading from "../../../global/components/Loading";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import BASE_URL from "../../../config";
 
 const CalendarHealthScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { loading, record, error } = useHealthRecord(id as string);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // Function to delete the record
+  const deleteRecord = async () => {
+    try {
+      setIsDeleting(true);
+
+      // Get auth token
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        Alert.alert("ข้อผิดพลาด", "กรุณาเข้าสู่ระบบใหม่");
+        router.push("/user/login");
+        return;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // Only proceed if we have a valid record and ID from params
+      if (!record || !id) {
+        throw new Error("ไม่พบข้อมูลบันทึก");
+      }
+
+      // First, delete any additional pill images if they exist
+      if (record.medications && record.medications.length > 0) {
+        await Promise.all(
+          record.medications.map(async (med) => {
+            if (med.pill_image) {
+              try {
+                // Extract folder and filename from the pill image path
+                let folder = "pill-images";
+                let fileName = "";
+
+                // Handle different image path formats
+                if (med.pill_image.includes("/")) {
+                  const parts = med.pill_image.split("/");
+                  fileName = parts.pop() || "";
+                  if (
+                    parts.length > 0 &&
+                    parts[parts.length - 1] !== "uploads"
+                  ) {
+                    folder = parts.pop() || "pill-images";
+                  }
+                } else {
+                  fileName = med.pill_image;
+                }
+
+                // Skip if we don't have a valid filename
+                if (!fileName) return;
+
+                // Delete the image file
+                await axios.delete(`${BASE_URL}/api/v1/storage/deleteFile`, {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  data: {
+                    folder,
+                    fileName,
+                  },
+                });
+
+                console.log(
+                  `Successfully deleted image: ${fileName} from ${folder}`
+                );
+              } catch (imageError) {
+                console.error("Error deleting image:", imageError);
+                // Continue with record deletion even if image deletion fails
+              }
+            }
+          })
+        );
+      }
+
+      // Then delete the record using the ID from URL params
+      const response = await axios.delete(
+        `${BASE_URL}/api/v1/user/deleteRecord/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        Alert.alert("สำเร็จ", "ลบข้อมูลบันทึกเรียบร้อยแล้ว", [
+          {
+            text: "ตกลง",
+            onPress: () => {
+              // Navigate back after successful deletion
+              router.back();
+            },
+          },
+        ]);
+      } else {
+        throw new Error(response.data.message || "ไม่สามารถลบข้อมูลได้");
+      }
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      Alert.alert(
+        "เกิดข้อผิดพลาด",
+        "ไม่สามารถลบข้อมูลบันทึกได้ กรุณาลองใหม่อีกครั้ง"
+      );
+    } finally {
+      setIsDeleting(false);
+      setShowConfirmModal(false);
+    }
+  };
+
+  // Handle delete button press
+  const handleDeletePress = () => {
+    setShowConfirmModal(true);
+  };
 
   // For debugging
   React.useEffect(() => {
@@ -96,8 +216,34 @@ const CalendarHealthScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <BackButton title="มุมมองปฏิทิน" />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <BackButton title="มุมมองปฏิทิน" />
+        {/* Delete Button */}
+        <View className="flex-row justify-end mx-8 my-2">
+          <TouchableOpacity
+            onPress={handleDeletePress}
+            disabled={isDeleting}
+            className="flex-row items-center"
+          >
+            {isDeleting ? (
+              <ActivityIndicator size="small" color="red" />
+            ) : (
+              <>
+                <Image
+                  source={require("../../../assets/BeginnerSetup/trash.png")}
+                  className="w-5 h-5 tint-abnormal"
+                  style={{ tintColor: "red" }}
+                />
+                <Text
+                  className="text-tag font-medium ml-1"
+                  style={{ color: "red" }}
+                >
+                  ลบบันทึก
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
 
         <Card>
           <View className="w-full">
@@ -380,6 +526,46 @@ const CalendarHealthScreen = () => {
           </View>
         </Card>
       </ScrollView>
+
+      {/* Confirmation Modal */}
+      <Modal visible={showConfirmModal} transparent animationType="fade">
+        <View className="flex-1 justify-center items-center bg-background/80">
+          <View className="bg-card rounded-2xl p-5 w-5/6 items-center">
+            <Text className="text-headline text-secondary font-bold text-center">
+              ยืนยันการลบ
+            </Text>
+            <Text className="text-description text-secondary font-regular text-center mt-2 mb-4">
+              คุณต้องการลบบันทึกนี้ใช่หรือไม่?
+            </Text>
+
+            <View className="flex-row justify-around w-full">
+              <TouchableOpacity
+                className="py-3 px-8 rounded-lg bg-primary"
+                onPress={() => setShowConfirmModal(false)}
+                disabled={isDeleting}
+              >
+                <Text className="text-description text-white font-bold">
+                  ยกเลิก
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="py-3 px-6 bg-abnormal rounded-lg"
+                onPress={deleteRecord}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text className="text-button text-card font-regular">
+                    ลบบันทึก
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

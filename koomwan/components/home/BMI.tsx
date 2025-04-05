@@ -310,8 +310,8 @@ export default function BMI() {
     return (
       <EmptyHomeCard
         header="ดัชนีมวลกายของฉัน"
-        title="ยังไม่มีข้อมูลดัชนีมวลกาย"
-        subtitle="กรุณาบันทึกข้อมูลน้ำหนักและส่วนสูงเพื่อคำนวณค่าดัชนีมวลกาย (BMI)"
+        title="ยังไม่มีข้อมูลดัชนีมวลกายล่าสุด"
+        subtitle="กรุณาบันทึกข้อมูลน้ำหนักและส่วนสูงเพื่อคำนวณค่าดัชนีมวลกาย (BMI) ล่าสุด"
         buttonText="บันทึกข้อมูลสุขภาพ"
         navigateTo="/(tabs)/tracking"
         icon={require("../../assets/Home/body.png")}

@@ -23,7 +23,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView showsVerticalScrollIndicator={false} className="mb-8">
-        <View className="flex-1 justify-center items-center p-4">
+        {/* <View className="flex-1 justify-center items-center p-4">
           <Text className="text-2xl font-regular mb-8">Home</Text>
           <TouchableOpacity onPress={() => router.push("/user/login")}>
             <Text className="color-secondary text-button">User Login</Text>
@@ -43,14 +43,14 @@ export default function HomeScreen() {
           <TouchableOpacity onPress={() => router.push("/doctor/signupinfo")}>
             <Text className="font-bold">Doctor info</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         <A1Cchart />
         <BMI />
         <Overview />
         <BloodSugarStatus />
         <EmoteDisplay />
-        <MedicationStatus hasTakenMeds={true} />
+        <MedicationStatus />
         <HealthDashboard />
       </ScrollView>
     </SafeAreaView>

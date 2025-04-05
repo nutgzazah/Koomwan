@@ -319,7 +319,7 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
           </View>
         ) : bloodSugarData.length === 0 ? (
           <EmptyHomeCard
-            title="ยังไม่มีข้อมูลน้ำตาลในเลือด"
+            title="ยังไม่มีข้อมูลน้ำตาลในเลือดล่าสุด"
             subtitle="คุณมีข้อมูลบันทึกสุขภาพแล้ว แต่ยังไม่มีการบันทึกค่าน้ำตาลในเลือด"
             buttonText="บันทึกข้อมูลสุขภาพ"
             /* icon={require("../../assets/Home/graph_notfound.png")} */
