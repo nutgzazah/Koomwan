@@ -117,6 +117,7 @@ const editReport = async (req, res) => {
                 title: report.title || 'Report Updated', // ใช้ title จาก report หรือใช้ชื่อเริ่มต้น
                 detail: response, // ใช้ response เป็นรายละเอียดของ notification
                 notificationType: 'general', // ประเภทของการแจ้งเตือน
+                helpRequest: report._id,
             });
 
             // บันทึก notification

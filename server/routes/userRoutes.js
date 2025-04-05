@@ -15,8 +15,8 @@ const {
   deleteRecord,
   getRecord,
 } = require("../controllers/trackingController");
-const { sentHelpRequest } = require('../controllers/helpRequestController');
-const { sendReminder } = require('../controllers/notificationController');
+const { sentHelpRequest, getHelpRequest, getAllHelpRequest } = require('../controllers/helpRequestController');
+const { sendReminder, getAllNotification } = require('../controllers/notificationController');
 
 //router object
 const router = express.Router();
@@ -64,5 +64,10 @@ router.post("/sentHelpRequest",requireSignIn , sentHelpRequest);
 // Get Remider
 router.get('/sentMedicineNoti', requireSignIn, sendReminder);
 
+router.get('/getAllNotification', requireSignIn, getAllNotification);
+
+router.get('/getAllProblem', requireSignIn, getAllHelpRequest);
+
+router.get('/getProblem/:problemId',requireSignIn, getHelpRequest); 
 //export
 module.exports = router;
