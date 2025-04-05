@@ -558,13 +558,13 @@ export default function SummaryTrackingScreen() {
 
         {/* Success Modal */}
         <Modal visible={showSuccessModal} transparent animationType="fade">
-          <View className="flex-1 justify-center items-center bg-gray-500 bg-opacity-50">
+          <View className="flex-1 justify-center items-center bg-gray/80">
             <View className="bg-card rounded-2xl p-7 m-4 items-center">
               <Text className="text-title font-sans text-center mb-1 font-bold">
-                บันทึกข้อมูล
+                บันทึกข้อมูลสำเร็จ
               </Text>
               <Text className="text-description font-sans text-center mb-3">
-                สุขภาพของคุณสำเร็จ!
+                บันทึกข้อมูลสุขภาพของคุณสำเร็จ!
               </Text>
               <Image
                 source={require("../../../assets/Tracking/tick-circle.png")}
