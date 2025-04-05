@@ -4,7 +4,7 @@ import Card from "../../../global/components/Card";
 import BackButton from "../../../global/components/BackButton";
 import BreakLine from "../../../global/components/BreakLine";
 
-export default function PrivacyPolicycreen() {
+export default function PrivacyPolicyScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <BackButton title="ย้อนกลับ" />
