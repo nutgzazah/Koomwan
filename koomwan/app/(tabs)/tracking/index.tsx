@@ -5,8 +5,10 @@ import {
   View,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -16,6 +18,10 @@ import BreakLine from "../../../global/components/BreakLine";
 import { LongButton } from "./components/LongButton";
 import MoodSelecter from "./components/MoodSelecter";
 import InputFieldOne from "./components/InputFieldOne";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import BASE_URL from "../../../config";
+import Loading from "../../../global/components/Loading";
 
 // To Format Global To Thai Date
 const formatThaiDate = (date: Date): string => {
@@ -32,10 +38,11 @@ const formatTime = (date: Date): string => {
 
 export default function TrackingScreen() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    date: "",
-    time: "",
+    date: formatThaiDate(new Date()),
+    time: formatTime(new Date()),
     weight: "",
     height: "",
     bloodSugar: "",
@@ -60,6 +67,86 @@ export default function TrackingScreen() {
       diastolic: "",
     },
   });
+
+  // Fetch user's health info initially
+  useEffect(() => {
+    const fetchHealthInfo = async () => {
+      try {
+        setLoading(true);
+        // Get token and user info
+        const authData = await AsyncStorage.getItem("@auth");
+
+        if (!authData) {
+          /* Alert.alert("Session Expired ", "Please login again"); */
+          router.push("/user/login");
+          return;
+        }
+
+        const auth = JSON.parse(authData);
+        const token = auth.token;
+        const userId = auth.user._id;
+        const healthInfoId = auth.user.healthinfo;
+
+        // Get health info data
+        const response = await axios.get(
+          `${BASE_URL}/api/v1/user/profile/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success && response.data.user.healthinfo) {
+          const healthInfo = response.data.user.healthinfo;
+
+          // Fill form with health info data
+          setFormData((prev) => ({
+            ...prev,
+            height: healthInfo.height ? healthInfo.height.toString() : "",
+            weight: healthInfo.weight ? healthInfo.weight.toString() : "",
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching health info:", error);
+        Alert.alert("ข้อผิดพลาด", "ไม่สามารถดึงข้อมูลสุขภาพได้");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHealthInfo();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // เคลียร์ข้อมูลเมื่อกลับมาที่หน้านี้
+      const clearPreviousData = async () => {
+        await AsyncStorage.removeItem("trackingFormData");
+        await AsyncStorage.removeItem("selectedMedicines");
+
+        // ตั้งค่าข้อมูลเริ่มต้นใหม่
+        setFormData({
+          date: formatThaiDate(new Date()),
+          time: formatTime(new Date()),
+          weight: "",
+          height: "",
+          bloodSugar: "",
+          a1c: "",
+          bloodPressure: {
+            systolic: "",
+            diastolic: "",
+          },
+          mood: "",
+        });
+      };
+      clearPreviousData();
+
+      return () => {
+        // ฟังก์ชันนี้จะทำงานเมื่อออกจากหน้า
+      };
+    }, [])
+  );
 
   // Validation for required fields
   const requiredFields = ["date", "time", "weight", "height"];
@@ -148,11 +235,17 @@ export default function TrackingScreen() {
       return;
     }
 
-    console.log("Sending Data:", formData); // Debug log
-    router.push({
-      pathname: "tracking/medicineCollected",
-      params: { formData: JSON.stringify(formData) },
-    });
+    // Store form data to pass to next screen
+    AsyncStorage.setItem("trackingFormData", JSON.stringify(formData))
+      .then(() => {
+        router.push({
+          pathname: "tracking/medicineCollected",
+        });
+      })
+      .catch((error) => {
+        console.error("Error saving form data:", error);
+        Alert.alert("ข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้");
+      });
   };
 
   // Date And Time Picker Handle
@@ -181,6 +274,10 @@ export default function TrackingScreen() {
       }));
     }
   };
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <SafeAreaView className="flex-1">
@@ -234,7 +331,7 @@ export default function TrackingScreen() {
                 label="น้ำหนัก"
                 value={formData.weight}
                 onChangeText={(value) => handleChange("weight", value)}
-                placeholder=" เช่น 60"
+                placeholder={formData.weight}
                 keyboardType="numeric"
                 errorMessage={errorMessages.weight}
               />
@@ -245,7 +342,7 @@ export default function TrackingScreen() {
                 label="ส่วนสูง"
                 value={formData.height}
                 onChangeText={(value) => handleChange("height", value)}
-                placeholder="เช่น 160"
+                placeholder={formData.height}
                 keyboardType="numeric"
                 errorMessage={errorMessages.height}
               />
@@ -325,11 +422,11 @@ export default function TrackingScreen() {
         </Card>
 
         {/* Go To The MedicineCollected */}
-        <View className="items-center w-full px-4">
+        <View className="items-center w-full px-4 mb-4">
           <LongButton
             title="ถัดไป"
             onPress={handleSubmit}
-            disabled={!isFormComplete}
+            disabled={!isFormComplete || loading}
             isCompleted={isFormComplete}
             customStyle={isFormComplete ? "bg-primary" : "bg-gray"}
           />
