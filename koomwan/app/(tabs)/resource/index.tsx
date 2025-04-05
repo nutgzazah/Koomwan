@@ -50,7 +50,7 @@ export default function ResourceScreen() {
   const filteredBlogs = useMemo(() => {
     return blogsData.filter(blog =>
       blog.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (selectedCategories.length === 0 || selectedCategories.every(category => blog.category.includes(category)))
+      (selectedCategories.length === 0 || selectedCategories.some(category => blog.category.includes(category))) // ใช้เงื่อนไข OR ในการ Filter
     );
   }, [blogsData, searchQuery, selectedCategories]);
 
@@ -59,33 +59,55 @@ export default function ResourceScreen() {
       try {
         setLoading(true);
         const authData = await AsyncStorage.getItem("@auth");
-
+  
         if (!authData) {
           Alert.alert("Session Expired ", "Please login again");
           router.push("/user/login");
           return;
         }
-
+  
         const auth = JSON.parse(authData);
         const token = auth.token;
         const userId = auth.user._id;
-        const healthInfoId = auth.user.healthinfo;
-
+  
         if (!userId || !token) {
           Alert.alert("Session Expired", "Please login again");
           router.push("/user/login");
           return;
         }
-
+  
         const resourceResponse = await axios.get(`${BASE_URL}/api/v1/admin/blog`);
-
+  
         if (resourceResponse.data.success) {
-          setBlogsData(resourceResponse.data.data);
-          console.log(extractCategories(resourceResponse.data.data));
+          const blogs = resourceResponse.data.data;
+  
+          // Fetch image URLs for each blog
+          const blogsWithImageUrls = await Promise.all(
+            blogs.map(async (blog: Blog) => {
+              const [folder, fileName] = blog.image.includes("/")
+                ? blog.image.split("/")
+                : ["blogImage", blog.image];
+              if (folder.includes("http")) {
+                return blog.image;
+              }
+  
+              const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
+                params: { fileName, folder },
+                headers: { "Cache-Control": "no-cache" },
+              });
+  
+              const imageUrl = response.data.success
+                ? response.data.url
+                : `${BASE_URL}/uploads/${blog.image}`;
+  
+              return { ...blog, image: imageUrl };
+            })
+          );
+  
+          setBlogsData(blogsWithImageUrls);
         }
       } catch (error) {
-        console.error("Error fetching profile data:", error);
-
+  
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
           Alert.alert("Session Expired", "Please login again", [
@@ -102,7 +124,7 @@ export default function ResourceScreen() {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, []);
 
