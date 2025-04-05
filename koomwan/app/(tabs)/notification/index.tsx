@@ -9,14 +9,15 @@ import axios from 'axios'; // Import Axios
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../../config";
 import { useNavigation } from '@react-navigation/native'; // Import the navigation hook
+import { useRouter } from "expo-router";
 
 export default function ResourceScreen() {
   const role: string = "doctor"; // Change this dynamically as per the user role
+  const router = useRouter();
   const [filter, setFilter] = useState(1);
   const [notifications, setNotifications] = useState<notificationCardProps[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const navigation = useNavigation(); // useNavigation hook for navigation
 
   // Fetch notifications from the backend API
   useEffect(() => {
@@ -25,39 +26,59 @@ export default function ResourceScreen() {
         setLoading(true);
         const authData = await AsyncStorage.getItem("@auth");
         if (!authData) {
-          Alert.alert("Session Expired ", "Please login again");
-          navigation.navigate("/user/login"); // Changed to use navigation from React Navigation
+          Alert.alert("Session Expired", "Please login again");
+          navigation.navigate("/user/login");
           return;
         }
-    
+
         const auth = JSON.parse(authData);
         const token = auth.token;
-        const userId = auth.user._id;
 
         // Make the request with the token
         const response = await axios.get(`${BASE_URL}/api/v1/user/getAllNotification`, {
           headers: {
-            Authorization: `Bearer ${token}`, // Ensure the token is passed in the correct format
+            Authorization: `Bearer ${token}`,
           },
         });
-    
-        console.log("Notifications received:", response.data); // Log the response to check data
-        setNotifications(response.data.notifications || []); // Ensure notifications are set to an empty array if not available
+
+        console.log("Notifications received:", response.data);
+
+        // Log only helpRequest for each notification
+        response.data.notifications.forEach((notification: any) => {
+          console.log("HelpRequest:", notification.helpRequest);
+        });
+
+        setNotifications(response.data.notifications || []);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching notifications:', err);
         setError('Failed to load notifications');
         setLoading(false);
       }
-    };    
-    
+    };
+
     fetchNotifications();
-  }, [navigation]); // Added navigation to dependency array for better effect management
+  }, []);
 
+  // Filter notifications based on type
+  const filteredNotifications = notifications.filter((notification) => {
+    if (filter === 1) {
+      return notification.notificationType === "general"; // Show general in personal
+    } else if (filter === 2) {
+      return notification.notificationType === "forum"; // Show forum in forum section
+    }
+    return true;
+  });
 
-  // onPress for each notification block
-  const onPress = () => {
-    console.log("Notification pressed");
+  // Update onPress to handle the logic for different headers
+  const onPress = (helpRequestId: string, header: string) => {
+    if (header === "การรายงานปัญหา") {
+      router.push(`/notification/${helpRequestId}`); // Use helpRequestId in the URL
+      console.log(`${helpRequestId}`);
+    } else if (header === "แจ้งเตือนการทานยา") {
+      router.push(`/home/calendarView`);
+      console.log(`${helpRequestId}`);
+    }
   };
 
   // Interface for typescript typing in DoctorView, UserView
@@ -72,18 +93,24 @@ export default function ResourceScreen() {
         <TwoChoiceFilterBox
           first_choice="ส่วนตัว"
           second_choice="ฟอรัม"
-          first_onPress={() => setFilter(1)}
-          second_onPress={() => setFilter(2)}
+          first_onPress={() => setFilter(1)}  // Filter to show 'general'
+          second_onPress={() => setFilter(2)} // Filter to show 'forum'
           current_choice={filter}
         />
         <View className="my-2"></View>
-        {notifications.map((notification, index) => (
-          <NotificationCard
-            key={index}
-            notification={notification}
-            onPress={onPress}
-          />
-        ))}
+        {filter === 1 && filteredNotifications.length === 0 ? (
+          <Text className="font-sans text-body text-center text-secondary flex-1 justify-center items-center">ไม่มีการแจ้งเตือนสำหรับส่วนตัว</Text>
+        ) : filter === 2 && filteredNotifications.length === 0 ? (
+          <Text className="font-sans text-body text-center text-secondary flex-1 justify-center items-center">ไม่มีการแจ้งเตือนสำหรับฟอรั่ม</Text>
+        ) : (
+          filteredNotifications.map((notification, index) => (
+            <NotificationCard
+              key={index}
+              notification={notification}
+              onPress={(helpRequestId: string, header: string) => onPress(helpRequestId, header)} // Pass header along with helpRequestId
+            />
+          ))
+        )}
       </DoctorDisplayCard>
     );
   }
@@ -94,13 +121,19 @@ export default function ResourceScreen() {
       <Card>
         <Text className="font-sans text-title text-secondary">การแจ้งเตือน</Text>
         <BreakLine />
-        {notifications.map((notification: notificationCardProps, index: number) => (
-          <NotificationCard
-            key={index}
-            notification={notification}
-            onPress={onPress}
-          />
-        ))}
+        {filter === 1 && filteredNotifications.length === 0 ? (
+          <Text className="font-sans text-body text-center text-secondary flex-1 justify-center items-center">ไม่มีการแจ้งเตือนสำหรับส่วนตัว</Text>
+        ) : filter === 2 && filteredNotifications.length === 0 ? (
+          <Text className="font-sans text-body text-center text-secondary flex-1 justify-center items-center">ไม่มีการแจ้งเตือนสำหรับฟอรั่ม</Text>
+        ) : (
+          filteredNotifications.map((notification: notificationCardProps, index: number) => (
+            <NotificationCard
+              key={index}
+              notification={notification}
+              onPress={(helpRequestId: string, header: string) => onPress(helpRequestId, header)} // Pass header along with helpRequestId
+            />
+          ))
+        )}
       </Card>
     );
   }

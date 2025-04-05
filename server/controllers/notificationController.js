@@ -29,18 +29,14 @@ const sendReminder = async () => {
             console.log(`Checking health info for user: ${healthInfo.user.username}`);
 
             // ตรวจสอบว่า healthInfo.regularpill มีข้อมูลหรือไม่
-            if (!healthInfo.regularpill || healthInfo.regularpill.length === 0) {
+            if (!Array.isArray(healthInfo.regularpill) || healthInfo.regularpill.length === 0) {
                 console.log(`No pills found for user: ${healthInfo.user.username}`);
                 continue;  // ถ้าไม่มีข้อมูล pills ให้ข้ามไปยังผู้ใช้ถัดไป
             }
 
-            // ตรวจสอบว่า reminderTimes มีข้อมูลอย่างถูกต้องหรือไม่
-            console.log(`User: ${healthInfo.user.username}, reminderTimes: ${JSON.stringify(healthInfo.regularpill.map(pill => pill.reminderTimes))}`);
-
             // กรองเวลาที่ผู้ใช้ตั้งไว้ใน 'reminderTimes'
             const pills = healthInfo.regularpill.filter(pill => {
                 console.log(`Checking pill: ${pill.pillName}, reminderTimes: ${pill.reminderTimes}`);
-                // ตรวจสอบว่า reminderTimes ของยาใดตรงกับเวลาปัจจุบันหรือไม่
                 return pill.reminderTimes && (
                     pill.reminderTimes.includes("everyday/" + currentTime) ||
                     pill.reminderTimes.includes(today + "/" + currentTime)
@@ -56,10 +52,23 @@ const sendReminder = async () => {
                 console.log(`Reminder for pill: ${pill.pillName} at ${currentTime}`);
 
                 try {
+                    // ตรวจสอบว่ามีการแจ้งเตือนนี้อยู่ในฐานข้อมูลแล้วหรือยัง
+                    const existingNotification = await Notification.findOne({
+                        user: healthInfo.user,
+                        title: 'แจ้งเตือนการทานยา',
+                        detail: `ถึงเวลาทานยา ${pill.pillName} แล้ว`,
+                        createdAt: { $gte: now.startOf('day'), $lt: now.endOf('day') }  // ตรวจสอบในวันที่เดียวกัน
+                    });
+
+                    if (existingNotification) {
+                        console.log(`Notification already sent for user: ${healthInfo.user.username}, pill: ${pill.pillName}`);
+                        continue; // ถ้ามีการแจ้งเตือนแล้ว ให้ข้ามไป
+                    }
+
                     // สร้างการแจ้งเตือนเมื่อเวลาตรงกับเวลาที่ตั้งไว้
                     const notification = new Notification({
                         user: healthInfo.user,
-                        title: `แจ้งเตือนการทานยา ${pill.pillName}`,
+                        title: 'แจ้งเตือนการทานยา',
                         detail: `อย่าลืมทานยา ${pill.pillName}`,
                         notificationType: 'general',
                     });
@@ -76,6 +85,7 @@ const sendReminder = async () => {
         console.error("Error sending medication reminder:", error);
     }
 };
+
 
 const getAllNotification = async (req, res) => {
     try {
