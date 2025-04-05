@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -47,11 +47,119 @@ const AddMedicineScreen: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [signedImageUrl, setSignedImageUrl] = useState<string | null>(null);
+
+  // Effect to load signed URL for image when component mounts
+  useEffect(() => {
+    if (medicine.image && !medicine.image.startsWith("file://")) {
+      fetchSignedImageUrl(medicine.image);
+    }
+  }, [medicine.image]);
 
   // Handle selecting medication type
   const handleSelectType = (selectedType: string) => {
     setMedicine((prev) => ({ ...prev, type: selectedType }));
     setIsDropdownOpen(false);
+  };
+
+  // Function to extract folder and filename from path
+  const extractFolderAndFilename = (
+    path: string
+  ): { folder: string; fileName: string } | null => {
+    try {
+      // If it's a full URL (from local server)
+      if (path.includes(`${BASE_URL}/uploads/`)) {
+        const parts = path.split("/");
+        const fileName = parts.pop() || "";
+        return { folder: "uploads", fileName };
+      }
+
+      // If it's a path with folder/filename format
+      if (path.includes("/") && !path.startsWith("file://")) {
+        const parts = path.split("/");
+        const fileName = parts.pop() || "";
+        const folder = parts.pop() || "pill-images";
+        return { folder, fileName };
+      }
+
+      // If it's just a filename
+      if (!path.includes("/")) {
+        return { folder: "pill-images", fileName: path };
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error extracting folder and filename:", error);
+      return null;
+    }
+  };
+
+  // Fetch signed URL for an image
+  const fetchSignedImageUrl = async (imagePath: string) => {
+    try {
+      // Don't get signed URL for local files
+      if (imagePath.startsWith("file://")) {
+        return imagePath;
+      }
+
+      // Skip for already complete URLs
+      if (
+        imagePath.startsWith("http") &&
+        !imagePath.includes(`${BASE_URL}/uploads/`)
+      ) {
+        return imagePath;
+      }
+
+      setIsLoadingImage(true);
+
+      // Get auth token
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        console.error("No auth data found");
+        return null;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // Extract folder and filename
+      const pathInfo = extractFolderAndFilename(imagePath);
+      if (!pathInfo) {
+        console.error(
+          "Could not extract folder and filename from path:",
+          imagePath
+        );
+        return null;
+      }
+
+      // Request signed URL
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/storage/getFileUrl`,
+        {
+          params: {
+            fileName: pathInfo.fileName,
+            folder: pathInfo.folder,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success && response.data.url) {
+        console.log("Image signed URL fetched successfully");
+        setSignedImageUrl(response.data.url);
+        return response.data.url;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error fetching signed image URL:", error);
+      return null;
+    } finally {
+      setIsLoadingImage(false);
+    }
   };
 
   // Upload image to server function
@@ -176,6 +284,22 @@ const AddMedicineScreen: React.FC = () => {
     }
   };
 
+  // Get image to display in uploader
+  const getImageForUploader = () => {
+    // If a local image has been selected, use that
+    if (localImageUri) {
+      return localImageUri;
+    }
+
+    // If we have a signed URL, use that
+    if (signedImageUrl) {
+      return signedImageUrl;
+    }
+
+    // Otherwise use the original image path
+    return medicine.image;
+  };
+
   return (
     <SafeAreaView className="flex-1">
       <BackButton title="ย้อนกลับ" />
@@ -192,16 +316,16 @@ const AddMedicineScreen: React.FC = () => {
             <BreakLine />
 
             {/* Image Uploader with loading indicator */}
-            {isUploading ? (
+            {isUploading || isLoadingImage ? (
               <View className="w-full h-[150px] bg-background rounded-lg items-center justify-center border border-gray">
                 <ActivityIndicator size="large" color="#3972F0" />
                 <Text className="text-description text-secondary font-regular mt-2">
-                  กำลังอัพโหลดรูปภาพ...
+                  {isUploading ? "กำลังอัพโหลดรูปภาพ..." : "กำลังโหลดรูปภาพ..."}
                 </Text>
               </View>
             ) : (
               <ImageUploaderWithPreview
-                imageUrl={medicine.image}
+                imageUrl={getImageForUploader()}
                 setImageUrl={(url) =>
                   setMedicine((prev) => ({ ...prev, image: url }))
                 }
@@ -262,9 +386,11 @@ const AddMedicineScreen: React.FC = () => {
             {/* Submit Button */}
             <TouchableOpacity
               onPress={handleSubmit}
-              disabled={isSubmitting || isUploading}
-              className={`bg-primary rounded-lg py-4 mt-6 w-full ${
-                isSubmitting || isUploading ? "bg-gray" : "bg-primary"
+              disabled={isSubmitting || isUploading || isLoadingImage}
+              className={`rounded-lg py-4 mt-6 w-full ${
+                isSubmitting || isUploading || isLoadingImage
+                  ? "bg-gray"
+                  : "bg-primary"
               }`}
             >
               {isSubmitting ? (
