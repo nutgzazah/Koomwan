@@ -1,9 +1,4 @@
-import { 
-  View, 
-  Text, 
-  Image, 
-  ScrollView 
-} from "react-native";
+import { View, Text, Image, ScrollView } from "react-native";
 import React, { useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -26,16 +21,18 @@ export default function MedicineDetailScreen() {
       <BackButton title="ย้อนกลับ" />
       <ScrollView className="mb-24">
         <Card>
-          <Text className="text-title font-bold text-secondary text-center mt-2 ">ยาประจำ</Text>
+          <Text className="text-title font-bold text-secondary text-center mt-2 ">
+            ยาประจำ
+          </Text>
           <BreakLine />
           <View className="bg-background border border-gray rounded-lg mb-2 mt-1 w-full h-60  ">
             <Image
               source={require("../../../assets/Tracking/glipizide-med.png")}
-              style={{ width: '100%', height: '100%' }}
+              style={{ width: "100%", height: "100%" }}
               resizeMode="contain"
             />
           </View>
-          
+
           {/*Show Medicine Name+Type+Detail*/}
           <InputFieldOne
             label="ชื่อยา"
@@ -43,7 +40,6 @@ export default function MedicineDetailScreen() {
             placeholder="ชื่อยา"
             editable={false}
             onChangeText={setMedicineName}
-            className="mb-0.5"       
           />
 
           <InputFieldOne
@@ -52,7 +48,6 @@ export default function MedicineDetailScreen() {
             placeholder="ประเภทยา"
             editable={false}
             onChangeText={setMedicineType}
-            className="mb-0.5" 
           />
 
           <InputFieldLong
