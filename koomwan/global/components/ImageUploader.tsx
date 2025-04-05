@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import BASE_URL from "../../config";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface ImageUploaderWithPreviewProps {
   imageUrl: string | null;
@@ -61,6 +65,129 @@ const ImageUploaderWithPreview: React.FC<ImageUploaderWithPreviewProps> = ({
       return false;
     }
   };
+
+  // Function to extract folder and filename from image path
+  const extractFolderAndFilename = (
+    path: string
+  ): { folder: string; fileName: string } | null => {
+    try {
+      // Skip for local file paths
+      if (path.startsWith("file://")) {
+        return null;
+      }
+
+      // Handle signed URLs from Cloudflare
+      if (path.includes("cloudflarestorage.com")) {
+        // Extract path part before query string
+        const pathWithoutQuery = path.split("?")[0];
+
+        // Find the part after the .com/
+        const afterDomain = pathWithoutQuery.split(".com/")[1];
+        if (afterDomain) {
+          const parts = afterDomain.split("/");
+          if (parts.length >= 2) {
+            const fileName = parts[parts.length - 1];
+            const folder = parts[parts.length - 2];
+            return { folder, fileName };
+          }
+        }
+      }
+
+      // If it's a full URL from server
+      if (path.includes(`${BASE_URL}/uploads/`)) {
+        const parts = path.split("/");
+        const fileName = parts.pop() || "";
+        return { folder: "uploads", fileName };
+      }
+
+      // If it's a path with folder/filename format
+      if (path.includes("/")) {
+        const parts = path.split("/");
+        const fileName = parts.pop() || "";
+        const folder = parts.pop() || "pill-images";
+        return { folder, fileName };
+      }
+
+      // If it's just a filename
+      if (!path.includes("/")) {
+        return { folder: "pill-images", fileName: path };
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error extracting folder and filename:", error);
+      return null;
+    }
+  };
+
+  // Function to delete image from server
+  const deleteImageFromServer = async (imagePath: string): Promise<boolean> => {
+    try {
+      setIsProcessing(true);
+
+      // Skip if it's a local path
+      if (imagePath.startsWith("file://")) {
+        return true;
+      }
+
+      // Get auth token
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        console.error("No auth data found");
+        return false;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // Extract folder and filename
+      const pathInfo = extractFolderAndFilename(imagePath);
+      if (!pathInfo) {
+        console.error(
+          "Could not extract folder and filename from path:",
+          imagePath
+        );
+        return false;
+      }
+
+      // Delete the image file
+      const response = await axios.delete(
+        `${BASE_URL}/api/v1/storage/deleteFile`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          data: {
+            folder: pathInfo.folder,
+            fileName: pathInfo.fileName,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        console.log(
+          `Successfully deleted image: ${pathInfo.fileName} from ${pathInfo.folder}`
+        );
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error("Error deleting image from server:", error);
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reset or refresh state after image deletion
+      setLocalImage(null);
+      setImageUrl(null);
+    }, [])
+  );
 
   const handleImageUpload = async (): Promise<void> => {
     try {
@@ -188,10 +315,30 @@ const ImageUploaderWithPreview: React.FC<ImageUploaderWithPreviewProps> = ({
         },
         {
           text: "ลบ",
-          onPress: () => {
-            // Clear both local preview and server URL
-            setLocalImage(null);
-            setImageUrl(null);
+          onPress: async () => {
+            setIsProcessing(true);
+            try {
+              // Check if there's an uploaded image to delete from server
+              if (imageUrl && !imageUrl.startsWith("file://")) {
+                // Try to delete the image from server
+                const deleted = await deleteImageFromServer(imageUrl);
+                if (!deleted) {
+                  console.warn("Failed to delete image from server:", imageUrl);
+                  // Continue anyway even if server deletion fails
+                }
+              }
+
+              // Clear both local preview and server URL
+              setLocalImage(null);
+              setImageUrl(null);
+            } catch (error) {
+              console.error("Error in handleRemoveImage:", error);
+              // Still clear the images locally even if server deletion fails
+              setLocalImage(null);
+              setImageUrl(null);
+            } finally {
+              setIsProcessing(false);
+            }
           },
           style: "destructive",
         },
