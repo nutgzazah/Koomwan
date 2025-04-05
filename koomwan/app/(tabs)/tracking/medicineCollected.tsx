@@ -756,7 +756,7 @@ export default function MedicineCollectedScreen() {
                 additionalMedicines.map((medicine) => (
                   <TouchableOpacity
                     key={medicine.id}
-                    onPress={() => handleEditMedicine(medicine)}
+                    onPress={() => handleViewDetails(medicine, false)}
                     className="flex-row items-center py-2"
                   >
                     {renderMedicineImage(medicine)}
@@ -771,15 +771,6 @@ export default function MedicineCollectedScreen() {
                       )}
                     </View>
                     <View className="flex-row items-center">
-                      <TouchableOpacity
-                        onPress={() => handleEditMedicine(medicine)}
-                        className="mr-3"
-                        disabled={deletingMedicineId === medicine.id}
-                      >
-                        <Text className="font-sans text-description text-primary">
-                          แก้ไข
-                        </Text>
-                      </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => handleDeleteMedicine(medicine.id)}
                         disabled={deletingMedicineId === medicine.id}
