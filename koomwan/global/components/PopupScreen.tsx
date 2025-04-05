@@ -43,6 +43,11 @@ export default function PopupScreen({
         setModalVisible(false);
     };
 
+    const handleCancel = () => {
+        setselectedChoice([]); // เคลียร์การเลือกเมื่อกดยกเลิก
+        setModalVisible(false);
+    };
+
     return (
         <Modal
             animationType="slide"
@@ -61,7 +66,8 @@ export default function PopupScreen({
                         <BreakLine />
                         <ScrollView
                             className="w-full h-52 mb-2"
-                            showsVerticalScrollIndicator={false}
+                            showsVerticalScrollIndicator={true}
+                            persistentScrollbar={true}
                         >
                             {choices.map((choice, index) => (
                                 <DropdownChoice
@@ -72,17 +78,25 @@ export default function PopupScreen({
                                 />
                             ))}
                         </ScrollView>
-
-                        <Pressable
-                            className="w-[10.5rem] h-12 bg-primary rounded-md justify-center items-center"
-                            onPress={handleApplyFilters}
-                        >
-                            <Text
-                                className="font-sans text-button text-card"
+                        <View className="flex flex-row justify-between w-full px-5">
+                            <Pressable
+                                className="w-[8rem] h-12 bg-primary rounded-md justify-center items-center mt-4"
+                                onPress={handleApplyFilters}
                             >
-                                {modalClosePlaceholder}
-                            </Text>
-                        </Pressable>
+                                <Text className="font-sans text-button text-card">
+                                    {modalClosePlaceholder}
+                                </Text>
+                            </Pressable>
+
+                            <Pressable
+                                className="w-[8rem] h-12 bg-secondary rounded-md justify-center items-center mt-4"
+                                onPress={handleCancel}
+                            >
+                                <Text className="font-sans text-button text-white">
+                                    ยกเลิก
+                                </Text>
+                            </Pressable>
+                        </View>
                     </View>
                 </View>
             </View>

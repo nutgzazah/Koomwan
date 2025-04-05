@@ -44,13 +44,23 @@ exports.getDoctorInfo = async (req, res) => {
           return res.status(400).json({ error: "Doctor ID is required" });
         }
     
-        const doctor = await Doctor.findById(doctorId).select("firstname lastname image");
+        const doctor = await Doctor.findById(doctorId).select("firstname lastname image hospital expert occupation email document");
     
         if (!doctor) {
           return res.status(404).json({ error: "Doctor not found" });
         }
     
-        res.status(200).json({ firstname: doctor.firstname,lastname: doctor.lastname, image: doctor.image });
+        res.status(200).json({
+            firstname: doctor.firstname,
+            lastname: doctor.lastname,
+            image: doctor.image,
+            hospital: doctor.hospital,
+            expert: doctor.expert,
+            occupation: doctor.occupation,
+            email: doctor.email,
+            document: doctor.document
+          });
+  
       } catch (error) {
         console.error("Error fetching doctor info:", error);
         res.status(500).json({ error: "Internal server error" });
@@ -165,6 +175,31 @@ exports.deletePost = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error", details: error.message });
     }
 };
+
+//ตรวจสอบว่า userId ได้กดไลค์ postId หรือไม่
+exports.isLiked = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.auth._id;
+
+        if (!userId) {
+            return res.status(400).json({ error: "UserId is required" });
+        }
+
+        const post = await Forum.findById(postId);
+        if (!post) {
+            return res.status(404).json({ error: "Post not found" });
+        }
+
+        const isLiked = post.likes.users.includes(userId);
+        const likes = post.likes.users.length; // ดึงจำนวนไลค์ทั้งหมด
+        return res.json({ isLiked, likes });
+    } catch (error) {
+        console.error("Error checking like status:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
 
 //กดไลค์/ลบไลค์
 exports.toggleLikePost = async (req, res) => {

@@ -4,12 +4,15 @@ import {
   ScrollView,
   Text,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import ForumCard from "../components/ForumCard";
 import CommentCard from "../components/CommentBox";
-import { useLocalSearchParams } from 'expo-router';
+import CommentReplyCard from "../components/CommentReplyBox";
+import { router, useLocalSearchParams } from 'expo-router';
 import axios from "axios";
 import BASE_URL from "../../../../config"
+import { AuthContext } from "../../../../context/authContext";
+import BackButton from "../../../../global/components/BackButton";
 
 const defaultUserAvatar01 = require("../../../../assets/Avatars/koomwanAvatar01.png");
 const defaultUserAvatar02 = require("../../../../assets/Avatars/koomwanAvatar02.png");
@@ -49,12 +52,16 @@ const getProfileImageUrl = async (
   }
 };
 
+
+
 export default function ForumScreen() {
+  const [state] = useContext(AuthContext)
   const { postId }  = useLocalSearchParams();
   const [postData, setPostData] = useState<any>(null);  // เก็บข้อมูลโพสต์
   const [comments, setComments] = useState<any[]>([]);  // เก็บข้อมูลคอมเมนต์
   const [loading, setLoading] = useState(true); // เพิ่มสถานะโหลด
-
+  const [doctorImageUrl, setDoctorImageUrl] = useState<string | null>(null);
+  const [commentUpdated, setCommentUpdated] = useState(false); // 👈 ตัวแปร trigger fetch ใหม่
 
   useEffect(() => {
     
@@ -62,6 +69,7 @@ export default function ForumScreen() {
       axios.get(`${BASE_URL}/api/v1/forum/getPostById/${postId}`)
         .then(async (response) => {
           const post = response.data;
+          console.log("Post DATA",post)
 
           // ดึง URL รูปภาพโพสต์
           const imageContent = post.image ? await getImageUrl(post.image) : null;
@@ -86,10 +94,15 @@ export default function ForumScreen() {
 
           // โหลดข้อมูลคอมเมนต์พร้อมข้อมูลหมอ
           const commentsWithDoctorInfo = await Promise.all(
-            post.comments.map(async (comment) => {
+            post.comments.map(async (comment: { role: string; commenter: any; }) => {
               let doctorName = "คุณหมอ";
               let doctorImageUrl = null;
               let isOwner = false;
+              let doctorHospital = null
+              let doctorExpert = null
+              let doctorOccupation = null
+              let doctorEmail = null
+              let doctorDocumentUrl = null
 
               if (comment.role === "owner") {
                 doctorName = post.postedBy.username ;
@@ -106,12 +119,16 @@ export default function ForumScreen() {
                 isOwner = true; // ✅ 
               }else if (comment.role === "doctor") {
                 try {
-                  const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string }>(
+                  const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string; hospital: string; expert: string; occupation: string; email: string; document: string}>(
                     `${BASE_URL}/api/v1/forum/getDoctorInfo`,
                     { params: { doctorId: comment.commenter } }
                   );
 
                   doctorName = `${doctorResponse.data.firstname} ${doctorResponse.data.lastname}`;
+                  doctorHospital = doctorResponse.data.hospital 
+                  doctorExpert = doctorResponse.data.expert
+                  doctorOccupation = doctorResponse.data.occupation 
+                  doctorEmail = doctorResponse.data.email
                   if (doctorResponse.data?.image) {
                     if (doctorResponse.data.image.startsWith("koomwanDoctorAvatar")) {
                       doctorImageUrl = doctorResponse.data.image; // ใช้ local path
@@ -119,8 +136,11 @@ export default function ForumScreen() {
                       doctorImageUrl = await getImageUrl(doctorResponse.data.image);
                     }
                   }
+                  if (doctorResponse.data?.document) {
+                    doctorDocumentUrl = await getImageUrl(doctorResponse.data.document);
+                  }
                 } catch (error) {
-                  console.error(`Error fetching doctor info for ID ${comment.commenter}:`, error);
+                  console.error(`Error fetching doctor Document info for ID ${comment.commenter}:`, error);
                 }
               }
               
@@ -128,6 +148,11 @@ export default function ForumScreen() {
               return {
                 ...comment,
                 doctorName,
+                doctorHospital,
+                doctorExpert,
+                doctorOccupation,
+                doctorEmail,
+                doctorDocumentUrl,
                 doctorImageUrl,
                 isOwner, // ✅ เพิ่มฟิลด์ isOwner ลงไป
               };
@@ -136,15 +161,33 @@ export default function ForumScreen() {
           );
 
           setComments(commentsWithDoctorInfo);
-          console.log(commentsWithDoctorInfo)
-          console.log("comments Data:",comments)
+          console.log("comments Data:",commentsWithDoctorInfo)
 
         })
         .catch(error => {
           console.error("Error fetching post:", error);
         });
     }
-  }, [postId]);
+    if (state.token) {
+      console.log("State: ",state)
+    }
+
+    const fetchDoctorImage = async () => {
+    if (state.user.role === "doctor") {
+      if (state.user.image.startsWith("koomwanDoctorAvatar")) {
+        setDoctorImageUrl(state.user.image);
+        console.log("doctorImageUrl :", state.user.image);
+      } else {
+        const fetchedImageUrl = await getImageUrl(state.user.image);
+        setDoctorImageUrl(fetchedImageUrl);
+        console.log("doctorImageUrl:", doctorImageUrl);
+      }
+    }
+  };
+
+  fetchDoctorImage();
+
+  }, [postId, commentUpdated]);
   if (!postData) {
     return (
       <SafeAreaView className="flex-1">
@@ -161,6 +204,7 @@ export default function ForumScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View>
+          <BackButton title="ย้อนกลับ" />
           <ForumCard
               imageContent={postData.imageContent}  // รูปภาพของโพสต์
               like={postData.likes.count}  // จำนวนไลก์
@@ -175,32 +219,78 @@ export default function ForumScreen() {
                 ) : defaultUserAvatar01 // 🟢 ใช้รูป local ถ้า user ไม่มีรูป
               }
               userName={postData.postedBy.username}  // ชื่อผู้โพสต์
-              doctorImage={null}  // ไม่มีข้อมูลหมอใน ForumCard
-              doctorName={null}
+              doctorImage={0}  // ไม่มีข้อมูลหมอใน ForumCard
+              doctorName={""}
               content={postData.title}  // เนื้อหาของโพสต์
               viewComments={true}
               posttime={postData.date}
+              postId={postData._id}
+              handlePostDeleted={() =>  router.back()} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
             />
+
+            {state.token && (state.user._id === postData.postedBy._id || state.user.role === "doctor") && (
+              <CommentReplyCard  
+              profileImage={
+                state.user.role === "user"
+                  ? postData.userImageUrl
+                    ? postData.userImageUrl === "koomwanAvatar01.png"
+                      ? defaultUserAvatar01
+                      : postData.userImageUrl === "koomwanAvatar02.png"
+                      ? defaultUserAvatar02
+                      : postData.userImageUrl === "koomwanAvatar03.png"
+                      ? defaultUserAvatar03
+                      : postData.userImageUrl === "koomwanAvatar04.png"
+                      ? defaultUserAvatar04
+                      : { uri: postData.userImageUrl }
+                    : defaultUserAvatar01
+                  : state.user.role === "doctor"
+                  ? doctorImageUrl
+                    ? doctorImageUrl === "koomwanDoctorAvatar01.png"
+                      ? defaultDoctorAvatar01
+                      : doctorImageUrl === "koomwanDoctorAvatar02.png"
+                      ? defaultDoctorAvatar02
+                      : { uri: doctorImageUrl }
+                    : defaultDoctorAvatar01
+                  : defaultUserAvatar01
+              }
+              username={
+                state.user.role === "doctor"
+                  ? `${state.user.firstname} ${state.user.lastname}`
+                  : state.user.username
+              }
+              imageContentSource={0} 
+              isOwner={state.user.role !== "doctor"} 
+              postId={postData._id}
+              onCommentAdded={() => setCommentUpdated(prev => !prev)} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
+            />
+            
+            )}
           {comments.map((comment, index) => (
             <CommentCard
-            key={index}
-            profileImage={
-              comment.doctorImageUrl ? (
+              key={index}
+              profileImage={comment.doctorImageUrl ? (
                 comment.doctorImageUrl === "koomwanAvatar01.png" ? defaultUserAvatar01 :
-                comment.doctorImageUrl === "koomwanAvatar02.png" ? defaultUserAvatar02 :
-                comment.doctorImageUrl === "koomwanAvatar03.png" ? defaultUserAvatar03 :
-                comment.doctorImageUrl === "koomwanAvatar04.png" ? defaultUserAvatar04 :
-                comment.doctorImageUrl === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
-                comment.doctorImageUrl === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
-              { uri: comment.doctorImageUrl } 
-            ) : defaultDoctorAvatar01
-            }
-            doctorName={comment.doctorName} // ชื่อคุณหมอ
-            content={comment.answer}  // คอนเทนต์ของคอมเมนต์
-            imageContentSource={null} // ไม่มีข้อมูลรูปภาพในคอมเมนต์
-            commentTime={comment.date}
-            isOwner={comment.isOwner} // ✅ ส่งค่า isOwner ไปด้วย
-          />
+                  comment.doctorImageUrl === "koomwanAvatar02.png" ? defaultUserAvatar02 :
+                    comment.doctorImageUrl === "koomwanAvatar03.png" ? defaultUserAvatar03 :
+                      comment.doctorImageUrl === "koomwanAvatar04.png" ? defaultUserAvatar04 :
+                        comment.doctorImageUrl === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
+                          comment.doctorImageUrl === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
+                            { uri: comment.doctorImageUrl }
+              ) : defaultDoctorAvatar01}
+              doctorName={comment.doctorName} // ชื่อคุณหมอ
+              content={comment.answer} // คอนเทนต์ของคอมเมนต์
+              imageContentSource={0} // ไม่มีข้อมูลรูปภาพในคอมเมนต์
+              commentTime={comment.date}
+              isOwner={comment.isOwner} // ✅ ส่งค่า isOwner ไปด้วย
+              postId={postData._id}
+              commentId={comment._id}
+              onDeleteComment={() => setCommentUpdated(prev => !prev)} // ✅ Toggle เพื่อให้ useEffect โหลดข้อมูลใหม่
+              hospital={comment.doctorHospital}
+              expert={comment.doctorExpert}
+              occupation={comment.doctorOccupation}
+              email={comment.doctorEmail} 
+              document={comment.doctorDocumentUrl}/>
+
           ))}
         </View>
       </ScrollView>

@@ -4,18 +4,23 @@ import {
     Image,
     Pressable,
     ImageSourcePropType,
+    Alert,
 } from "react-native";
 import Card from "../../../../global/components/Card";
-import React from "react";
+import React, { useContext,useEffect, useState } from "react";
 import BreakLine from "../../../../global/components/BreakLine";
-import { useState } from "react";
 import { useRouter } from "expo-router";
 import PopupScreen from "../../../../global/components/PopupScreen";
 import DoctorIcon from "./DoctorIcon";
+import BASE_URL from "../../../../config";
 
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { AuthContext } from "../../../../context/authContext";
+import axios, { AxiosError } from "axios";
+import { useFocusEffect } from "@react-navigation/native";
+import CommentReplyCard from "./CommentReplyBox";
 
 dayjs.extend(relativeTime);
 dayjs.locale("th");
@@ -34,6 +39,7 @@ interface forumCardProps {
     viewComments: boolean
     posttime: string
     postId: string; 
+    handlePostDeleted?: () => void;
 }
 
 const formatPostTime = (posttime: string): string => {
@@ -52,6 +58,8 @@ const formatPostTime = (posttime: string): string => {
     return postDate.format("D MMMM ") + (postDate.year() + 543);
   };
 
+  
+
 export default function ForumCard({
     imageContent,
     like,
@@ -64,7 +72,10 @@ export default function ForumCard({
     viewComments,
     posttime,
     postId,
+    handlePostDeleted,
 }: forumCardProps) {
+    
+    const [state] = useContext(AuthContext)
     const [likes, setLikes] = useState(like);
     const [isLike, setIsLike] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
@@ -78,25 +89,100 @@ export default function ForumCard({
         "อื่นๆ",
     ];
 
-    const onPressedLike = () => {
-        if (isLike) {
-            setLikes(likes - 1);
-            setIsLike(false);
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchLikeStatus = async () => {
+                try {
+                    const response = await axios.get(`${BASE_URL}/api/v1/forum/isliked/${postId}`);
+                    setIsLike(response.data.isLiked);
+                    setLikes(response.data.likes); // อัปเดตจำนวนไลค์ให้ถูกต้อง
+                    console.log("Post Likes: ",response.data.likes)
+                } catch (error) {
+                    console.error("Error fetching like status:", error);
+                }
+            }; 
+    
+            if (state.token) {
+                fetchLikeStatus();
+            }
+        }, [postId, state.token])
+    );
+
+    const handleReportPost = async (selectedReason: string) => {
+        if (!state.token) {
+            console.error("No token found, user might not be logged in.");
+            return;
         }
-        else if (!isLike) {
-            setLikes(likes + 1);
-            setIsLike(true);
+    
+        try {
+            console.log("Reason for report:", selectedReason); // ✅ Log ค่าที่ส่งไป
+
+            const response = await axios.post(
+                `${BASE_URL}/api/v1/forum/report/${postId}`,
+                { reason: selectedReason },
+            );
+            console.log("Report Success:", response.data);
+            setModalVisible(false); // ปิด PopupScreen หลังจากส่งรายงานสำเร็จ
+        } catch (error) {
+            const axiosError = error as AxiosError; // ✅ บอก TypeScript ว่า error เป็น AxiosError
+            
+            if (axiosError.response) {
+                const errorMessage = (axiosError.response.data as { message?: string })?.message || "Unknown error";
+                
+                if (errorMessage.includes("already reported")) {
+                    Alert.alert("แจ้งเตือน", "คุณได้รายงานโพสต์นี้ไปแล้ว", [{ text: "ตกลง" }]);
+                } else {
+                    Alert.alert("ข้อผิดพลาด", "ไม่สามารถรายงานโพสต์ได้ โปรดลองใหม่", [{ text: "ตกลง" }]);
+                }
+                
+                console.error("Error reporting post:", errorMessage);
+            } else {
+                Alert.alert("ข้อผิดพลาด", "เกิดข้อผิดพลาด โปรดลองใหม่", [{ text: "ตกลง" }]);
+                console.error("Error:", axiosError.message);
+            }
         }
-    }
+    };
+
+    const onPressedLike = async () => {
+        console.log("State:", state); // ตรวจสอบโครงสร้างของ state อีกที
+        console.log("Post ID:", postId); // ตรวจสอบ postId
+        console.log("token:", state.token)
+
+        if (!postId) {
+            console.error("Error: postId is undefined.");
+            return;
+        }
+    
+        const token = state.token; // ดึง token จาก state
+    
+        if (!token) {
+            console.error("No token found, user might not be logged in.");
+            return;
+        }
+    
+        try {
+            const response = await axios.post(
+                `${BASE_URL}/api/v1/forum/like/${postId}`
+            );
+    
+            setLikes(response.data.likes);
+            setIsLike((prevIsLike) => !prevIsLike);
+        } catch (error) {
+            console.error("Error toggling like:", error);
+        }
+    };
 
     return (
         <>
             <PopupScreen
                 header="รายงานโพสต์"
                 modalVisible={modalVisible}
-                setModalVisible={(() => setModalVisible(!setModalVisible))}
+                setModalVisible={() => setModalVisible(!modalVisible)}
                 choices={mockChoices}
                 modalClosePlaceholder="ส่งรายงาน"
+                onChoiceSelect={(selectedChoice) => {
+                    handleReportPost(selectedChoice[0]); // ส่งเฉพาะเหตุผลแรกที่เลือก
+                }}
             />
             <Card>
                 <View className="flex flex-row justify-evenly items-center">
@@ -116,10 +202,37 @@ export default function ForumCard({
                         <Text className="font-sans text-tag">{formatPostTime(posttime)}</Text>
                     </View>
                     <View className="ml-7 w-10">
-                        <Pressable
-                            className="w-6 h-6"
-                            onPress={() => setModalVisible(true)}
-                        >
+                    <Pressable
+                        className="w-6 h-6"
+                        onPress={() => {
+                            if (state.user.username === userName) {
+                                // ถ้าเป็นเจ้าของโพสต์ ให้แสดง Modal ลบโพสต์
+                                Alert.alert(
+                                    "ยืนยันการลบโพสต์",
+                                    "คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?",
+                                    [
+                                        { text: "ยกเลิก", style: "cancel" },
+                                        {
+                                            text: "ลบโพสต์",
+                                            onPress: async () => {
+                                                try {
+                                                    await axios.delete(`${BASE_URL}/api/v1/forum/deletePost/${postId}`);
+                                                    if (handlePostDeleted) handlePostDeleted();
+                                                    Alert.alert("ลบโพสต์สำเร็จ");
+                                                } catch (error) {
+                                                    Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถลบโพสต์ได้");
+                                                }
+                                            },
+                                            style: "destructive"
+                                        }
+                                    ]
+                                );
+                            } else {
+                                // ถ้าไม่ใช่เจ้าของโพสต์ ให้แสดง Modal รายงานโพสต์
+                                setModalVisible(true);
+                            }
+                        }}
+                    >
                             <Image source={require("../../../../assets/Forum/option.png")} className="w-full h-full" />
                         </Pressable>
                     </View>
@@ -133,6 +246,7 @@ export default function ForumCard({
                     imageContent ? (
                         <View className="w-auto h-auto mt-6">
                             <Image
+                                className="rounded-2xl"
                                 style={{ width: 336, height: 336 }} // แก้ให้มีขนาดแน่นอน
                                 source={
                                     typeof imageContent === "string"
@@ -161,7 +275,22 @@ export default function ForumCard({
                     <CommentTrigger postId={postId} />
                 }
                 {comments === 0 && !viewComments && 
+                <>
                     <NoCommentsBox />
+                    {(state.user.username === userName || state.user.role === "doctor") && (
+                        <Pressable onPress={() => router.push({
+                            pathname: `/forum/post/${postId}`,
+                            params: { postId: postId },  // Add the postId as a parameter
+                        })}>
+                            <View className="flex flex-row justify-items-center mt-4 border border-primary rounded-full py-2 px-4 w-fit">
+                                <Image source={require("../../../../assets/Forum/Pen-bold.png")} className="w-6 h-6" />
+                                <Text className="font-sans text-description w-fit text-center px-2 color-primary font-bold">
+                                    ตอบกลับข้อความ
+                                </Text>
+                            </View>
+                        </Pressable>
+                    )}
+                </>
                 }
             </Card>
         </>
@@ -193,36 +322,50 @@ export default function ForumCard({
                     pathname: `/forum/post/${postId}`,
                     params: { postId: postId },  // Add the postId as a parameter
                 })}>
-                    <Text className="font-sans text-tag">การตอบกลับ ({comments})</Text>
-                </Pressable>
-                {doctorName && (
-                    <View className="flex flex-row items-center mt-4">
-                        <DoctorIcon doctorImage={doctorImage} />
-                        <View>
-                            <Text
-                                className="font-sans text-description"
-                                numberOfLines={1}
-                                ellipsizeMode='tail'
-                            >
-                                {doctorName}
-                            </Text>
-                            <View className="bg-primary rounded-3xl h-6 w-20 items-center">
-                                <Text className="text-white text-tag">
-                                    แพทย์
+                    <Text className="font-sans text-tag text-primary font-bold">การตอบกลับ ({comments})</Text>
+                    {doctorName ? (
+                        <View className="flex flex-row items-center mt-4">
+                            <DoctorIcon doctorImage={doctorImage} verify={true} />
+                            <View>
+                                <Text
+                                    className="font-sans text-description"
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
+                                    {doctorName}
                                 </Text>
+                                <View className="bg-primary rounded-3xl h-6 w-20 items-center">
+                                    <Text className="text-white text-tag">แพทย์</Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                )}
+                    ) : (
+                        <View className="flex flex-row items-center mt-4">
+                            <DoctorIcon doctorImage={userimage} />
+                            <View>
+                                <Text
+                                    className="font-sans text-description"
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
+                                    {userName}
+                                </Text>
+                                <View className="rounded-3xl h-6 w-fititems-center">
+                                    <Text className="text-secondary font-sans text-tag ">ตอบกลับ {comments} ข้อความ</Text>
+                                </View>
+                            </View>
+                        </View>
+                    )}
+                </Pressable>
             </View>
         </>;
     }
 
     function NoCommentsBox(): React.ReactNode {
         return <>
-            <BreakLine />
+            <BreakLine/>
             <View className="w-full ml-5">
-                <Text className="font-sans text-tag text-abnormal">การตอบกลับ ({comments})</Text>
+                <Text className="font-sans text-tag text-secondary">การตอบกลับ ({comments})</Text>
             </View>
         </>;
     }

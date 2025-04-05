@@ -335,7 +335,7 @@ const loginController = async (req,res) => {
         const token = await JWT.sign(
             { _id: user._id, role: user.role },  // เพิ่ม role เข้าไปใน payload
             process.env.JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: '1d' }
         );
 
         //แสดงข้อมูลหลัง Login สำเร็จแต่ไม่ต้องแสดง password ที่บันทึกไว้จริง

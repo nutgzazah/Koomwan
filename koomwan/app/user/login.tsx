@@ -86,7 +86,10 @@ export default function UserLoginScreen() {
           `${BASE_URL}/api/v1/auth/login`,
           loginData
         );
-        setState(response);
+        setState({
+          user: response.data.user,
+          token: response.data.token,
+        });
         await AsyncStorage.setItem("@auth", JSON.stringify(response.data));
         await AsyncStorage.setItem("userId", response.data.user._id);
         await AsyncStorage.setItem("token", response.data.token);
