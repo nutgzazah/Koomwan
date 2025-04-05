@@ -798,7 +798,7 @@ export default function MedicineCollectedScreen() {
                   </TouchableOpacity>
                 ))
               ) : (
-                <Text className="text-center py-2 text-description text-secondary">
+                <Text className="text-center py-2 text-description font-regular text-secondary">
                   ยังไม่มียาเพิ่มเติม
                 </Text>
               )}
