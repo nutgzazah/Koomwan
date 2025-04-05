@@ -6,24 +6,25 @@ import {
   Image,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
-import InputFieldOne from "./components/InputFieldOne";
-import InputFieldLong from "./components/InputFieldLong";
-import Dropdown from "./components/DropDown";
 import BackButton from "../../../global/components/BackButton";
-
+import MedDropdown from "../../../components/beginner/(medicine)/MedDropdown";
+import ImageUploaderWithPreview from "../../../global/components/ImageUploader";
+import { MEDICATION_TYPES } from "../../../constant/medication";
 
 interface Medicine {
   id: string;
   name: string;
   type: string;
   details: string;
-  image: string;
+  image: string | null;
 }
 
 const AddMedicineScreen: React.FC = () => {
@@ -35,49 +36,45 @@ const AddMedicineScreen: React.FC = () => {
     name: (params.name as string) || "",
     type: (params.type as string) || "",
     details: (params.details as string) || "",
-    image: (params.image as string) || "",
+    image: (params.image as string) || null,
   });
 
-  // Permission Required Image From User Gallery
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission required", "กรุณาอนุญาตให้เข้าถึงรูปภาพ");
-      return;
-    }
+  const [localImageUri, setLocalImageUri] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets?.[0]) {
-      setMedicine((prev) => ({ ...prev, image: result.assets[0].uri }));
-    }
+  // Handle selecting medication type
+  const handleSelectType = (selectedType: string) => {
+    setMedicine((prev) => ({ ...prev, type: selectedType }));
+    setIsDropdownOpen(false);
   };
 
   const handleSubmit = () => {
     if (!medicine.name.trim()) {
-      Alert.alert("กรุณากรอกชื่อยา");
+      Alert.alert("กรุณากรอกชื่อยา", "ชื่อยาไม่สามารถเว้นว่างได้");
       return;
     }
 
     if (!medicine.type.trim()) {
-      Alert.alert("กรุณาเลือกประเภทของยา");
+      Alert.alert("กรุณาเลือกประเภทของยา", "ประเภทยาไม่สามารถเว้นว่างได้");
       return;
     }
 
+    // Use local image URI if available, otherwise use the image path from params
+    const imageToUse = localImageUri || medicine.image;
+
+    // Create the medicine object to pass to the next screen
     const newMedicine = {
       id: medicine.id || Date.now().toString(),
       name: medicine.name,
       type: medicine.type,
       details: medicine.details,
-      image: medicine.image,
+      image: imageToUse,
     };
 
-    router.push({
+    console.log("New Medicine:", newMedicine);
+
+    // Navigate back to medicine collection screen with the new/edited medicine
+    router.dismissTo({
       pathname: "./medicineCollected",
       params: {
         id: newMedicine.id,
@@ -93,87 +90,87 @@ const AddMedicineScreen: React.FC = () => {
   return (
     <SafeAreaView className="flex-1">
       <BackButton title="ย้อนกลับ" />
-      <ScrollView className="mb-24">
-        <Card>
-        <Text className="font-sans text-title font-bold text-center mt-2 text-secondary">
-          {params.isEdit === "true" ? "ยาเพิ่มเติม" : "เพิ่มยาเพิ่มเติม"}
-        </Text>
-
-          <BreakLine />
-
-          <TouchableOpacity
-            onPress={pickImage}
-            className="bg-background border border-gray rounded-lg items-center justify-center mb-3 py-5 px-5"
-            style={{ width: "100%", height: 200 }}
-          >
-            {medicine.image ? (
-              <Image
-                source={{ uri: medicine.image }}
-                className="w-40 h-40 rounded-lg"
-              />
-            ) : (
-              <Image
-                source={require("../../../assets/Tracking/add-image.png")}
-                className="w-20 h-20 mb-2"
-                style={{ width: "100%", height: "100%" }}
-                resizeMode="contain"
-              />
-            )}
-          </TouchableOpacity>
-
-          {/* For Create Additional Medicine */}
-          <InputFieldOne
-            label="ชื่อยา"
-            value={medicine.name}
-            onChangeText={(text) =>
-              setMedicine((prev) => ({ ...prev, name: text }))
-            }
-            placeholder="ระบุชื่อยา"
-          />
-
-          {/* Medicine Type */}
-          <Text className="font-sans text-description font-bold text-secondary self-start pl-1 mb-1">
-            ประเภท
-          </Text>
-          <Dropdown
-            choices={[
-              "ยาเฉพาะโรค",
-              "ยาสามัญประจำบ้าน",
-              "ยาใช้ภายนอก",
-              "ยาบำรุง",
-              "ยาวิตามินและเกลือแร่เสริม",
-              "อื่นๆ",
-            ]}
-            selectedChoice={medicine.type}
-            onChoiceChange={(choice) => {
-              setMedicine((prev) => ({ ...prev, type: choice }));
-            }}
-            dropdownStyle={{ width: "99%"}}
-            closeOnSelect={true}
-          />
-
-          {/* Medicine Detail */}
-          <InputFieldLong
-            label="รายละเอียด (Optional)"
-            value={medicine.details}
-            onChangeText={(text) =>
-              setMedicine((prev) => ({ ...prev, details: text }))
-            }
-            placeholder="ระบุรายละเอียดยา"
-            editable
-          />
-
-          {/* Submit Button */}
-          <TouchableOpacity
-            onPress={handleSubmit}
-            className="bg-primary rounded-lg px-20 py-3.5 mt-5"
-          >
-            <Text className="font-sans font-bold text-button text-card text-center">
-              {params.isEdit === "true" ? "บันทึกการแก้ไข" : "เพิ่มยาเพิ่มเติม"}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
+        <ScrollView className="mb-24">
+          <Card>
+            <Text className="font-sans text-title font-bold text-center mt-2 text-secondary">
+              {params.isEdit === "true" ? "แก้ไขยาเพิ่มเติม" : "ยาเพิ่มเติม"}
             </Text>
-          </TouchableOpacity>
-        </Card>
-      </ScrollView>
+
+            <BreakLine />
+
+            {/* Image Uploader */}
+            <ImageUploaderWithPreview
+              imageUrl={medicine.image}
+              setImageUrl={(url) =>
+                setMedicine((prev) => ({ ...prev, image: url }))
+              }
+              localImage={localImageUri}
+              setLocalImage={setLocalImageUri}
+            />
+
+            {/* Medicine Name */}
+            <View className="mt-4 w-full">
+              <Text className="text-description text-secondary font-regular mb-2">
+                ชื่อยา
+              </Text>
+              <TextInput
+                value={medicine.name}
+                onChangeText={(text) =>
+                  setMedicine((prev) => ({ ...prev, name: text }))
+                }
+                placeholder="ระบุชื่อยา"
+                className="w-full bg-background border border-gray rounded p-3 px-4 text-description font-regular h-12"
+              />
+            </View>
+
+            {/* Medicine Type */}
+            <View className="mt-4">
+              <Text className="text-description text-secondary font-regular mb-2">
+                ประเภท
+              </Text>
+              <MedDropdown
+                value={medicine.type}
+                options={MEDICATION_TYPES}
+                onSelect={handleSelectType}
+              />
+            </View>
+
+            {/* Medicine Description */}
+            <View className="mt-4 w-full">
+              <Text className="text-description text-secondary font-regular mb-2">
+                รายละเอียด (Optional)
+              </Text>
+              <TextInput
+                value={medicine.details}
+                onChangeText={(text) =>
+                  setMedicine((prev) => ({ ...prev, details: text }))
+                }
+                placeholder="ระบุรายละเอียดยา"
+                multiline
+                numberOfLines={4}
+                className="w-full bg-background border border-gray rounded p-3 px-4 text-description font-regular h-32"
+                textAlignVertical="top"
+              />
+            </View>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              onPress={handleSubmit}
+              className="bg-primary rounded-lg py-4 mt-6 w-full"
+            >
+              <Text className="font-sans font-bold text-button text-card text-center">
+                {params.isEdit === "true"
+                  ? "บันทึกการแก้ไข"
+                  : "เพิ่มยาเพิ่มเติม"}
+              </Text>
+            </TouchableOpacity>
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
