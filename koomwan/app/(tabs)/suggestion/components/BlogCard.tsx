@@ -7,7 +7,7 @@ import {
 
 import React from "react";
 
-interface ArticleCardProps {
+interface BlogCardProps {
   title: string;
   author: string;
   category: string;
@@ -15,13 +15,13 @@ interface ArticleCardProps {
   imageSrc: any;
 }
 
-export default function ArticleCard({
+export default function BlogCard({
   title,
   author,
   category,
   tags,
   imageSrc,
-}: ArticleCardProps) {
+}: BlogCardProps) {
   return (
 
     <TouchableOpacity >
