@@ -25,7 +25,7 @@ app.use('/api/v1/user', require('./routes/userRoutes'))
 app.use('/api/v1/forum', require('./routes/forumRoutes'))
 app.use('/api/v1/admin', require('./routes/adminRoutes'))
 app.use('/api/v1/storage', require('./routes/storageRoutes'))
-
+app.use('/api/v1/storage', require('./routes/storageRoutes'))
 //PORT
 const PORT = process.env.PORT || 8080
 
