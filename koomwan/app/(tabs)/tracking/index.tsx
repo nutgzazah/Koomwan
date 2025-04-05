@@ -56,8 +56,9 @@ const parseThaiDate = (thaiDateStr: string): Date | null => {
 const isDateInPast = (dateToCheck: Date): boolean => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  dateToCheck.setHours(0, 0, 0, 0);
-  return dateToCheck < today;
+  const dateToCheckClone = new Date(dateToCheck);
+  dateToCheckClone.setHours(0, 0, 0, 0);
+  return dateToCheckClone < today;
 };
 
 export default function TrackingScreen() {
