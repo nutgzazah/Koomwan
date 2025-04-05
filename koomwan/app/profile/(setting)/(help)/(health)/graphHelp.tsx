@@ -10,9 +10,8 @@ export default function GraphHelpScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <BackButton title="การช่วยเหลือผู้ใช้งาน" />
       <ScrollView>
-        <BackButton title="การช่วยเหลือผู้ใช้งาน" />
-
         <View className="w-full px-4">
           <Card>
             <View className="w-full">

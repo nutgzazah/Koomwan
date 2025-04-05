@@ -322,6 +322,7 @@ const CalendarScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <BackButton title="หน้าหลัก" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -331,7 +332,6 @@ const CalendarScreen = () => {
           />
         }
       >
-        <BackButton title="หน้าหลัก" />
         <View className="mx-2 py-2">
           <View className="rounded-[10px] overflow-hidden">
             <Calendar

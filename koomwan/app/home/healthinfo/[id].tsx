@@ -96,9 +96,8 @@ const CalendarHealthScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <BackButton title="มุมมองปฏิทิน" />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <BackButton title="มุมมองปฏิทิน" />
-
         <Card>
           <View className="w-full">
             <Text className="text-headline text-secondary font-medium text-center py-4">
