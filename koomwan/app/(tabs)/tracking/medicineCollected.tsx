@@ -756,7 +756,7 @@ export default function MedicineCollectedScreen() {
                 additionalMedicines.map((medicine) => (
                   <TouchableOpacity
                     key={medicine.id}
-                    onPress={() => handleViewDetails(medicine, false)}
+                    onPress={() => handleEditMedicine(medicine)}
                     className="flex-row items-center py-2"
                   >
                     {renderMedicineImage(medicine)}
