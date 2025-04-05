@@ -8,6 +8,7 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
@@ -49,6 +50,7 @@ type Post = {
 };
 
 export default function ForumScreen() {
+  const scrollRef = React.useRef<ScrollView>(null);
   const router = useRouter();
   const [state] = useContext(AuthContext)
   const token = state?.token;
@@ -244,7 +246,11 @@ export default function ForumScreen() {
   return (
     <SafeAreaProvider>
       <SafeAreaView className="flex-1">
-        <ScrollView className="mb-24" showsVerticalScrollIndicator={false}>
+      <ScrollView
+  ref={scrollRef}
+  className="mb-24"
+  showsVerticalScrollIndicator={false}
+>
           <View className="mx-6 my-4">
             <SearchBox
               value={searchQuery}
@@ -329,6 +335,24 @@ export default function ForumScreen() {
             
           )}
         </ScrollView>
+
+          {/* 🔼 Floating Scroll to Top Button */}
+        <TouchableOpacity
+          onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
+          style={{
+            position: "absolute",
+            bottom: 125,
+            right: 30,
+            elevation: 5, // เงาสำหรับ Android
+          }}
+          className="bg-secondary rounded-full border-1 w-12 h-12 shadow-sm p-[12px] justify-center items-center"
+        >
+          <Image
+            className="w-8 h-8"
+            source={require("../../../assets/Forum/arrow-up.png")}
+          />
+
+        </TouchableOpacity>
       </SafeAreaView>
     </SafeAreaProvider>
   );
