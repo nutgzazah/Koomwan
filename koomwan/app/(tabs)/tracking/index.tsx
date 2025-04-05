@@ -1,14 +1,16 @@
-import { 
-  Text, 
-  SafeAreaView, 
-  ScrollView, 
-  View, 
-  TouchableOpacity, 
+import {
+  Text,
+  SafeAreaView,
+  ScrollView,
+  View,
+  TouchableOpacity,
   Alert,
 } from "react-native";
-import React, { useState} from "react"; 
+import React, { useState } from "react";
 import { useRouter } from "expo-router";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import { LongButton } from "./components/LongButton";
@@ -30,7 +32,7 @@ const formatTime = (date: Date): string => {
 
 export default function TrackingScreen() {
   const router = useRouter();
-  
+
   const [formData, setFormData] = useState({
     date: "",
     time: "",
@@ -40,9 +42,9 @@ export default function TrackingScreen() {
     a1c: "",
     bloodPressure: {
       systolic: "",
-      diastolic: ""
+      diastolic: "",
     },
-    mood: ""
+    mood: "",
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -55,7 +57,7 @@ export default function TrackingScreen() {
     a1c: "",
     bloodPressure: {
       systolic: "",
-      diastolic: ""
+      diastolic: "",
     },
   });
 
@@ -84,60 +86,80 @@ export default function TrackingScreen() {
       bloodSugar: "น้ำตาลในเลือด",
       a1c: "ค่า HbA1c",
       bloodPressureSystolic: "ความดันตัวบน",
-      bloodPressureDiastolic: "ความดันตัวล่าง"
+      bloodPressureDiastolic: "ความดันตัวล่าง",
     };
 
-    if (!/^\d*\.?\d*$/.test(value) || (ranges[name] && (numValue < ranges[name][0] || numValue > ranges[name][1]))) {
+    if (
+      !/^\d*\.?\d*$/.test(value) ||
+      (ranges[name] &&
+        (numValue < ranges[name][0] || numValue > ranges[name][1]))
+    ) {
       return `กรุณากรอก ${fieldNames[name] || name} ให้ถูกต้อง`;
     }
     return "";
   };
 
   // Handle Input Change
-  const handleChange = (field: string, value: string | { systolic: string; diastolic: string }) => {
+  const handleChange = (
+    field: string,
+    value: string | { systolic: string; diastolic: string }
+  ) => {
     if (field === "bloodPressure" && typeof value === "object") {
-      const systolicError = validateInput("bloodPressureSystolic", value.systolic);
-      const diastolicError = validateInput("bloodPressureDiastolic", value.diastolic);
+      const systolicError = validateInput(
+        "bloodPressureSystolic",
+        value.systolic
+      );
+      const diastolicError = validateInput(
+        "bloodPressureDiastolic",
+        value.diastolic
+      );
 
       setErrorMessages((prev) => ({
         ...prev,
         bloodPressure: {
           systolic: systolicError,
-          diastolic: diastolicError
-        }
+          diastolic: diastolicError,
+        },
       }));
 
       setFormData((prev) => ({
         ...prev,
-        bloodPressure: { ...prev.bloodPressure, ...value }
+        bloodPressure: { ...prev.bloodPressure, ...value },
       }));
     } else {
       const error = validateInput(field, value as string);
 
       setErrorMessages((prev) => ({
         ...prev,
-        [field]: error
+        [field]: error,
       }));
 
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
   };
 
- 
-   // Validation Before Submit
-   const handleSubmit = () => {
+  // Validation Before Submit
+  const handleSubmit = () => {
     const requiredFields = ["date", "time", "weight", "height"];
-    if (requiredFields.some((field) => !formData[field as keyof typeof formData])) {
+    if (
+      requiredFields.some((field) => !formData[field as keyof typeof formData])
+    ) {
       Alert.alert("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
 
     console.log("Sending Data:", formData); // Debug log
-    router.push({ pathname: "./medicineCollected", params: { formData: JSON.stringify(formData) } });
-  };  
+    router.push({
+      pathname: "tracking/medicineCollected",
+      params: { formData: JSON.stringify(formData) },
+    });
+  };
 
   // Date And Time Picker Handle
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleDateChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
     setShowDatePicker(false);
     if (selectedDate) {
       setFormData((prev) => ({
@@ -147,7 +169,10 @@ export default function TrackingScreen() {
     }
   };
 
-  const handleTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
+  const handleTimeChange = (
+    event: DateTimePickerEvent,
+    selectedTime?: Date
+  ) => {
     setShowTimePicker(false);
     if (selectedTime) {
       setFormData((prev) => ({
@@ -162,10 +187,15 @@ export default function TrackingScreen() {
       <ScrollView className="mb-24">
         {/* Card One - Date And Time Input */}
         <Card>
-          <Text className="text-display font-bold font-sans text-secondary text-center mt-1">บันทึกข้อมูลสุขภาพ</Text>
+          <Text className="text-display font-bold font-sans text-secondary text-center mt-1">
+            บันทึกข้อมูลสุขภาพ
+          </Text>
 
           {/* Date */}
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} className="mt-2">
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            className="mt-2"
+          >
             <InputFieldOne
               label="วันที่"
               value={formData.date}
@@ -176,7 +206,10 @@ export default function TrackingScreen() {
           </TouchableOpacity>
 
           {/* Time */}
-          <TouchableOpacity onPress={() => setShowTimePicker(true)} className="mb-1">
+          <TouchableOpacity
+            onPress={() => setShowTimePicker(true)}
+            className="mb-1"
+          >
             <InputFieldOne
               label="เวลา"
               value={formData.time}
@@ -189,7 +222,9 @@ export default function TrackingScreen() {
 
         {/* Card Two - Health Information */}
         <Card>
-          <Text className="text-title font-sans text-secondary text-center mt-1">ข้อมูลสุขภาพ</Text>
+          <Text className="text-title font-sans text-secondary text-center mt-1">
+            ข้อมูลสุขภาพ
+          </Text>
           <BreakLine />
 
           {/* Weight And Height With The Same Line */}
@@ -243,7 +278,12 @@ export default function TrackingScreen() {
               <InputFieldOne
                 label="ค่าความดันตัวบน (Optional)"
                 value={formData.bloodPressure.systolic}
-                onChangeText={(value) => handleChange("bloodPressure", { ...formData.bloodPressure, systolic: value })}
+                onChangeText={(value) =>
+                  handleChange("bloodPressure", {
+                    ...formData.bloodPressure,
+                    systolic: value,
+                  })
+                }
                 placeholder="เช่น 120"
                 keyboardType="numeric"
                 errorMessage={errorMessages.bloodPressure.systolic}
@@ -254,7 +294,12 @@ export default function TrackingScreen() {
               <InputFieldOne
                 label="ค่าความดันตัวล่าง (Optional)"
                 value={formData.bloodPressure.diastolic}
-                onChangeText={(value) => handleChange("bloodPressure", { ...formData.bloodPressure, diastolic: value })}
+                onChangeText={(value) =>
+                  handleChange("bloodPressure", {
+                    ...formData.bloodPressure,
+                    diastolic: value,
+                  })
+                }
                 placeholder="เช่น 80"
                 keyboardType="numeric"
                 errorMessage={errorMessages.bloodPressure.diastolic}
@@ -265,11 +310,18 @@ export default function TrackingScreen() {
 
         {/* Card Three - ข้อมูลอารมณ์ */}
         <Card>
-          <Text className="text-title font-sans text-secondary text-center mt-1">ข้อมูลอารมณ์</Text>
+          <Text className="text-title font-sans text-secondary text-center mt-1">
+            ข้อมูลอารมณ์
+          </Text>
           <BreakLine />
 
-          <Text className="text-description font-sans font-bold text-secondary text-center mb-1">วันนี้คุณรู้สึกอย่างไร . . . (Optional)</Text>
-          <MoodSelecter selectedMood={formData.mood} onSelect={(mood) => handleChange("mood", mood)} />
+          <Text className="text-description font-sans font-bold text-secondary text-center mb-1">
+            วันนี้คุณรู้สึกอย่างไร . . . (Optional)
+          </Text>
+          <MoodSelecter
+            selectedMood={formData.mood}
+            onSelect={(mood) => handleChange("mood", mood)}
+          />
         </Card>
 
         {/* Go To The MedicineCollected */}
@@ -279,13 +331,15 @@ export default function TrackingScreen() {
             onPress={handleSubmit}
             disabled={!isFormComplete}
             isCompleted={isFormComplete}
-            customStyle={isFormComplete ? "bg-blue-600" : "bg-gray"}
+            customStyle={isFormComplete ? "bg-primary" : "bg-gray"}
           />
         </View>
 
         {/* Date Picker - Replaces Input field with picker */}
         {showDatePicker && (
-          <View style={{ position: "absolute", top: 115, left: 24, width: "100%" }}>
+          <View
+            style={{ position: "absolute", top: 115, left: 24, width: "100%" }}
+          >
             <DateTimePicker
               value={new Date()}
               mode="date"
@@ -297,7 +351,9 @@ export default function TrackingScreen() {
 
         {/* Time Picker - Replaces Input field with picker */}
         {showTimePicker && (
-          <View style={{ position: "absolute", top: 205, left: 22, width: "100%" }}>
+          <View
+            style={{ position: "absolute", top: 205, left: 22, width: "100%" }}
+          >
             <DateTimePicker
               value={new Date()}
               mode="time"
