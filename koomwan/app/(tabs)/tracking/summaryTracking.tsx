@@ -7,77 +7,222 @@ import {
   Modal,
   Image,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import React, { useState } from "react";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "expo-router";
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import BackButton from "../../../global/components/BackButton";
 import InputFieldOne from "./components/InputFieldOne";
-
-const REGULAR_MEDICINES = [
-  {
-    id: "1",
-    name: "Glipizide (ไกลพิไซด์)",
-    type: "ยาเบาหวาน",
-    details: "รับประทานก่อนอาหาร 30 นาที วันละ 1-2 ครั้ง",
-    image: require("../../../assets/Tracking/Medicine.png"),
-  },
-  {
-    id: "2",
-    name: "Metformin (เม็ทฟอมิน)",
-    type: "ยาเบาหวาน",
-    details: "รับประทานพร้อมอาหาร เช้า-เย็น",
-    image: require("../../../assets/Tracking/Medicine.png"),
-  },
-  {
-    id: "3",
-    name: "พาราเซตามอล",
-    type: "ยาแก้ปวด",
-    details: "รับประทานเมื่อมีอาการปวด",
-    image: require("../../../assets/Tracking/Medicine.png"),
-  },
-];
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import BASE_URL from "../../../config";
 
 export default function SummaryTrackingScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedMood, setSelectedMood] = useState("happy");
+  const [dataLoading, setDataLoading] = useState(true);
 
-  const healthData = {
-    date: "13 ธันวาคม พ.ศ.2567",
-    time: "13:32 น.",
-    weight: "65",
-    height: "168",
-    bloodSugar: "120",
-    a1c: "4.8",
-    bloodPressure: {
-      systolic: "120",
-      diastolic: "80",
-    },
-    medicines: REGULAR_MEDICINES, // Use your REGULAR_MEDICINES here
-  };
+  // States for storing data
+  const [formData, setFormData] = useState<any>(null);
+  const [selectedMedicines, setSelectedMedicines] = useState<any>({});
+  const [regularMedicines, setRegularMedicines] = useState<any[]>([]);
+  const [additionalMedicines, setAdditionalMedicines] = useState<any[]>([]);
 
-  const handleMoodSelect = (mood: string) => {
-    setSelectedMood(mood);
-  };
+  // Load data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setDataLoading(true);
 
-  const handleConfirm = () => {
-    setLoading(true);
-    setTimeout(() => {
+        // Load form data and selected medicines from AsyncStorage
+        const [formDataStr, selectedMedicinesStr] = await Promise.all([
+          AsyncStorage.getItem("trackingFormData"),
+          AsyncStorage.getItem("selectedMedicines"),
+        ]);
+
+        if (!formDataStr) {
+          console.error("No form data found");
+          Alert.alert("ข้อมูลไม่ครบถ้วน", "ไม่พบข้อมูลสุขภาพที่บันทึกไว้");
+          router.back();
+          return;
+        }
+
+        const parsedFormData = JSON.parse(formDataStr);
+        const parsedMedicines = selectedMedicinesStr
+          ? JSON.parse(selectedMedicinesStr)
+          : {};
+
+        // Set states
+        setFormData(parsedFormData);
+        setSelectedMedicines(parsedMedicines);
+
+        // Separate regular and additional medicines
+        const medicines = Object.values(parsedMedicines);
+
+        const regular = medicines.filter((med: any) => med.time !== undefined);
+        const additional = medicines.filter(
+          (med: any) => med.time === undefined
+        );
+
+        setRegularMedicines(regular);
+        setAdditionalMedicines(additional);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        Alert.alert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลได้");
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Handle form submission to API
+  const handleConfirm = async () => {
+    try {
+      setLoading(true);
+
+      // Get authentication data
+      const authData = await AsyncStorage.getItem("@auth");
+
+      if (!authData || !formData) {
+        Alert.alert("ข้อผิดพลาด", "ข้อมูลไม่ครบถ้วน");
+        return;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+      const userId = auth.user._id;
+
+      // Format additional pills for API
+      const additionalPills = additionalMedicines.map((medicine) => ({
+        pillName: medicine.name,
+        pillImage:
+          typeof medicine.image === "string"
+            ? medicine.image.split("/").pop()
+            : "",
+        pillType: medicine.type,
+        description: medicine.details || "",
+        takePillTimes: [formData.time.replace(" น.", "")], // Use time from form data
+      }));
+
+      // Parse date and time for API
+      const dateParts = formData.date.split("/");
+      const timeParts = formData.time.replace(" น.", "").split(":");
+
+      // Create date object (convert Buddhist year to Gregorian)
+      const recordTime = new Date(
+        parseInt(dateParts[2]) - 543, // Convert from Buddhist era to Gregorian
+        parseInt(dateParts[1]) - 1, // Month is 0-indexed
+        parseInt(dateParts[0]),
+        parseInt(timeParts[0]),
+        parseInt(timeParts[1])
+      );
+
+      // Create request payload
+      const payload = {
+        userId: userId,
+        height: parseFloat(formData.height),
+        weight: parseFloat(formData.weight),
+        bloodsugar: formData.bloodSugar
+          ? parseFloat(formData.bloodSugar)
+          : undefined,
+        a1c: formData.a1c ? parseFloat(formData.a1c) : undefined,
+        bloodpressure:
+          formData.bloodPressure.systolic || formData.bloodPressure.diastolic
+            ? {
+                systolic: formData.bloodPressure.systolic
+                  ? parseFloat(formData.bloodPressure.systolic)
+                  : undefined,
+                diastolic: formData.bloodPressure.diastolic
+                  ? parseFloat(formData.bloodPressure.diastolic)
+                  : undefined,
+              }
+            : undefined,
+        moodstatus: formData.mood || undefined,
+        additionpill: additionalPills.length > 0 ? additionalPills : undefined,
+        recordtime: recordTime.toISOString(),
+      };
+
+      // Make API request
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/user/addRecord`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        // Update medication tracking status for regular medications if they were selected
+        if (regularMedicines.length > 0) {
+          try {
+            // Get date in YYYY-MM-DD format
+            const trackingDate = `${recordTime.getFullYear()}-${String(
+              recordTime.getMonth() + 1
+            ).padStart(2, "0")}-${String(recordTime.getDate()).padStart(
+              2,
+              "0"
+            )}`;
+
+            // Update each selected medication
+            await Promise.all(
+              regularMedicines.map(async (med) => {
+                await axios.post(
+                  `${BASE_URL}/api/v1/regular-pills/update-status`,
+                  {
+                    medicationId: med.id,
+                    userId: userId,
+                    status: "taken",
+                    actualTime: med.time,
+                  },
+                  {
+                    headers: { Authorization: `Bearer ${token}` },
+                  }
+                );
+              })
+            );
+          } catch (medicationError) {
+            console.error("Error updating medication status:", medicationError);
+          }
+        }
+
+        // Clear temporary storage
+        await Promise.all([
+          AsyncStorage.removeItem("trackingFormData"),
+          AsyncStorage.removeItem("selectedMedicines"),
+          AsyncStorage.removeItem("isFirstLoadMed"),
+        ]);
+
+        setShowSuccessModal(true);
+      } else {
+        throw new Error(response.data.message || "การบันทึกล้มเหลว");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      Alert.alert(
+        "การบันทึกล้มเหลว",
+        "ไม่สามารถบันทึกข้อมูลได้ โปรดลองอีกครั้ง"
+      );
+    } finally {
       setLoading(false);
-      setShowSuccessModal(true);
-    }, 2000); // Simulate API call delay
+    }
   };
 
   const handleCloseSuccess = () => {
     setShowSuccessModal(false);
+
+    // เคลียร์ข้อมูลทั้งหมดที่เกี่ยวข้องกับฟอร์ม
+    AsyncStorage.removeItem("trackingFormData");
+    AsyncStorage.removeItem("selectedMedicines");
+    router.dismissTo("/tracking");
     router.replace("/(tabs)");
   };
 
-  // เลือกรูปภาพตามอารมณ์ที่เลือก
+  // Function to get mood image
   const getMoodImage = (mood: string) => {
     switch (mood) {
       case "happy":
@@ -95,52 +240,59 @@ export default function SummaryTrackingScreen() {
       case "angry":
         return require("../../../assets/Tracking/mood-angry.png");
       default:
-        return require("../../../assets/Tracking/mood-happy.png"); // default to happy
+        return require("../../../assets/Tracking/mood-happy.png");
     }
   };
 
-  //ตรงนี้งง
+  if (dataLoading) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#3972F0" />
+        <Text className="mt-4 text-secondary">กำลังโหลดข้อมูล...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1">
       <ScrollView className="mb-24">
-        <BackButton title="ย้อนกลับ" /> {/* Back button */}
+        <BackButton title="ย้อนกลับ" />
+
         <Card>
           <Text className="text-title font-sans font-bold text-secondary text-center mt-2">
             ข้อมูลที่บันทึก
           </Text>
-          <Text className="text-description font-sans text-secondary text-center mt-2">
-            วัน/เดือน/ปี และเวลาที่บันทึก
-          </Text>
           <Text className="text-description font-sans text-secondary text-center">
-            ณ วันที่ {healthData.date}
+            ณ วันที่ {formData?.date || "-"}
           </Text>
           <Text className="text-description font-sans text-secondary text-center mb-1">
-            เวลา {healthData.time}
+            เวลา {formData?.time || "-"}
           </Text>
         </Card>
+
         <Card>
           <Text className="text-title font-sans text-secondary text-center mt-1">
             ข้อมูลสุขภาพ
           </Text>
           <BreakLine />
-          {/* Weight And Height With The Same Line */}
+
+          {/* Weight And Height */}
           <View className="flex-row justify-between">
             <View className="w-1/2">
               <InputFieldOne
                 label="น้ำหนัก"
-                value={healthData.weight} // ใช้ค่าจาก healthData
-                placeholder=" เช่น 60"
-                editable={false} // ไม่ให้แก้ไข
+                value={formData?.weight || "-"}
+                placeholder="เช่น 60"
+                editable={false}
               />
             </View>
 
             <View className="w-1/2">
               <InputFieldOne
                 label="ส่วนสูง"
-                value={healthData.height} // ใช้ค่าจาก healthData
+                value={formData?.height || "-"}
                 placeholder="เช่น 160"
-                editable={false} // ไม่ให้แก้ไข
+                editable={false}
               />
             </View>
           </View>
@@ -148,17 +300,17 @@ export default function SummaryTrackingScreen() {
           {/* Blood Sugar */}
           <InputFieldOne
             label="ค่าระดับน้ำตาลในเลือด (Optional)"
-            value={healthData.bloodSugar || ""} // ค่าอาจจะเป็นค่าว่างได้
+            value={formData?.bloodSugar || "-"}
             placeholder="เช่น 90"
-            editable={false} // ไม่ให้แก้ไข
+            editable={false}
           />
 
           {/* A1c */}
           <InputFieldOne
             label="ค่าเฉลี่ยน้ำตาลในเลือด HbA1c (Optional)"
-            value={healthData.a1c}
+            value={formData?.a1c || "-"}
             placeholder="เช่น 5.6"
-            editable={false} // ไม่ให้แก้ไข
+            editable={false}
           />
 
           {/* Blood Pressure */}
@@ -166,116 +318,150 @@ export default function SummaryTrackingScreen() {
             <View className="w-1/2">
               <InputFieldOne
                 label="ค่าความดันตัวบน (Optional)"
-                value={healthData.bloodPressure.systolic}
+                value={formData?.bloodPressure?.systolic || "-"}
                 placeholder="เช่น 120"
-                editable={false} // ไม่ให้แก้ไข
+                editable={false}
               />
             </View>
 
             <View className="w-1/2">
               <InputFieldOne
                 label="ค่าความดันตัวล่าง (Optional)"
-                value={healthData.bloodPressure.diastolic}
+                value={formData?.bloodPressure?.diastolic || "-"}
                 placeholder="เช่น 80"
-                editable={false} // ไม่ให้แก้ไข
+                editable={false}
               />
             </View>
           </View>
         </Card>
-        <Card>
-          <Text className="text-title font-sans text-secondary text-center mt-2">
-            ข้อมูลอารมณ์
-          </Text>
-          <BreakLine />
-          <Text className="text-description text-secondary font-sans font-bold text-center mt-1">
-            อารมณ์ของคุณ (Optional)
-          </Text>
 
-          <View
-            className={`items-center py-3 px-6 mt-4 rounded-xl ${
-              selectedMood === "happy"
-                ? " bg-card border border-gray"
-                : "bg-background"
-            }`}
-          >
-            {/*getMoodImage For Selected Mood*/}
-            <Image
-              source={getMoodImage(selectedMood)}
-              className="w-16 h-16"
-              resizeMode="contain"
-            />
-            <Text className="text-description text-secondary font-sans font-bold mt-2">
-              {selectedMood}
+        {/* Mood Information */}
+        {formData?.mood && (
+          <Card>
+            <Text className="text-title font-sans text-secondary text-center mt-2">
+              ข้อมูลอารมณ์
             </Text>
-            {/* Display mood label */}
-          </View>
-        </Card>
-        {/* ยาประจำ */}
-        <Card>
-          <Text className="text-title font-sans text-secondary text-center mt-2">
-            ยาประจำ
-          </Text>
-          <BreakLine />
-          {healthData.medicines
-            .filter((medicine) => medicine.type === "ยาเบาหวาน")
-            .map((medicine, index) => (
+            <BreakLine />
+            <Text className="text-description text-secondary font-sans text-center ">
+              อารมณ์ของคุณ
+            </Text>
+
+            <View className="items-center px-6 mt-2 rounded-xl bg-card ">
+              <Image
+                source={getMoodImage(formData.mood)}
+                className="w-16 h-16"
+                resizeMode="contain"
+              />
+              <Text className="text-description text-secondary font-sans font-bold mt-2">
+                {formData.mood === "happy"
+                  ? "มีความสุข"
+                  : formData.mood === "laughing"
+                  ? "หัวเราะ"
+                  : formData.mood === "neutral"
+                  ? "เฉยๆ"
+                  : formData.mood === "irritated"
+                  ? "หงุดหงิด"
+                  : formData.mood === "sick"
+                  ? "ป่วย"
+                  : formData.mood === "crying"
+                  ? "ร้องไห้"
+                  : formData.mood === "angry"
+                  ? "โกรธ"
+                  : "มีความสุข"}
+              </Text>
+            </View>
+          </Card>
+        )}
+
+        {/* Regular Medicines */}
+        {regularMedicines.length > 0 && (
+          <Card>
+            <Text className="text-title font-sans text-secondary text-center mt-2">
+              ยาประจำ
+            </Text>
+            <BreakLine />
+            {regularMedicines.map((medicine: any, index: number) => (
               <View
-                key={index}
-                className="flex-row justify-between items-center mt-4"
+                key={`regular-med-${medicine.id}-${index}`}
+                className="flex-row items-center mt-3 mb-1"
               >
-                <Image source={medicine.image} className="w-12 h-12" />
-                <View className="ml-4">
-                  <Text className="text-description font-sans text-secondary">
+                <Image
+                  source={
+                    typeof medicine.image === "string"
+                      ? { uri: medicine.image }
+                      : medicine.image
+                  }
+                  className="w-12 h-12 rounded-lg"
+                />
+                <View className="ml-4 flex-1">
+                  <Text className="text-description font-sans text-secondary font-semibold">
                     {medicine.name}
+                  </Text>
+                  {medicine.time && (
+                    <Text className="text-tag font-sans text-secondary">
+                      เวลา {medicine.time}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ))}
+          </Card>
+        )}
+
+        {/* Additional Medicines */}
+        {additionalMedicines.length > 0 && (
+          <Card>
+            <Text className="text-title font-sans text-secondary text-center mt-2">
+              ยาเพิ่มเติม
+            </Text>
+            <BreakLine />
+            {additionalMedicines.map((medicine: any, index: number) => (
+              <View
+                key={`additional-med-${medicine.id}-${index}`}
+                className="flex-row items-center mt-3 mb-1"
+              >
+                <Image
+                  source={require("../../../assets/Tracking/Medicine.png")}
+                  className="w-8 h-8 rounded-lg ml-2"
+                />
+                <View className="ml-4 flex-1">
+                  <Text className="text-description font-sans text-secondary font-semibold">
+                    {medicine.name}
+                  </Text>
+                  <Text className="text-tag font-sans text-secondary mt-1">
+                    {medicine.type}
                   </Text>
                 </View>
               </View>
             ))}
-        </Card>
-        {/* ยาเพิ่มเติม */}
-        <Card>
-          <Text className="text-title font-sans text-secondary text-center mt-2">
-            ยาเพิ่มเติม
-          </Text>
-          <BreakLine />
-          {healthData.medicines
-            .filter((medicine) => medicine.type !== "ยาเบาหวาน")
-            .map((medicine, index) => (
-              <View
-                key={index}
-                className="flex-row justify-between items-center mt-4"
-              >
-                <Image source={medicine.image} className="w-12 h-12" />
-                <View className="ml-4">
-                  <Text className="text-description font-sans text-secondary">
-                    {medicine.name}
-                  </Text>
-                </View>
-              </View>
-            ))}
-        </Card>
-        {/* ปุ่มถัดไป */}
+          </Card>
+        )}
+
+        {/* Confirm Button */}
         <TouchableOpacity
           onPress={handleConfirm}
           disabled={loading}
-          className="bg-primary rounded-lg py-4 px-8 mt-3 mb-6 mx-6"
+          className="bg-primary rounded-lg py-4 px-8 mt-5 mb-6 mx-6"
         >
-          <Text className="text-button font-sans text-card text-center font-bold">
-            {loading ? "กำลังบันทึก..." : "ถัดไป"}
+          <Text className="text-button text-card text-center font-bold">
+            {loading ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
           </Text>
         </TouchableOpacity>
+
         {loading && (
-          <View className="items-center mt-4">
+          <View className="items-center mt-2 mb-5">
             <ActivityIndicator size="large" color="#3972F0" />
           </View>
         )}
+
+        {/* Success Modal */}
         <Modal visible={showSuccessModal} transparent animationType="fade">
-          <View className="flex-1 justify-center items-center bg-gray bg-opacity-50">
+          <View className="flex-1 justify-center items-center bg-gray-500 bg-opacity-50">
             <View className="bg-card rounded-2xl p-7 m-4 items-center">
-              <Text className="text-body font-sans text-center mb-1">
+              <Text className="text-title font-sans text-center mb-1 font-bold">
                 บันทึกข้อมูล
               </Text>
-              <Text className="text-body font-sans text-center mb-3">
+              <Text className="text-description font-sans text-center mb-3">
                 สุขภาพของคุณสำเร็จ!
               </Text>
               <Image
@@ -286,7 +472,7 @@ export default function SummaryTrackingScreen() {
                 className="bg-primary rounded-lg px-20 py-4"
                 onPress={handleCloseSuccess}
               >
-                <Text className=" text-button font-sans text-card font-bold text-center">
+                <Text className="text-button font-sans text-card font-bold text-center">
                   ปิด
                 </Text>
               </TouchableOpacity>
