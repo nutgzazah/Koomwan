@@ -24,6 +24,9 @@ export default function SummaryTrackingScreen() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
+  const [imageUploadStatus, setImageUploadStatus] = useState<{
+    [key: string]: string;
+  }>({});
 
   // States for storing data
   const [formData, setFormData] = useState<any>(null);
@@ -80,6 +83,63 @@ export default function SummaryTrackingScreen() {
     loadData();
   }, []);
 
+  // Upload image to server
+  const uploadImageToServer = async (imageUri: string) => {
+    try {
+      // Skip if already uploaded to server (URL starts with BASE_URL)
+      if (imageUri.startsWith(BASE_URL) || !imageUri.startsWith("file://")) {
+        return imageUri;
+      }
+
+      // Get auth token
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        throw new Error("Authentication data not found");
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // Create FormData
+      const formData = new FormData();
+
+      // Add image file
+      const filename = imageUri.split("/").pop();
+      const match = /\.(\w+)$/.exec(filename || "");
+      const type = match ? `image/${match[1]}` : `image`;
+
+      formData.append("file", {
+        uri: imageUri,
+        type,
+        name: filename,
+      } as any);
+
+      // Specify upload folder
+      formData.append("folder", "pill-images");
+
+      // Send to image upload API
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/storage/uploadFile`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data && response.data.R2filePath) {
+        return response.data.R2filePath;
+      }
+
+      throw new Error("Image upload failed");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return null;
+    }
+  };
+
   // Handle form submission to API
   const handleConfirm = async () => {
     try {
@@ -97,17 +157,52 @@ export default function SummaryTrackingScreen() {
       const token = auth.token;
       const userId = auth.user._id;
 
-      // Format additional pills for API
-      const additionalPills = additionalMedicines.map((medicine) => ({
-        pillName: medicine.name,
-        pillImage:
-          typeof medicine.image === "string"
-            ? medicine.image.split("/").pop()
-            : "",
-        pillType: medicine.type,
-        description: medicine.details || "",
-        takePillTimes: [formData.time.replace(" น.", "")], // Use time from form data
-      }));
+      // Upload any local images for additional pills
+      const additionalPillsWithImages = await Promise.all(
+        additionalMedicines.map(async (medicine) => {
+          // Update status for this medicine
+          setImageUploadStatus((prev) => ({
+            ...prev,
+            [medicine.id]: "uploading",
+          }));
+
+          let pillImage = "";
+          // Check if image is a local file URI or already a server path
+          if (typeof medicine.image === "string") {
+            if (medicine.image.startsWith("file://")) {
+              // It's a local file, needs to be uploaded
+              const uploadedPath = await uploadImageToServer(medicine.image);
+              if (uploadedPath) {
+                // Extract just the filename from the path
+                pillImage =
+                  typeof uploadedPath === "string"
+                    ? uploadedPath.split("/").pop() || ""
+                    : "";
+                setImageUploadStatus((prev) => ({
+                  ...prev,
+                  [medicine.id]: "success",
+                }));
+              } else {
+                setImageUploadStatus((prev) => ({
+                  ...prev,
+                  [medicine.id]: "failed",
+                }));
+              }
+            } else if (medicine.image.includes("/")) {
+              // It's a server path, extract filename
+              pillImage = medicine.image.split("/").pop() || "";
+            }
+          }
+
+          return {
+            pillName: medicine.name,
+            pillImage: pillImage,
+            pillType: medicine.type,
+            description: medicine.details || "",
+            takePillTimes: [formData.time.replace(" น.", "")], // Use time from form data
+          };
+        })
+      );
 
       // Parse date and time for API
       const dateParts = formData.date.split("/");
@@ -143,7 +238,10 @@ export default function SummaryTrackingScreen() {
               }
             : undefined,
         moodstatus: formData.mood || undefined,
-        additionpill: additionalPills.length > 0 ? additionalPills : undefined,
+        additionpill:
+          additionalPillsWithImages.length > 0
+            ? additionalPillsWithImages
+            : undefined,
         recordtime: recordTime.toISOString(),
       };
 
@@ -195,6 +293,8 @@ export default function SummaryTrackingScreen() {
           AsyncStorage.removeItem("trackingFormData"),
           AsyncStorage.removeItem("selectedMedicines"),
           AsyncStorage.removeItem("isFirstLoadMed"),
+          AsyncStorage.removeItem("additionalMedicines"),
+          AsyncStorage.removeItem("selectedMedicinesStatus"),
         ]);
 
         setShowSuccessModal(true);
@@ -215,7 +315,7 @@ export default function SummaryTrackingScreen() {
   const handleCloseSuccess = () => {
     setShowSuccessModal(false);
 
-    // เคลียร์ข้อมูลทั้งหมดที่เกี่ยวข้องกับฟอร์ม
+    // Clear all form-related data
     AsyncStorage.removeItem("trackingFormData");
     AsyncStorage.removeItem("selectedMedicines");
     router.dismissTo("/tracking");
@@ -242,6 +342,16 @@ export default function SummaryTrackingScreen() {
       default:
         return require("../../../assets/Tracking/mood-happy.png");
     }
+  };
+
+  // Function to render medicine image with proper handling
+  const renderMedicineImage = (medicine: any) => {
+    return (
+      <Image
+        source={require("../../../assets/Tracking/Medicine.png")}
+        className="w-10 h-10 "
+      />
+    );
   };
 
   if (dataLoading) {
@@ -385,14 +495,7 @@ export default function SummaryTrackingScreen() {
                 key={`regular-med-${medicine.id}-${index}`}
                 className="flex-row items-center mt-3 mb-1"
               >
-                <Image
-                  source={
-                    typeof medicine.image === "string"
-                      ? { uri: medicine.image }
-                      : medicine.image
-                  }
-                  className="w-12 h-12 rounded-lg"
-                />
+                {renderMedicineImage(medicine)}
                 <View className="ml-4 flex-1">
                   <Text className="text-description font-sans text-secondary font-semibold">
                     {medicine.name}
@@ -420,10 +523,7 @@ export default function SummaryTrackingScreen() {
                 key={`additional-med-${medicine.id}-${index}`}
                 className="flex-row items-center mt-3 mb-1"
               >
-                <Image
-                  source={require("../../../assets/Tracking/Medicine.png")}
-                  className="w-8 h-8 rounded-lg ml-2"
-                />
+                {renderMedicineImage(medicine)}
                 <View className="ml-4 flex-1">
                   <Text className="text-description font-sans text-secondary font-semibold">
                     {medicine.name}
@@ -441,7 +541,9 @@ export default function SummaryTrackingScreen() {
         <TouchableOpacity
           onPress={handleConfirm}
           disabled={loading}
-          className="bg-primary rounded-lg py-4 px-8 mt-5 mb-6 mx-6"
+          className={`rounded-lg py-4 px-8 mt-5 mb-6 mx-6 ${
+            loading ? "bg-gray" : "bg-primary"
+          }`}
         >
           <Text className="text-button text-card text-center font-bold">
             {loading ? "กำลังบันทึก..." : "บันทึกข้อมูล"}

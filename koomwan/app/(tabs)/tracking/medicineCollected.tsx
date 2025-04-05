@@ -44,6 +44,9 @@ export default function MedicineCollectedScreen() {
   const params = useLocalSearchParams();
 
   const [loading, setLoading] = useState(true);
+  const [deletingMedicineId, setDeletingMedicineId] = useState<string | null>(
+    null
+  );
   const [regularMedicines, setRegularMedicines] = useState<Medicine[]>([]);
   const [groupedRegularMeds, setGroupedRegularMeds] = useState<
     MedicationLogGroup[]
@@ -56,21 +59,44 @@ export default function MedicineCollectedScreen() {
   }>({});
   const [formData, setFormData] = useState<any>(null);
 
-  // Load health form data from AsyncStorage
+  // Add state to track if medicines were loaded from AsyncStorage
+  const [loadedFromStorage, setLoadedFromStorage] = useState(false);
+
+  // Load health form data and saved medicines from AsyncStorage
   useEffect(() => {
-    const loadFormData = async () => {
+    const loadStoredData = async () => {
       try {
+        // Load form data
         const savedFormData = await AsyncStorage.getItem("trackingFormData");
         if (savedFormData) {
           setFormData(JSON.parse(savedFormData));
         }
-        console.log("Form data loaded:", savedFormData);
+
+        // Load any previously saved additional medicines
+        const savedMedicines = await AsyncStorage.getItem(
+          "additionalMedicines"
+        );
+        if (savedMedicines) {
+          const parsedMedicines = JSON.parse(savedMedicines);
+          setAdditionalMedicines(parsedMedicines);
+          setLoadedFromStorage(true);
+        }
+
+        // Load selected medicines status
+        const savedSelectedMedicines = await AsyncStorage.getItem(
+          "selectedMedicinesStatus"
+        );
+        if (savedSelectedMedicines) {
+          setSelectedMedicines(JSON.parse(savedSelectedMedicines));
+        }
+
+        console.log("Stored data loaded successfully");
       } catch (error) {
-        console.error("Error loading form data:", error);
+        console.error("Error loading stored data:", error);
       }
     };
 
-    loadFormData();
+    loadStoredData();
   }, []);
 
   useFocusEffect(
@@ -81,8 +107,10 @@ export default function MedicineCollectedScreen() {
           const isFirstLoad = await AsyncStorage.getItem("isFirstLoadMed");
           if (isFirstLoad !== "false") {
             // เคลียร์ข้อมูลยาเพิ่มเติม
-            setAdditionalMedicines([]);
-            setSelectedMedicines({});
+            if (!loadedFromStorage) {
+              setAdditionalMedicines([]);
+              setSelectedMedicines({});
+            }
 
             // ตั้งค่า flag เพื่อไม่ให้เคลียร์ข้อมูลในครั้งต่อไป (เมื่อกลับมาจากหน้า addMedicine)
             await AsyncStorage.setItem("isFirstLoadMed", "false");
@@ -101,8 +129,33 @@ export default function MedicineCollectedScreen() {
           AsyncStorage.removeItem("isFirstLoadMed");
         }
       };
-    }, [])
+    }, [loadedFromStorage])
   );
+
+  // Save additional medicines to AsyncStorage whenever they change
+  useEffect(() => {
+    if (additionalMedicines.length > 0) {
+      AsyncStorage.setItem(
+        "additionalMedicines",
+        JSON.stringify(additionalMedicines)
+      );
+    } else {
+      // If no additional medicines, remove the item from storage
+      AsyncStorage.removeItem("additionalMedicines");
+    }
+  }, [additionalMedicines]);
+
+  // Save selected medicines status to AsyncStorage whenever it changes
+  useEffect(() => {
+    if (Object.keys(selectedMedicines).length > 0) {
+      AsyncStorage.setItem(
+        "selectedMedicinesStatus",
+        JSON.stringify(selectedMedicines)
+      );
+    } else {
+      AsyncStorage.removeItem("selectedMedicinesStatus");
+    }
+  }, [selectedMedicines]);
 
   // Group regular medicines by time whenever they change
   useEffect(() => {
@@ -186,7 +239,7 @@ export default function MedicineCollectedScreen() {
           dailyMedicationsResponse.data.success &&
           dailyMedicationsResponse.data.medicationLogs
         ) {
-          // Convert the medication logs to our Medicine format
+          // Convert format
           const regularPills =
             dailyMedicationsResponse.data.medicationLogs.flatMap(
               (medicationLog: any) =>
@@ -211,10 +264,10 @@ export default function MedicineCollectedScreen() {
           // สร้าง selected medicines จากยาที่มีสถานะ taken แล้ว
           const takenMedicines = regularPills
             .filter((med: Medicine) => med.taken)
-            .reduce((acc: { [key: string]: Medicine }, med: Medicine) => {
-              acc[med.id] = med;
+            .reduce((acc: { [key: string]: boolean }, med: Medicine) => {
+              acc[med.id] = true;
               return acc;
-            }, {} as { [key: string]: boolean });
+            }, {});
 
           setSelectedMedicines((prev) => ({ ...prev, ...takenMedicines }));
         } else {
@@ -283,12 +336,16 @@ export default function MedicineCollectedScreen() {
           : require("../../../assets/Tracking/Medicine.png"),
       };
 
+      // Check if this medicine already exists or is being edited
       const exists = additionalMedicines.some(
         (med) => med.id === newMedicine.id
       );
+
       if (!exists) {
+        // Add new medicine
         setAdditionalMedicines((prev) => [...prev, newMedicine]);
       } else {
+        // Update existing medicine
         setAdditionalMedicines((prev) =>
           prev.map((med) => (med.id === newMedicine.id ? newMedicine : med))
         );
@@ -340,7 +397,7 @@ export default function MedicineCollectedScreen() {
         }`
       );
 
-      // อัปเดตสถานะ taken ในยาด้วย
+      // อัปเดตสถานะ taken ในยา
       setRegularMedicines((prevMeds) =>
         prevMeds.map((med) =>
           med.id === medicineId ? { ...med, taken: isChecked } : med
@@ -349,6 +406,75 @@ export default function MedicineCollectedScreen() {
     } catch (error) {
       console.error("Error updating medication status:", error);
       Alert.alert("ข้อผิดพลาด", "ไม่สามารถอัพเดตสถานะยาได้");
+    }
+  };
+
+  // Function to delete image from server
+  const deleteImageFromServer = async (imagePath: string) => {
+    try {
+      // ข้าม หากไม่มี path หรือไม่ใช่รูปแบบที่ถูกต้อง
+      if (!imagePath || typeof imagePath !== "string") {
+        return true;
+      }
+
+      // ข้าม หากเป็นรูปภาพเริ่มต้น (จาก require)
+      if (!imagePath.includes("/")) {
+        return true;
+      }
+
+      // รับข้อมูล auth token
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        throw new Error("Authentication data not found");
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // แยกส่วนของชื่อโฟลเดอร์และชื่อไฟล์
+      let folder = "pill-images";
+      let fileName = "";
+
+      if (imagePath.startsWith("file://")) {
+        // เป็นไฟล์ในเครื่อง ไม่ต้องลบจากเซิร์ฟเวอร์
+        return true;
+      } else if (imagePath.includes("/")) {
+        // มีพาธที่มี / แยกส่วนของโฟลเดอร์และชื่อไฟล์
+        const parts = imagePath.split("/");
+        fileName = parts.pop() || "";
+
+        // ถ้ามีโฟลเดอร์ใน path ก็ใช้โฟลเดอร์นั้น แต่ถ้าไม่มีก็ใช้ค่าเริ่มต้น
+        if (parts.length > 0 && parts[parts.length - 1] !== "uploads") {
+          folder = parts.pop() || "pill-images";
+        }
+      } else {
+        // เป็นเพียงชื่อไฟล์
+        fileName = imagePath;
+      }
+
+      // ข้ามถ้าไม่มีชื่อไฟล์
+      if (!fileName) {
+        return true;
+      }
+
+      // ส่ง request ลบไฟล์ไปยัง API
+      await axios.delete(`${BASE_URL}/api/v1/storage/deleteFile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        data: {
+          folder: folder,
+          fileName: fileName,
+        },
+      });
+
+      console.log(`ลบรูปภาพสำเร็จ: ${fileName} จากโฟลเดอร์ ${folder}`);
+      return true;
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการลบรูปภาพ:", error);
+      // ไม่บล็อกการลบยาแม้ว่าการลบรูปภาพจะล้มเหลว
+      return false;
     }
   };
 
@@ -363,7 +489,7 @@ export default function MedicineCollectedScreen() {
         },
       });
     } else {
-      // สำหรับยาเพิ่มเติม ยังคงไปที่ medicineDetail
+      // สำหรับยาเพิ่มเติม ไปที่ medicineDetail
       router.push({
         pathname: "./medicineDetail",
         params: {
@@ -402,27 +528,88 @@ export default function MedicineCollectedScreen() {
 
   // Delete a medicine
   const handleDeleteMedicine = (medicineId: string) => {
-    Alert.alert(
-      String("ยืนยันการลบ"),
-      String("คุณแน่ใจหรือไม่ว่าต้องการลบยานี้?"),
-      [
-        { text: String("ยกเลิก"), style: "cancel" },
-        {
-          text: String("ลบ"),
-          onPress: () => {
+    // ค้นหายาที่จะลบเพื่อเข้าถึงพาธของรูปภาพ
+    const medicineToDelete = additionalMedicines.find(
+      (med) => med.id === medicineId
+    );
+
+    if (!medicineToDelete) {
+      console.error("ไม่พบยาที่ต้องการลบ:", medicineId);
+      return;
+    }
+
+    Alert.alert("ยืนยันการลบ", "คุณแน่ใจหรือไม่ว่าต้องการลบยานี้?", [
+      { text: "ยกเลิก", style: "cancel" },
+      {
+        text: "ลบ",
+        onPress: async () => {
+          try {
+            // แสดงสถานะกำลังลบ
+            setDeletingMedicineId(medicineId);
+
+            // ลองลบรูปภาพจากเซิร์ฟเวอร์ก่อน
+            let imageDeleted = true;
+            if (typeof medicineToDelete.image === "string") {
+              imageDeleted = await deleteImageFromServer(
+                medicineToDelete.image
+              );
+            }
+
+            // ลบข้อมูลยาออกจาก state
             setAdditionalMedicines((prev) =>
               prev.filter((medicine) => medicine.id !== medicineId)
             );
+
+            // ลบออกจาก selected medicines
             setSelectedMedicines((prev) => {
               const updatedState = { ...prev };
-              delete updatedState[medicineId]; // Remove the deleted medicine from selected state
+              delete updatedState[medicineId];
               return updatedState;
             });
-            Alert.alert(String("ลบสำเร็จ"), String("ยาถูกลบเรียบร้อย"));
-          },
+
+            // อัพเดต AsyncStorage
+            AsyncStorage.getItem("additionalMedicines").then(
+              (storedMedicines) => {
+                if (storedMedicines) {
+                  const parsedMedicines = JSON.parse(storedMedicines);
+                  const updatedMedicines = parsedMedicines.filter(
+                    (med: Medicine) => med.id !== medicineId
+                  );
+
+                  if (updatedMedicines.length > 0) {
+                    AsyncStorage.setItem(
+                      "additionalMedicines",
+                      JSON.stringify(updatedMedicines)
+                    );
+                  } else {
+                    AsyncStorage.removeItem("additionalMedicines");
+                  }
+                }
+              }
+            );
+
+            // แสดงข้อความตามผลการลบ
+            if (imageDeleted) {
+              Alert.alert("ลบสำเร็จ", "ยาถูกลบเรียบร้อย");
+            } else {
+              Alert.alert(
+                "ลบสำเร็จบางส่วน",
+                "ยาถูกลบแล้ว แต่ไม่สามารถลบรูปภาพได้"
+              );
+            }
+          } catch (error) {
+            console.error("เกิดข้อผิดพลาดในกระบวนการลบ:", error);
+            Alert.alert(
+              "เกิดข้อผิดพลาด",
+              "ไม่สามารถลบยาได้ กรุณาลองใหม่อีกครั้ง"
+            );
+          } finally {
+            // ล้างสถานะกำลังลบ
+            setDeletingMedicineId(null);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   // Handle checkbox selection change
@@ -460,7 +647,10 @@ export default function MedicineCollectedScreen() {
         "selectedMedicines",
         JSON.stringify(allSelectedMedicines)
       );
-      console.log("Selected medicines.", JSON.stringify(allSelectedMedicines));
+      console.log(
+        "Selected medicines saved successfully:",
+        Object.keys(allSelectedMedicines).length
+      );
       router.push({
         pathname: "./summaryTracking",
       });
@@ -468,6 +658,16 @@ export default function MedicineCollectedScreen() {
       console.error("Error saving selected medicines:", error);
       Alert.alert("ข้อผิดพลาด", "ไม่สามารถบันทึกยาที่เลือกได้");
     }
+  };
+
+  // Render medicine image with proper handling for different source types
+  const renderMedicineImage = (medicine: Medicine) => {
+    return (
+      <Image
+        source={require("../../../assets/Tracking/Medicine.png")}
+        className="w-8 h-8 rounded-lg ml-2"
+      />
+    );
   };
 
   if (loading) {
@@ -523,10 +723,7 @@ export default function MedicineCollectedScreen() {
                                 : "#F8F8F8"
                             }
                           />
-                          <Image
-                            source={require("../../../assets/Tracking/Medicine.png")}
-                            className="w-8 h-8 ml-2"
-                          />
+                          {renderMedicineImage(medication)}
                           <Text className="text-description text-secondary font-regular ml-2">
                             {medication.name || "ไม่ระบุชื่อยา"}
                           </Text>
@@ -562,19 +759,22 @@ export default function MedicineCollectedScreen() {
                     onPress={() => handleViewDetails(medicine, false)}
                     className="flex-row items-center py-2"
                   >
-                    <Image
-                      source={require("../../../assets/Tracking/Medicine.png")}
-                      className="w-8 h-8 rounded-lg ml-2"
-                    />
+                    {renderMedicineImage(medicine)}
                     <View className="ml-2 flex-1">
                       <Text className="font-sans text-description font-semibold">
                         {String(medicine.name)}
                       </Text>
+                      {medicine.type && (
+                        <Text className="font-sans text-tag text-secondary">
+                          {String(medicine.type)}
+                        </Text>
+                      )}
                     </View>
                     <View className="flex-row items-center">
                       <TouchableOpacity
                         onPress={() => handleEditMedicine(medicine)}
                         className="mr-3"
+                        disabled={deletingMedicineId === medicine.id}
                       >
                         <Text className="font-sans text-description text-primary">
                           แก้ไข
@@ -582,12 +782,17 @@ export default function MedicineCollectedScreen() {
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => handleDeleteMedicine(medicine.id)}
+                        disabled={deletingMedicineId === medicine.id}
                       >
-                        <Image
-                          source={require("../../../assets/Tracking/trash.png")}
-                          className="w-6 h-6"
-                          style={{ tintColor: "red" }}
-                        />
+                        {deletingMedicineId === medicine.id ? (
+                          <ActivityIndicator size="small" color="red" />
+                        ) : (
+                          <Image
+                            source={require("../../../assets/Tracking/trash.png")}
+                            className="w-6 h-6"
+                            style={{ tintColor: "red" }}
+                          />
+                        )}
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
