@@ -558,7 +558,7 @@ export default function SummaryTrackingScreen() {
 
         {/* Success Modal */}
         <Modal visible={showSuccessModal} transparent animationType="fade">
-          <View className="flex-1 justify-center items-center bg-gray/80">
+          <View className="flex-1 justify-center items-center bg-background/80">
             <View className="bg-card rounded-2xl p-7 m-4 items-center">
               <Text className="text-title font-sans text-center mb-1 font-bold">
                 บันทึกข้อมูลสำเร็จ
