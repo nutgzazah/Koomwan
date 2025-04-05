@@ -105,10 +105,8 @@ export default function ResourceScreen() {
           );
   
           setBlogsData(blogsWithImageUrls);
-          console.log(blogsWithImageUrls)
         }
       } catch (error) {
-        console.error("Error fetching profile data:", error);
   
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
