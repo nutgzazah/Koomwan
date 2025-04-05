@@ -35,7 +35,29 @@ const formatThaiDate = (date: Date): string => {
 const formatTime = (date: Date): string => {
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${hours}:${minutes}`;
+  return `${hours}:${minutes} น.`;
+};
+
+// แปลงวันที่ไทยเป็น Date object
+const parseThaiDate = (thaiDateStr: string): Date | null => {
+  try {
+    const [day, month, thaiYear] = thaiDateStr.split("/").map(Number);
+    if (!day || !month || !thaiYear) return null;
+
+    const gregorianYear = thaiYear - 543;
+    return new Date(gregorianYear, month - 1, day);
+  } catch (error) {
+    console.error("Error parsing Thai date:", error);
+    return null;
+  }
+};
+
+// เปรียบเทียบวันที่กับวันปัจจุบัน (ไม่รวมเวลา)
+const isDateInPast = (dateToCheck: Date): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dateToCheck.setHours(0, 0, 0, 0);
+  return dateToCheck < today;
 };
 
 export default function TrackingScreen() {
@@ -68,6 +90,7 @@ export default function TrackingScreen() {
       systolic: "",
       diastolic: "",
     },
+    date: "",
   });
 
   // Fetch user's health info initially
@@ -141,6 +164,19 @@ export default function TrackingScreen() {
           },
           mood: "",
         });
+
+        // เคลียร์ข้อความข้อผิดพลาด
+        setErrorMessages({
+          weight: "",
+          height: "",
+          bloodSugar: "",
+          a1c: "",
+          bloodPressure: {
+            systolic: "",
+            diastolic: "",
+          },
+          date: "",
+        });
       };
       clearPreviousData();
 
@@ -152,9 +188,10 @@ export default function TrackingScreen() {
 
   // Validation for required fields
   const requiredFields = ["date", "time", "weight", "height"];
-  const isFormComplete = requiredFields.every(
-    (field) => formData[field as keyof typeof formData] !== ""
-  );
+  const isFormComplete =
+    requiredFields.every(
+      (field) => formData[field as keyof typeof formData] !== ""
+    ) && errorMessages.date === "";
 
   // Validation For Input
   const ranges: Record<string, [number, number]> = {
@@ -227,6 +264,18 @@ export default function TrackingScreen() {
     }
   };
 
+  // ตรวจสอบวันที่ (ไม่ให้บันทึกวันในอดีต)
+  const validateDate = (dateStr: string): string => {
+    const dateObj = parseThaiDate(dateStr);
+    if (!dateObj) return "วันที่ไม่ถูกต้อง";
+
+    if (isDateInPast(dateObj)) {
+      return "ไม่สามารถบันทึกข้อมูลย้อนหลังได้";
+    }
+
+    return "";
+  };
+
   // Validation Before Submit
   const handleSubmit = () => {
     const requiredFields = ["date", "time", "weight", "height"];
@@ -234,6 +283,14 @@ export default function TrackingScreen() {
       requiredFields.some((field) => !formData[field as keyof typeof formData])
     ) {
       Alert.alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+      return;
+    }
+
+    // ตรวจสอบวันที่อีกครั้งก่อนส่งข้อมูล
+    const dateError = validateDate(formData.date);
+    if (dateError) {
+      setErrorMessages((prev) => ({ ...prev, date: dateError }));
+      Alert.alert("ข้อผิดพลาด", dateError);
       return;
     }
 
@@ -257,6 +314,18 @@ export default function TrackingScreen() {
   ) => {
     setShowDatePicker(false);
     if (selectedDate) {
+      // ตรวจสอบว่าวันที่ที่เลือกไม่ใช่วันในอดีต
+      if (isDateInPast(selectedDate)) {
+        setErrorMessages((prev) => ({
+          ...prev,
+          date: "ไม่สามารถบันทึกข้อมูลย้อนหลังได้",
+        }));
+        Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลย้อนหลังได้");
+        return;
+      } else {
+        setErrorMessages((prev) => ({ ...prev, date: "" }));
+      }
+
       setFormData((prev) => ({
         ...prev,
         date: formatThaiDate(selectedDate),
@@ -301,6 +370,7 @@ export default function TrackingScreen() {
               placeholder="เลือกวันที่"
               editable={false}
               rightIcon={require("../../../assets/Tracking/calendar.png")}
+              errorMessage={errorMessages.date}
             />
           </TouchableOpacity>
 
@@ -444,6 +514,7 @@ export default function TrackingScreen() {
               mode="date"
               display="compact"
               onChange={handleDateChange}
+              minimumDate={new Date()} // ไม่อนุญาตให้เลือกวันในอดีต
             />
           </View>
         )}
