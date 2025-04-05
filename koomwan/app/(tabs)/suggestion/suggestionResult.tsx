@@ -12,6 +12,7 @@ import Card from '../../../global/components/Card';
 import BreakLine from '../../../global/components/BreakLine';
 import { ShortButton } from '../tracking/components/ShortButton';
 import AdviceCard from './components/AdviceCard';
+import BASE_URL from "../../../config"
 
 interface SuggestionResultData {
   health_score: number;
@@ -34,7 +35,7 @@ export default function SuggestionResult() {
     const fetchSuggestion = async () => {
       try {
         const response = await axios.post(
-          'http://192.168.182.141:8080/api/v1/ai/predict',
+          `${BASE_URL}/api/v1/ai/predict`,
           {
             userId: '66144c9e33fa4a7b12345698',
             gender: 'male',
@@ -46,6 +47,8 @@ export default function SuggestionResult() {
             diastolic_bp: 95,
           }
         );
+        console.log("flaskRes",response)
+        console.log("flaskRes Data",response.data)
         setResult(response.data);
       } catch (err) {
         console.error('Error fetching prediction:', err);
