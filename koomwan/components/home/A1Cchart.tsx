@@ -8,6 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useFocusEffect } from "expo-router";
 import BASE_URL from "../../config";
 import Loading from "../../global/components/Loading";
+import EmptyHomeCard from "./emptystate/EmptyHome";
 
 // Define the API response type for blood sugar records
 interface BloodSugarRecord {
@@ -75,6 +76,7 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
   });
   const [lastRecordDate, setLastRecordDate] = useState<string>("");
   const [lastBloodSugarValue, setLastBloodSugarValue] = useState<number>(0);
+  const [hasRecords, setHasRecords] = useState<boolean>(false);
 
   const screenWidth = Dimensions.get("window").width - 48; // Full width minus padding
 
@@ -167,6 +169,14 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
 
       // Filter records that have bloodsugar field and sort by date
       const allRecords = response.data.records;
+
+      // Check if there are any records at all
+      if (allRecords.length === 0) {
+        setHasRecords(false);
+        setLoading(false);
+        return;
+      }
+
       const bloodSugarRecords = allRecords
         .filter(
           (record: BloodSugarRecord) =>
@@ -181,6 +191,9 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
       const records = bloodSugarRecords.slice(0, 5);
 
       if (records.length > 0) {
+        // Has blood sugar records
+        setHasRecords(true);
+
         // Sort records by date (oldest first) for proper chart display
         const sortedRecords = [...records].sort(
           (a, b) =>
@@ -216,20 +229,9 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
         setLastRecordDate(formatThaiDate(latestRecord.recordtime));
         setLastBloodSugarValue(latestRecord.bloodsugar);
       } else {
-        // When no records found, reset data
+        // Has records but no blood sugar data
+        setHasRecords(true);
         setBloodSugarData([]);
-        setChartData({
-          labels: [""],
-          datasets: [
-            {
-              data: [0],
-              color: (opacity = 1) => `rgba(57, 114, 240, ${opacity})`,
-              strokeWidth: 2,
-            },
-          ],
-        });
-        setLastRecordDate("");
-        setLastBloodSugarValue(0);
       }
     } catch (err) {
       console.error("Error fetching blood sugar data:", err);
@@ -287,6 +289,18 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
     return "text-abnormal";
   };
 
+  // If no records exist, show the empty state component
+  if (!loading && !hasRecords) {
+    return (
+      <EmptyHomeCard
+        title="ยังไม่มีข้อมูลบันทึกสุขภาพ"
+        subtitle="กรุณาบันทึกข้อมูลสุขภาพเพื่อติดตามค่าน้ำตาลในเลือดของคุณ"
+        buttonText="บันทึกข้อมูลสุขภาพ"
+        /* icon={require("../../assets/Home/graph_notfound.png")} */
+      />
+    );
+  }
+
   return (
     <Card>
       <View className="w-full justify-center items-center">
@@ -304,11 +318,12 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
             </Text>
           </View>
         ) : bloodSugarData.length === 0 ? (
-          <View className="py-16">
-            <Text className="text-description text-secondary text-center">
-              ไม่พบข้อมูลระดับน้ำตาลในเลือด
-            </Text>
-          </View>
+          <EmptyHomeCard
+            title="ยังไม่มีข้อมูลน้ำตาลในเลือด"
+            subtitle="คุณมีข้อมูลบันทึกสุขภาพแล้ว แต่ยังไม่มีการบันทึกค่าน้ำตาลในเลือด"
+            buttonText="บันทึกข้อมูลสุขภาพ"
+            /* icon={require("../../assets/Home/graph_notfound.png")} */
+          />
         ) : (
           <>
             <Text className="text-headline font-regular text-secondary mb-2">

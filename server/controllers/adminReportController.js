@@ -1,5 +1,6 @@
 
 const helpRequestModel = require("../models/helpRequestModel");
+const Notification = require("../models/notificationModel");
 
 // Post new report
 const sentReport = async (req, res) => {
@@ -88,7 +89,7 @@ const getReportById = async (req, res) => {
 const editReport = async (req, res) => { 
     try {
         const id = req.params.id;
-        const { response } = req.body;
+        const { response } = req.body; 
 
         if (!id) {
             return res.status(400).json({
@@ -109,13 +110,24 @@ const editReport = async (req, res) => {
         if (response && response.trim() !== "") {
             report.response = response;
             report.status = "completed";
+
+            // สร้าง notification โดยใช้ข้อมูลจาก report
+            const notification = new Notification({
+                user: report.user, // ใช้ user จาก report
+                title: report.title || 'Report Updated', // ใช้ title จาก report หรือใช้ชื่อเริ่มต้น
+                detail: response, // ใช้ response เป็นรายละเอียดของ notification
+                notificationType: 'general', // ประเภทของการแจ้งเตือน
+            });
+
+            // บันทึก notification
+            await notification.save();
         }
 
         await report.save();
 
         return res.status(200).json({
             success: true,
-            message: `Report updated successfully` ,
+            message: `Report updated successfully`,
             data: report,
         });
     } catch (error) {
@@ -127,6 +139,7 @@ const editReport = async (req, res) => {
         });
     }
 };
+
 
 
 

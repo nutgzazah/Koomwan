@@ -7,6 +7,7 @@ import BASE_URL from "../../config";
 import { router, useFocusEffect } from "expo-router";
 import Loading from "../../global/components/Loading";
 import { calculateBMI, getBMICategory } from "../../util/bmi";
+import EmptyHomeCard from "./emptystate/EmptyHome";
 
 const BMIScale = () => {
   const indicators = [
@@ -133,6 +134,7 @@ export default function BMI() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
+  const [hasRecords, setHasRecords] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -167,10 +169,13 @@ export default function BMI() {
       // Get the most recent record
       const records = recordResponse.data.records;
       if (!records || records.length === 0) {
-        setError("ไม่พบข้อมูลบันทึกสุขภาพ");
+        setHasRecords(false);
         setLoading(false);
         return;
       }
+
+      // Has records
+      setHasRecords(true);
 
       // Sort records by date (newest first)
       const sortedRecords = [...records].sort(
@@ -298,6 +303,19 @@ export default function BMI() {
       <Card>
         <Loading />
       </Card>
+    );
+  }
+
+  if (!hasRecords) {
+    return (
+      <EmptyHomeCard
+        header="ดัชนีมวลกายของฉัน"
+        title="ยังไม่มีข้อมูลดัชนีมวลกาย"
+        subtitle="กรุณาบันทึกข้อมูลน้ำหนักและส่วนสูงเพื่อคำนวณค่าดัชนีมวลกาย (BMI)"
+        buttonText="บันทึกข้อมูลสุขภาพ"
+        navigateTo="/(tabs)/tracking"
+        icon={require("../../assets/Home/body.png")}
+      />
     );
   }
 

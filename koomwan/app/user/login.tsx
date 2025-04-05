@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Alert,
 } from "react-native";
 import React, { useContext, useState } from "react";
 import { useRouter } from "expo-router";
@@ -38,6 +39,30 @@ export default function UserLoginScreen() {
     return thaiMobileRegex.test(cleanPhone);
   };
 
+  // Check if user has health info
+  const checkHealthInfoExists = async (userId: string): Promise<boolean> => {
+    try {
+      const authData = await AsyncStorage.getItem("@auth");
+      const auth = authData ? JSON.parse(authData) : null;
+      const token = auth.token;
+      const response = await axios.get(
+        `${BASE_URL}/api/v1/user/profile/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Check if healthinfo exists and is not null
+      return response.data?.user?.healthinfo != null;
+    } catch (error) {
+      console.error("Error checking health info:", error);
+      // If there's an error, we'll assume user needs to go through setup
+      return false;
+    }
+  };
+
   const handleLogin = async () => {
     console.log("Login function called");
     try {
@@ -69,23 +94,28 @@ export default function UserLoginScreen() {
         await AsyncStorage.setItem("userId", response.data.user._id);
         await AsyncStorage.setItem("token", response.data.token);
         console.log("Login response data:", response.data);
-        // router.replace("/user/beginner");
-        router.replace("(tabs)"); //ใช้ dev ก่อนค่อยเอาออก
+
+        // Check if user has health info
+        const hasHealthInfo = await checkHealthInfoExists(
+          response.data.user._id
+        );
+
+        if (hasHealthInfo) {
+          // User has health info, route to main tabs
+
+          router.replace("/(tabs)");
+        } else {
+          // User needs to complete beginner setup
+          router.replace("/user/beginner");
+        }
       }
     } catch (error) {
       // ตรวจสอบว่าคือ AxiosError หรือไม่
       if (axios.isAxiosError(error)) {
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: error.response?.data.message || "Unknown error occurred",
-        });
+        Alert.alert("เกิดข้อผิดพลาด", "กรุณาลองใหม่อีกครั้ง");
+        console.log("API Error Response:", error.response?.data.message);
       } else {
-        Toast.show({
-          type: "error",
-          text1: "Unexpected Error",
-          text2: "An unexpected error occurred",
-        });
+        Alert.alert("เกิดข้อผิดพลาด", "กรุณาลองใหม่อีกครั้ง");
       }
       console.error("Error to login:", error);
     }

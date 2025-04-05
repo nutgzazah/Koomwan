@@ -14,24 +14,25 @@ import DateTimePicker, {
 import Card from "../../../global/components/Card";
 import BreakLine from "../../../global/components/BreakLine";
 import BackButton from "../../../global/components/BackButton";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 const MedicineNotification = () => {
   const router = useRouter();
+  const { healthInfoId } = useLocalSearchParams();
   const [selectedDay, setSelectedDay] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<Date>(new Date());
   const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
   const [showDayPicker, setShowDayPicker] = useState<boolean>(false);
 
   const dayMap: Record<string, string> = {
-    วันจันทร์: "Mon",
-    วันอังคาร: "Tue",
-    วันพุธ: "Wed",
-    วันพฤหัสบดี: "Thu",
-    วันศุกร์: "Fri",
-    วันเสาร์: "Sat",
-    วันอาทิตย์: "Sun",
-    ทุกวัน: "Everyday",
+    วันจันทร์: "monday",
+    วันอังคาร: "tuesday",
+    วันพุธ: "wednesday",
+    วันพฤหัสบดี: "thursday",
+    วันศุกร์: "friday",
+    วันเสาร์: "satuarday",
+    วันอาทิตย์: "sunday",
+    ทุกวัน: "everyday",
   };
 
   const days = Object.keys(dayMap); // ["วันจันทร์", "วันอังคาร", ..., "ทุกวัน"]
@@ -65,16 +66,24 @@ const MedicineNotification = () => {
       return;
     }
 
-    const formattedDay = dayMap[selectedDay] || "Everyday"; // แปลงวันภาษาไทย -> อังกฤษ
+    const formattedDay = dayMap[selectedDay] || "everyday"; // แปลงวันภาษาไทย -> อังกฤษ
     const formattedTime = formatTime(selectedTime); // "08:00"
     const reminderFormat = `${formattedDay}/${formattedTime}`; // "Mon/08:00"
 
     console.log("Reminder:", reminderFormat);
 
+    // เตรียม params ที่จะส่งกลับไป
+    const params: Record<string, string> = { reminderFormat };
+
+    // ส่ง healthInfoId กลับไปด้วยถ้ามี
+    if (healthInfoId) {
+      params.healthInfoId = healthInfoId as string;
+    }
+
     // ส่งค่ากลับไปยังหน้า MedicationForm
     router.dismissTo({
       pathname: "/profile/addMed",
-      params: { reminderFormat },
+      params,
     });
   };
 

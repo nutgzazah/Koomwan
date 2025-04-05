@@ -34,7 +34,7 @@ type ImagePickerResult = {
 };
 
 export default function MedicationForm() {
-  const { reminderFormat } = useLocalSearchParams();
+  const { reminderFormat, healthInfoId } = useLocalSearchParams();
   const [pillName, setPillName] = useState("");
   const [pillType, setPillType] = useState("");
   const [pillDescription, setPillDescription] = useState("");
@@ -52,6 +52,7 @@ export default function MedicationForm() {
   const pathname = usePathname();
   console.log("Current Path:" + pathname);
   console.log("Reminder Format:", reminderFormat);
+  console.log("HealthInfoId:", healthInfoId);
 
   useEffect(() => {
     if (reminderFormat && !reminderTimes.includes(reminderFormat as string)) {
@@ -260,21 +261,27 @@ export default function MedicationForm() {
       const token = auth.token;
       const userId = auth.user._id;
 
-      // ดึง healthInfoId ของผู้ใช้
-      const userResponse = await axios.get(
-        `${BASE_URL}/api/v1/user/profile/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      // ใช้ healthInfoId จาก URL params ถ้ามี หรือไม่ก็ดึงจาก API
+      let finalHealthInfoId = healthInfoId as string;
+
+      // ถ้าไม่มี healthInfoId จาก params ให้ดึงจาก API
+      if (!finalHealthInfoId) {
+        // ดึง healthInfoId ของผู้ใช้
+        const userResponse = await axios.get(
+          `${BASE_URL}/api/v1/user/profile/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!userResponse.data.success || !userResponse.data.user.healthinfo) {
+          throw new Error("ไม่พบข้อมูลสุขภาพของผู้ใช้");
         }
-      );
 
-      if (!userResponse.data.success || !userResponse.data.user.healthinfo) {
-        throw new Error("ไม่พบข้อมูลสุขภาพของผู้ใช้");
+        finalHealthInfoId = userResponse.data.user.healthinfo._id;
       }
-
-      const healthInfoId = userResponse.data.user.healthinfo._id;
 
       // Check if there's a local image to upload
       let finalImagePath = pillImage;
@@ -301,7 +308,7 @@ export default function MedicationForm() {
 
       // ส่งข้อมูลไปยัง API
       const response = await axios.post(
-        `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}/add-pill`,
+        `${BASE_URL}/api/v1/user/healthinfo/${finalHealthInfoId}/add-pill`,
         medicationData,
         {
           headers: {
@@ -316,7 +323,14 @@ export default function MedicationForm() {
         Alert.alert("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", [
           {
             text: "ตกลง",
-            onPress: () => router.back(),
+            onPress: () => {
+              // ถ้ามาจากหน้า beginner setup (มี healthInfoId จาก params) ให้กลับไปที่หน้านั้น
+              if (healthInfoId) {
+                router.back();
+              } else {
+                router.back();
+              }
+            },
           },
         ]);
       } else {
@@ -416,7 +430,17 @@ export default function MedicationForm() {
                     แจ้งเตือนการใช้ยา (Optional)
                   </Text>
                   <TouchableOpacity
-                    onPress={() => router.push("/user/medNoti")}
+                    onPress={() => {
+                      // ส่ง healthInfoId ไปที่หน้า medNoti หากมี
+                      if (healthInfoId) {
+                        router.push({
+                          pathname: "/user/medNoti",
+                          params: { healthInfoId },
+                        });
+                      } else {
+                        router.push("/user/medNoti");
+                      }
+                    }}
                   >
                     <Image
                       source={require("../../../assets/BeginnerSetup/add.png")}
@@ -436,7 +460,16 @@ export default function MedicationForm() {
                           className="w-5 h-5 mr-2"
                         />
                         <Text className="text-description text-secondary font-regular">
-                          {time.replace("/", " เวลา ")}
+                          {time
+                            .replace("/", " เวลา ")
+                            .replace("monday", "วันจันทร์")
+                            .replace("tuesday", "วันอังคาร")
+                            .replace("wednesday", "วันพุธ")
+                            .replace("thursday", "วันพฤหัสบดี")
+                            .replace("friday", "วันศุกร์")
+                            .replace("saturday", "วันเสาร์")
+                            .replace("sunday", "วันอาทิตย์")
+                            .replace("everyday", "ทุกวัน")}
                         </Text>
                       </View>
                       <View>
@@ -463,7 +496,17 @@ export default function MedicationForm() {
                 </Text>
                 <TouchableOpacity
                   className="items-center ml-2"
-                  onPress={() => router.push("/user/medNoti")}
+                  onPress={() => {
+                    // ส่ง healthInfoId ไปที่หน้า medNoti หากมี
+                    if (healthInfoId) {
+                      router.push({
+                        pathname: "/user/medNoti",
+                        params: { healthInfoId },
+                      });
+                    } else {
+                      router.push("/user/medNoti");
+                    }
+                  }}
                 >
                   <Image
                     source={require("../../../assets/BeginnerSetup/add.png")}

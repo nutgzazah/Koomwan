@@ -1,5 +1,4 @@
-// screens/BeginnerSetupScreen.tsx
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   SafeAreaView,
@@ -9,7 +8,10 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Text,
+  Animated,
+  Easing,
 } from "react-native";
+import { router } from "expo-router";
 import Card from "../../global/components/Card";
 import BreakLine from "../../global/components/BreakLine";
 import SelectionModal from "../../components/beginner/SelectionModal";
@@ -22,6 +24,7 @@ import { StepOption } from "../../components/beginner/StepOption";
 import { BeginnerBackButton } from "../../components/beginner/BackButton";
 import { NextButton } from "../../components/beginner/NextButton";
 import { useBeginnerSetup } from "../../hooks/useBeginnerSetup";
+import Loading from "../../global/components/Loading";
 import {
   steps,
   getStepMessage,
@@ -38,6 +41,9 @@ export default function BeginnerSetupScreen() {
     modalType,
     height,
     weight,
+    isLoading,
+    healthInfoId,
+    healthInfoCreated,
     setHeight,
     setWeight,
     handleNext,
@@ -51,6 +57,47 @@ export default function BeginnerSetupScreen() {
     isStepValid,
   } = useBeginnerSetup();
 
+  // Animation
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const previousStep = useRef(currentStep);
+
+  // เพิ่ม Animation ตอน switch case
+  useEffect(() => {
+    // ข้ามการ animate ถ้า currentStep ไม่เปลี่ยน
+    if (previousStep.current !== currentStep) {
+      // ทิศทางการ animate
+      // 1 = ขวาไปซ้าย (next)
+      // -1 = ซ้ายไปขวา (back)
+      // 0 = ไม่มีการ animate (first step)
+      const direction = previousStep.current < currentStep ? 1 : -1;
+
+      // ลบ animation ก่อนหน้า
+      slideAnim.setValue(100 * direction);
+      fadeAnim.setValue(0);
+
+      // แสดง animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+      ]).start();
+    }
+
+    // อัพเดท previousStep
+    // เพื่อให้ animation ทำงานถูกต้องในครั้งถัดไป
+    previousStep.current = currentStep;
+  }, [currentStep, fadeAnim, slideAnim]);
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 3:
@@ -58,7 +105,8 @@ export default function BeginnerSetupScreen() {
       case 4:
         return <WeightInput weight={weight} setWeight={setWeight} />;
       case 5:
-        return <MedicineInput />;
+        // ส่ง healthInfoId ไปให้ MedicineInput
+        return <MedicineInput healthInfoId={healthInfoId} />;
       case 2:
         return (
           <BirthdayInput
@@ -81,6 +129,14 @@ export default function BeginnerSetupScreen() {
     }
   };
 
+  // กำหนดเงื่อนไขการแสดงปุ่ม Back
+  // ไม่แสดงปุ่ม Back เมื่อได้สร้าง healthInfo แล้ว (อยู่ที่หน้า MedicineInput)
+  const shouldShowBackButton = currentStep > 0 && !healthInfoCreated;
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -89,26 +145,36 @@ export default function BeginnerSetupScreen() {
       <SafeAreaView className="flex-1 bg-background">
         <StatusBar barStyle="dark-content" backgroundColor="#F8F8F8" />
 
-        {currentStep > 0 && <BeginnerBackButton onPress={handleBack} />}
+        {/* แสดงปุ่ม Back ตามเงื่อนไข */}
+        {shouldShowBackButton && <BeginnerBackButton onPress={handleBack} />}
 
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View className="flex-1 justify-center px-4">
-            <Card>
-              <Text className="text-title text-secondary font-bold mb-2">
-                {getStepTitle(currentStep)}
-              </Text>
-              <BreakLine />
+            <Animated.View
+              style={{
+                opacity: fadeAnim,
+                transform: [{ translateX: slideAnim }],
+                flex: 1,
+                justifyContent: "center",
+              }}
+            >
+              <Card>
+                <Text className="text-title text-secondary font-bold mb-2">
+                  {getStepTitle(currentStep)}
+                </Text>
+                <BreakLine />
 
-              {renderStepContent()}
+                {renderStepContent()}
 
-              <BreakLine />
+                <BreakLine />
 
-              <NavigationDots
-                currentStep={currentStep}
-                totalSteps={6}
-                message={getStepMessage(currentStep)}
-              />
-            </Card>
+                <NavigationDots
+                  currentStep={currentStep}
+                  totalSteps={6}
+                  message={getStepMessage(currentStep)}
+                />
+              </Card>
+            </Animated.View>
           </View>
         </TouchableWithoutFeedback>
 
