@@ -50,7 +50,7 @@ export default function HomeScreen() {
         <Overview />
         <BloodSugarStatus />
         <EmoteDisplay />
-        <MedicationStatus hasTakenMeds={true} />
+        <MedicationStatus />
         <HealthDashboard />
       </ScrollView>
     </SafeAreaView>
