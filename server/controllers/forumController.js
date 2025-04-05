@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Forum = require('../models/forumModel'); // นำเข้า Forum Model
 const User = require('../models/userModel'); // นำเข้า User Model
 const Doctor = require('../models/doctorModel'); // นำเข้า Doctor Model
+const Notification = require('../models/notificationModel'); 
 const { uploadToR2v2, deleteFromR2 } = require('../Services/uploadService');
 
 // Create a new forum post
@@ -284,6 +285,18 @@ exports.addComment = async (req, res) => {
 
         post.comments.push(newComment);
         await post.save();
+
+        // ✅ ถ้าคนคอมเมนต์เป็นหมอ → ส่ง noti ให้เจ้าของโพสต์
+        if (isDoctor) {
+            await Notification.create({
+                user: post.postedBy,
+                title: "หมอได้ตอบคำถามของคุณแล้ว",
+                detail: answer.length > 100 ? answer.slice(0, 100) + '...' : answer,
+                notificationType: "forum",
+                forum: post._id, // ✅ เพิ่มตรงนี้เพื่อเชื่อมกับ Forum post
+                isRead: false
+            });
+        }
 
         res.status(201).json({
             message: 'Comment added successfully',

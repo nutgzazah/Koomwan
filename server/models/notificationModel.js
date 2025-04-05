@@ -23,6 +23,11 @@ const notificationSchema = new mongoose.Schema({
         // enum: ['forum', 'general', 'medication', 'system'],
         required: true
     },
+    forum: { 
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Forum',
+        required: false
+    },
     helpRequest: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'HelpRequest',  // เชื่อมโยงไปยัง HelpRequest model
