@@ -53,17 +53,16 @@ const Overview = () => {
   };
 
   // Process the records to get the last 7 days of data
+  // ปรับปรุงฟังก์ชัน processRecords ให้ตรวจสอบทุก record ในวันนั้น
   const processRecords = (records: any[]) => {
     const days = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
-    // ใช้เวลาไทย (GMT+7) แทนเวลาเครื่อง
     const today = getCurrentThaiDate();
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-    // Create an array of the last 7 days (including today)
+    // สร้างข้อมูลสำหรับ 7 วันล่าสุด
     const weekData: WeeklyDataItem[] = [];
     for (let i = 6; i >= 0; i--) {
       const currentDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-      const dayIndex = currentDate.getDay(); // ใช้วันจาก currentDate โดยตรง
+      const dayIndex = currentDate.getDay();
 
       weekData.push({
         day: days[dayIndex],
@@ -75,34 +74,61 @@ const Overview = () => {
       });
     }
 
-    // Map the records to the days
+    // การจัดการข้อมูลจาก records
     if (records && records.length > 0) {
       setHasRecords(true);
+
+      // จัดระเบียบข้อมูลตามวัน - รวมข้อมูลทั้งหมดของแต่ละวัน
+      const recordsByDay: { [key: string]: any[] } = {};
+
+      // จัดกลุ่มข้อมูลตามวัน
       records.forEach((record) => {
-        // ปรับเวลาของข้อมูลให้เป็น GMT+7 เช่นกัน
-        const recordTime = new Date(record.recordtime);
-        const recordDateThai = new Date(recordTime);
+        const recordDate = new Date(record.recordtime).toDateString();
 
-        // Only consider records from the last 7 days
-        weekData.forEach((day) => {
-          // เปรียบเทียบเฉพาะวันที่ เดือน ปี (ไม่รวมเวลา)
-          const recordDate = recordDateThai.toDateString();
-          const dayDate = day.date.toDateString();
+        if (!recordsByDay[recordDate]) {
+          recordsByDay[recordDate] = [];
+        }
 
-          if (recordDate === dayDate) {
-            day.bmi = calculateBMI(record.weight, record.height).toFixed(2);
-            // Handle the mood from the API - ensure it's a valid Mood type if possible
-            day.mood = record.moodstatus || "neutral";
-            // Check if any pills were taken that day
-            day.hasPill = record.additionpill && record.additionpill.length > 0;
-          }
-        });
+        recordsByDay[recordDate].push(record);
+      });
+
+      // อัปเดตข้อมูลในแต่ละวัน
+      weekData.forEach((day) => {
+        const dayDateString = day.date.toDateString();
+        const dayRecords = recordsByDay[dayDateString] || [];
+
+        if (dayRecords.length > 0) {
+          // ค้นหา record ที่เหมาะสมที่สุดสำหรับข้อมูล BMI และ mood (เลือกอันล่าสุด)
+          const latestRecord = dayRecords.sort(
+            (a, b) =>
+              new Date(b.recordtime).getTime() -
+              new Date(a.recordtime).getTime()
+          )[0];
+
+          // อัปเดต BMI และ mood จาก record ล่าสุด
+          day.bmi = calculateBMI(
+            latestRecord.weight,
+            latestRecord.height
+          ).toFixed(2);
+          day.mood = latestRecord.moodstatus || "neutral";
+
+          // ตรวจสอบว่ามียาเพิ่มเติมในบันทึกใดๆ ของวันนั้น
+          const hasAnyPills = dayRecords.some((record) => {
+            return (
+              Array.isArray(record.additionpill) &&
+              record.additionpill.length > 0
+            );
+          });
+
+          // ถ้ามียาในบันทึกใดๆ ให้แสดงไอคอนยา
+          day.hasPill = hasAnyPills;
+        }
       });
     } else {
       setHasRecords(false);
     }
 
-    // Reverse to display Sunday first
+    // กลับลำดับให้วันอาทิตย์อยู่ด้านซ้าย
     return weekData.reverse();
   };
 
