@@ -5,6 +5,7 @@ import {
   View,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
@@ -23,7 +24,9 @@ interface SuggestionResultData {
   healthAdvice: {
     food: { title: string; description: string }[];
     exercise: { title: string; description: string }[];
-    blog: { title: string; description: string }[];
+    blog: {
+      category: string;
+}[];
   };
 }
 
@@ -39,12 +42,12 @@ export default function SuggestionResult() {
           {
             userId: '66144c9e33fa4a7b12345698',
             gender: 'male',
-            age: 55,
+            age: 21,
             bmi: 31,
-            blood_glucose_level: 195,
-            HbA1c_level: 7.2,
-            systolic_bp: 145,
-            diastolic_bp: 95,
+            blood_glucose_level: 91,
+            HbA1c_level: 5.2,
+            systolic_bp: 100,
+            diastolic_bp: 70,
           }
         );
         console.log("flaskRes",response)
@@ -52,6 +55,7 @@ export default function SuggestionResult() {
         setResult(response.data);
       } catch (err) {
         console.error('Error fetching prediction:', err);
+
       }
     };
     fetchSuggestion();
@@ -60,7 +64,8 @@ export default function SuggestionResult() {
   if (!result) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center">
-        <Text>กำลังประเมินผลสุขภาพ...</Text>
+        <ActivityIndicator size="large" color="#3972F0" />
+        <Text className="font-sans text-description mt-4 text-secondary">กำลังประเมินผลสุขภาพ...</Text>
       </SafeAreaView>
     );
   }
@@ -165,8 +170,8 @@ export default function SuggestionResult() {
           {result.healthAdvice.blog.map((item, index) => (
             <AdviceCard
               key={index}
-              title={item.title}
-              description={item.description}
+              title={item.category}
+              description={item.category}
               image={require('../../../assets/Suggestion/people-yoga.png')}
             />
           ))}

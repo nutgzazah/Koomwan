@@ -22,10 +22,6 @@ scaler = joblib.load(os.path.join(base_dir, "scaler.pkl"))
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def calculate_health_score(user):
-    user.setdefault('systolic_bp', 120)
-    user.setdefault('diastolic_bp', 80)
-    user.setdefault('bmi', 22)
-
     sbp = user['systolic_bp']
     dbp = user['diastolic_bp']
     bmi = user['bmi']
@@ -35,13 +31,15 @@ def calculate_health_score(user):
     user['hypertension'] = 1 if sbp >= 140 or dbp >= 90 else 0
     user['heart_disease'] = 1 if glucose >= 180 or bmi >= 30 else 0
     gender = 0 if user['gender'].lower() == 'male' else 1
-
-    X = np.array([[gender, user['age'], bmi, glucose, hba1c, sbp, dbp, user['hypertension'], user['heart_disease']]])
+    X = np.array([[gender, user['age'], user['hypertension'],user['heart_disease'],bmi,hba1c,  glucose, sbp, dbp]])
     X_scaled = scaler.transform(X)
 
     #ทำนายแบบมีความน่าจะเป็น
     prediction = model.predict(X_scaled)[0]
     diabetes_proba = model.predict_proba(X_scaled)[0][1]  # ความเสี่ยงเบาหวาน (class 1)
+    print("user:", user)
+    print("Prediction:", prediction)
+    print("Diabetes Probability:", diabetes_proba)
 
     #แปลงความเสี่ยงเป็น %
     diabetes_percent = round(diabetes_proba * 100)
@@ -88,7 +86,7 @@ def generate_advice(user, score, risk, diabetes_percent):
     issue_summary = ", ".join(issues) if issues else "ไม่มีความเสี่ยงที่ชัดเจน"
 
     prompt = f"""
-    ผู้ใช้มีข้อมูลสุขภาพดังนี้:
+    คุณเป็นนักโภชนาการผู้เชี่ยวชาญ กำลังวิเคราะห์สุขภาพของผู้ใช้จากข้อมูลต่อไปนี้:
     - เพศ: {user['gender']}
     - อายุ: {user['age']}
     - BMI: {user['bmi']}
@@ -101,16 +99,18 @@ def generate_advice(user, score, risk, diabetes_percent):
 
     กรุณาตอบกลับเป็น **JSON อย่างเดียวเท่านั้น** ห้ามใส่เครื่องหมาย ``` หรือคำบรรยายอื่นนอกโครงสร้างดังนี้:
     {{
-      "summary": "สรุปสุขภาพแบบกระชับโดยไม่ทวนข้อมูล เช่น ระดับน้ำตาล ความดัน หรือ BMI ถ้าอยู่ในเกณฑ์ดีให้ชม ถ้าเกินให้เตือน และควรแนะนำโดยรวม เช่น 'สุขภาพโดยรวมดี แต่ควรเฝ้าระวังน้ำตาลในเลือด'",
+      "summary": "สรุปสุขภาพโดยรวมอย่างกระชับแต่มีความลึกมากขึ้น ไม่ต้องทวนตัวเลข แต่ให้ระบุภาพรวมสุขภาพว่าอยู่ในเกณฑ์ดีหรือควรระวัง พร้อมคำแนะนำภาพรวม เช่น 'สุขภาพโดยรวมถือว่าอยู่ในเกณฑ์ปานกลาง มีบางส่วนที่ควรเฝ้าระวัง โดยเฉพาะระดับน้ำตาลและความดัน ควรใส่ใจการดูแลอาหารและการออกกำลังกายให้สม่ำเสมอ'",
       "healthAdvice": {{ 
         "food": [{{ "title": "...", "description": "..." }}], 
         "exercise": [{{ "title": "...", "description": "..." }}],
-        "blog": [{{ "title": "...", "description": "..." }}]
-      }},
-      "motivation": "ข้อความสร้างแรงบันดาลใจให้เหมาะกับแต่ละบุคคลสั้นกระชับ"
+        "blog": [{{ "category": "..." }}]
+    }},
+    "motivation": "ข้อความสร้างแรงบันดาลใจให้เหมาะกับแต่ละบุคคลสั้นกระชับ"
     }}
-    healthAdvice คำอธิบายต้องกระชับ ไม่เกิน 2-3 บรรทัด ห้ามเกิน 3 รายการต่อหมวด ห้ามขาด 3 เท่านั้น  ห้ามซ้ำ ห้ามมี key อื่น
-    """
+        healthAdvice คำอธิบายต้องกระชับ ไม่เกิน 2-3 บรรทัด ห้ามเกิน 3 รายการต่อหมวด ห้ามขาด 3 เท่านั้น ห้ามซ้ำ ห้ามมี key อื่น
+        blog ต้องเลือกจาก category ต่อไปนี้เท่านั้น และเลือกมาให้เหมาะสมที่สุด 3 ประเภท: 
+        1.ความรู้ 2.โภชนาการ 3.โรค 4.ออกกำลังกาย 5.แรงบันดาลใจ 6.ข่าวสาร
+        """
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -119,7 +119,7 @@ def generate_advice(user, score, risk, diabetes_percent):
             {"role": "user", "content": prompt}
         ],
         temperature=0.7,
-        max_tokens=550
+        max_tokens=1000
     )
     
 

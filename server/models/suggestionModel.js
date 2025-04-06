@@ -31,7 +31,7 @@ const suggestionSchema = new mongoose.Schema({
     exercise: [{ title: String, description: String }],
     
     //Blog
-    blog: [{ title: String, description: String }]
+    blog: [{ category: String }]
 
   },
   motivation: {
