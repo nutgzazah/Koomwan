@@ -113,12 +113,6 @@ export default function TabsLayout() {
     fetchProfileImage();
   }, [fetchProfileImage]);
 
-  // Fetch on focus
-  useFocusEffect(
-    useCallback(() => {
-      fetchProfileImage();
-    }, [fetchProfileImage])
-  );
 
   return (
     <Tabs
