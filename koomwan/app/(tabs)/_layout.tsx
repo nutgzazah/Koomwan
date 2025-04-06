@@ -1,13 +1,15 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
-import React from "react";
-import { useRouter, Tabs } from "expo-router";
+import { View, Text, TouchableOpacity, Image, ImageSourcePropType } from "react-native";
+import React, { useEffect, useState, useContext, useCallback } from "react";
+import { useRouter, Tabs, useFocusEffect } from "expo-router";
 import { NavTabIcon, NavBigIcon } from "../../global/components/NavBarBottom";
+import { AuthContext } from "../../context/authContext";
+import BASE_URL from "../../config"
+import axios from "axios";
 
 export default function TabsLayout() {
   const router = useRouter();
 
   // โค๊ดส่วนนี้ Import รูปภาพจาก Assets สำหรับ Navbar
-  const profileIcon = require("../../assets/Navbar/mock-profile.png");
   const logoIcon = require("../../assets/Navbar/Logo.png");
   const notificationsIcon = require("../../assets/Navbar/notification.png");
   const homeIcon = require("../../assets/Navbar/home.png");
@@ -20,26 +22,143 @@ export default function TabsLayout() {
   const forumIcon = require("../../assets/Navbar/messages.png");
   const forumBoldIcon = require("../../assets/Navbar/messages-bold.png");
 
+  // โค๊ดสำหรับ Icon ของ Profile
+  const defaultUserAvatar01 = require("../../assets/Avatars/koomwanAvatar01.png");
+  const defaultUserAvatar02 = require("../../assets/Avatars/koomwanAvatar02.png");
+  const defaultUserAvatar03 = require("../../assets/Avatars/koomwanAvatar03.png");
+  const defaultUserAvatar04 = require("../../assets/Avatars/koomwanAvatar04.png");
+  const defaultDoctorAvatar01 = require("../../assets/Avatars/koomwanDoctorAvatar01.png");
+  const defaultDoctorAvatar02 = require("../../assets/Avatars/koomwanDoctorAvatar02.png");
+
   // Route ที่ไม่ต้องการให้แสดงอยู่ในแท็บอย่างเช่น notification, profile, setting
   // ตอนนี้ใส่คอมเมนต์ไปเพราะยังไม่ได้ทำ route, ถอดคอมเมนต์ข้างล่างออกได้ตอนทำ route จริง
   const hiddenRoutes = ["notification"];
+  const [state] = useContext(AuthContext)
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>('user');
+
+  const getImageUrl = async (path: string): Promise<string | null> => {
+    try {
+      const res = await axios.get<{ url: string }>(
+        `${BASE_URL}/api/v1/storage/getFileUrlFromPath`,
+        {
+          params: { path },
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }
+      );
+      return res.data.url;
+    } catch (error) {
+      console.error(`Error fetching image for path ${path}:`, error);
+      return null;
+    }
+  };
+
+  const getProfileImageUrl = async (fileName: string, folder: string): Promise<string | null> => {
+    try {
+      const res = await axios.get<{ url: string }>(
+        `${BASE_URL}/api/v1/storage/getFileUrl`,
+        {
+          params: { fileName, folder },
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }
+      );
+      return res.data.url;
+    } catch (error) {
+      console.error(`Error fetching image for path ${folder}/${fileName}:`, error);
+      return null;
+    }
+  };
+
+  const getDefaultAvatar = (imageName: string) => {
+    if (imageName.startsWith("koomwanAvatar")) {
+      switch (imageName) {
+        case "koomwanAvatar01.png": return defaultUserAvatar01;
+        case "koomwanAvatar02.png": return defaultUserAvatar02;
+        case "koomwanAvatar03.png": return defaultUserAvatar03;
+        case "koomwanAvatar04.png": return defaultUserAvatar04;
+        default: return defaultUserAvatar01;
+      }
+    } else if (imageName.startsWith("koomwanDoctorAvatar")) {
+      switch (imageName) {
+        case "koomwanDoctorAvatar01.png": return defaultDoctorAvatar01;
+        case "koomwanDoctorAvatar02.png": return defaultDoctorAvatar02;
+        default: return defaultDoctorAvatar01;
+      }
+    }
+    return null;
+  };
+
+  const fetchProfileImage = useCallback(async () => {
+    if (!state?.user?.image) return;
+
+    try {
+      const image = state.user.image;
+      const userRole = state.user.role;
+      setRole(userRole);
+
+      // Handle default avatars
+      const defaultAvatar = getDefaultAvatar(image);
+      if (defaultAvatar) {
+        setImageUrl(defaultAvatar);
+        return;
+      }
+
+      // Handle custom images
+      if (userRole === "user") {
+        const url = await getProfileImageUrl(image, "user");
+        if (url) setImageUrl(url);
+      } else if (userRole === "doctor") {
+        const url = await getImageUrl(image);
+        if (url?.startsWith("https")) setImageUrl(url);
+      }
+    } catch (error) {
+      console.error("Error fetching profile image:", error);
+    } finally {
+    }
+  }, [state?.user?.image, state?.user?.role]);
+
+  // Initial fetch on mount
+  useEffect(() => {
+    fetchProfileImage();
+  }, [fetchProfileImage]);
+
+  // Fetch on focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfileImage();
+    }, [fetchProfileImage])
+  );
 
   return (
     <Tabs
       screenOptions={{
         headerShown: true,
         headerLeft: () => (
-          // headerLeft : ส่วน Icon โปรไฟล์
-          // โปรไฟล์ แก้ไข Path รูปโปรไฟล์ ตอนทำจริง
-          // บทบาท (ทั่วไป) แก้ไขตอนทำจริง
           <TouchableOpacity
             onPress={() => router.push("profile")}
             className="ml-4"
           >
             <View className="flex-row items-baseline">
-              <Image className="w-12 h-12" source={profileIcon} />
+              <Image
+                className="w-12 h-12 rounded-full border border-primary"
+                source={{
+                  uri: imageUrl,
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                  }
+                }}
+              />
               <View className="bg-primary right-6 px-3 rounded-3xl">
-                <Text className="text-card font-sans font-medium">ทั่วไป</Text>
+                <Text className="text-card font-sans font-medium">
+                  {role === 'user' ? "ทั่วไป" : "หมอ"}
+                </Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -104,7 +223,7 @@ export default function TabsLayout() {
         name="tracking"
         options={{
           title: "tracking",
-          tabBarIcon: ({}) => <NavBigIcon icon={trackingIcon} />,
+          tabBarIcon: ({ }) => <NavBigIcon icon={trackingIcon} />,
         }}
       />
       <Tabs.Screen
