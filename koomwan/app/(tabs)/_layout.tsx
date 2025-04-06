@@ -52,21 +52,21 @@ export default function TabsLayout() {
       return null;
     }
   };
-  
+
   const getImageUrl = (path: string): Promise<string | null> => {
     return fetchImageUrl('/api/v1/storage/getFileUrlFromPath', { path });
   };
-  
+
   const getProfileImageUrl = (fileName: string, folder: string): Promise<string | null> => {
     return fetchImageUrl('/api/v1/storage/getFileUrl', { fileName, folder });
   };
 
   const fetchProfileImage = useCallback(async () => {
     if (!state?.user?.image) return;
-  
+
     const { image, role: userRole } = state.user;
     setRole(userRole);
-  
+
     try {
       // Handle default avatars
       const defaultAvatar = getDefaultAvatar(image);
@@ -74,13 +74,13 @@ export default function TabsLayout() {
         setImageUrl(defaultAvatar);
         return;
       }
-  
+
       // Handle custom images
       const url =
         userRole === "user"
           ? await getProfileImageUrl(image, "user")
           : await getImageUrl(image);
-  
+
       if (url?.startsWith("https")) {
         setImageUrl(url);
       }
@@ -91,19 +91,19 @@ export default function TabsLayout() {
 
   const getDefaultAvatar = (imageName: string) => {
     if (imageName.startsWith("koomwanAvatar")) {
-      switch (imageName) {
-        case "koomwanAvatar01.png": return defaultUserAvatar01;
-        case "koomwanAvatar02.png": return defaultUserAvatar02;
-        case "koomwanAvatar03.png": return defaultUserAvatar03;
-        case "koomwanAvatar04.png": return defaultUserAvatar04;
-        default: return defaultUserAvatar01;
-      }
-    } else if (imageName.startsWith("koomwanDoctorAvatar")) {
-      switch (imageName) {
-        case "koomwanDoctorAvatar01.png": return defaultDoctorAvatar01;
-        case "koomwanDoctorAvatar02.png": return defaultDoctorAvatar02;
-        default: return defaultDoctorAvatar01;
-      }
+      setImageUrl(
+        state.user.image === "koomwanAvatar01.png" ? defaultUserAvatar01 :
+        state.user.image === "koomwanAvatar02.png" ? defaultUserAvatar02 :
+        state.user.image === "koomwanAvatar03.png" ? defaultUserAvatar03 :
+        state.user.image === "koomwanAvatar04.png" ? defaultUserAvatar04 :
+        defaultUserAvatar01
+      );
+    } else if (state?.user.image.startsWith("koomwanDoctorAvatar")) {
+      setImageUrl(
+        state.user.image === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
+        state.user.image === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
+        defaultDoctorAvatar01
+      );
     }
     return null;
   };
@@ -126,13 +126,15 @@ export default function TabsLayout() {
             <View className="flex-row items-baseline">
               <Image
                 className="w-12 h-12 rounded-full border border-primary"
-                source={{
-                  uri: imageUrl,
-                  headers: {
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache',
-                  }
-                }}
+                source={
+                  imageUrl
+                    ? typeof imageUrl === "string"
+                      ? { uri: imageUrl, headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' } }
+                      : imageUrl
+                    : role === "user"
+                      ? defaultUserAvatar01
+                      : defaultDoctorAvatar01
+                }
               />
               <View className="bg-primary right-6 px-3 rounded-3xl">
                 <Text className="text-card font-sans font-medium">
