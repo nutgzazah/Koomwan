@@ -37,43 +37,57 @@ export default function TabsLayout() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>('user');
 
-  const getImageUrl = async (path: string): Promise<string | null> => {
+  const fetchImageUrl = async (endpoint: string, params: object): Promise<string | null> => {
     try {
-      const res = await axios.get<{ url: string }>(
-        `${BASE_URL}/api/v1/storage/getFileUrlFromPath`,
-        {
-          params: { path },
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        }
-      );
+      const res = await axios.get<{ url: string }>(`${BASE_URL}${endpoint}`, {
+        params,
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      });
       return res.data.url;
     } catch (error) {
-      console.error(`Error fetching image for path ${path}:`, error);
+      console.error(`Error fetching image from ${endpoint}:`, error);
       return null;
     }
+  };
+  
+  const getImageUrl = (path: string): Promise<string | null> => {
+    return fetchImageUrl('/api/v1/storage/getFileUrlFromPath', { path });
+  };
+  
+  const getProfileImageUrl = (fileName: string, folder: string): Promise<string | null> => {
+    return fetchImageUrl('/api/v1/storage/getFileUrl', { fileName, folder });
   };
 
-  const getProfileImageUrl = async (fileName: string, folder: string): Promise<string | null> => {
+  const fetchProfileImage = useCallback(async () => {
+    if (!state?.user?.image) return;
+  
+    const { image, role: userRole } = state.user;
+    setRole(userRole);
+  
     try {
-      const res = await axios.get<{ url: string }>(
-        `${BASE_URL}/api/v1/storage/getFileUrl`,
-        {
-          params: { fileName, folder },
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        }
-      );
-      return res.data.url;
+      // Handle default avatars
+      const defaultAvatar = getDefaultAvatar(image);
+      if (defaultAvatar) {
+        setImageUrl(defaultAvatar);
+        return;
+      }
+  
+      // Handle custom images
+      const url =
+        userRole === "user"
+          ? await getProfileImageUrl(image, "user")
+          : await getImageUrl(image);
+  
+      if (url?.startsWith("https")) {
+        setImageUrl(url);
+      }
     } catch (error) {
-      console.error(`Error fetching image for path ${folder}/${fileName}:`, error);
-      return null;
+      console.error("Error fetching profile image:", error);
     }
-  };
+  }, [state?.user?.image, state?.user?.role]);
 
   const getDefaultAvatar = (imageName: string) => {
     if (imageName.startsWith("koomwanAvatar")) {
@@ -93,35 +107,6 @@ export default function TabsLayout() {
     }
     return null;
   };
-
-  const fetchProfileImage = useCallback(async () => {
-    if (!state?.user?.image) return;
-
-    try {
-      const image = state.user.image;
-      const userRole = state.user.role;
-      setRole(userRole);
-
-      // Handle default avatars
-      const defaultAvatar = getDefaultAvatar(image);
-      if (defaultAvatar) {
-        setImageUrl(defaultAvatar);
-        return;
-      }
-
-      // Handle custom images
-      if (userRole === "user") {
-        const url = await getProfileImageUrl(image, "user");
-        if (url) setImageUrl(url);
-      } else if (userRole === "doctor") {
-        const url = await getImageUrl(image);
-        if (url?.startsWith("https")) setImageUrl(url);
-      }
-    } catch (error) {
-      console.error("Error fetching profile image:", error);
-    } finally {
-    }
-  }, [state?.user?.image, state?.user?.role]);
 
   // Initial fetch on mount
   useEffect(() => {
