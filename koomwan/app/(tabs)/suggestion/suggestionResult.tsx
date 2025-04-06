@@ -40,7 +40,8 @@ export default function SuggestionResult() {
             userId: '66144c9e33fa4a7b12345698',
             gender: 'male',
             age: 55,
-            bmi: 31,
+            weight: 85,       // For BMI Calculate
+            height: 170,      // For BMI Calculate
             blood_glucose_level: 195,
             HbA1c_level: 7.2,
             systolic_bp: 145,
