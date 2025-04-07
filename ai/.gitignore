@@ -4,3 +4,6 @@
 # Ignore compiled python files
 __pycache__/
 *.pyc
+
+# Ignore model and scaler pickle files
+*.pkl
