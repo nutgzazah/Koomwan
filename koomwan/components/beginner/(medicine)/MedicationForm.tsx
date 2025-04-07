@@ -377,16 +377,9 @@ export default function MedicationForm() {
   };
 
   const handleRemoveReminder = (index: number) => {
-    showModal(
-      "ลบการแจ้งเตือน",
-      "คุณต้องการลบการแจ้งเตือนนี้ใช่หรือไม่?",
-      "warning",
-      () => {
-        const updatedReminders = [...reminderTimes];
-        updatedReminders.splice(index, 1);
-        setReminderTimes(updatedReminders);
-      }
-    );
+    const updatedReminders = [...reminderTimes];
+    updatedReminders.splice(index, 1);
+    setReminderTimes(updatedReminders);
   };
 
   return (
