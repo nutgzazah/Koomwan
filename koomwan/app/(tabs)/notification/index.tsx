@@ -42,17 +42,12 @@ export default function ResourceScreen() {
 
       console.log("Notifications received:", response.data);
 
-      // Sort notifications by time (assuming 'createdAt' is the timestamp field)
-      const sortedNotifications = response.data.notifications.sort(
-        (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
       // Log only helpRequest for each notification
-      sortedNotifications.forEach((notification: any) => {
+      response.data.notifications.forEach((notification: any) => {
         console.log("HelpRequest:", notification.helpRequest);
       });
 
-      setNotifications(sortedNotifications || []);
+      setNotifications(response.data.notifications || []);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching notifications:', err);
@@ -65,9 +60,7 @@ export default function ResourceScreen() {
     useCallback(() => {
       fetchNotifications(); // Fetch notifications when the screen is focused
     }, []
-    ));
-
-
+  ));
 
   // Filter notifications based on type
   const filteredNotifications = notifications.filter((notification) => {
