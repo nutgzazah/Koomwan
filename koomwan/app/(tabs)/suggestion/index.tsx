@@ -21,6 +21,8 @@ import BASE_URL from "../../../config"
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 import motivationalQuotes from './motivationalQuotes';
+import AdviceBlogCard from "./components/AdviceBlogCard";
+
 
 export default function SuggestionScreen() {
   const router = useRouter();
@@ -30,6 +32,7 @@ export default function SuggestionScreen() {
   const [result, setResult] = useState<any>(null);
   const [quote, setQuote] = useState("");
   const [diabetesType, setDiabetesType] = useState<string | null>(null);
+  const [randomBlogs, setRandomBlogs] = useState<any[]>([]);
   console.log("State Suggestion: ",state)
 
   const fetchDiabetesType = async () => {
@@ -51,6 +54,7 @@ export default function SuggestionScreen() {
     try {
       const res = await axios.get(`${BASE_URL}/api/v1/suggestion/getSuggestionData`);
       setResult(res.data);
+      await fetchBlogsByCategory(res.data.healthAdvice.blog); 
       console.log("result",res.data)
       const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
       setQuote(randomQuote);
@@ -60,6 +64,35 @@ export default function SuggestionScreen() {
       }
     }finally {
       setLoading(false);  // End loading
+    }
+  };
+
+  const fetchBlogsByCategory = async (blogs: any[]) => {
+    try {
+      const blogResults = await Promise.all(
+        blogs.map(async (item) => { 
+          try {
+            const res = await axios.get(`${BASE_URL}/api/v1/suggestion/getRandomBlogFromCategory/${item.category}`);
+            return {
+              blogId: res.data._id,
+              image: res.data.image,
+              title: res.data.title,
+              content: res.data.content,
+            };
+          } catch (error) {
+            // ถ้าไม่เจอ blog (API ส่ง 404 หรือ error)
+            return {
+              blogId: "",
+              image: null,
+              title: "ไม่มี Blog",
+              content: "ไม่มีรายละเอียด",
+            };
+          }
+        })
+      );
+      setRandomBlogs(blogResults);
+    } catch (error) {
+      console.error("Error fetching random blogs:", error);
     }
   };
 
@@ -245,14 +278,14 @@ export default function SuggestionScreen() {
             </Text>
           </View>
           <ScrollView horizontal className="mt-4 px-1" showsHorizontalScrollIndicator={false}>
-            {result.healthAdvice.blog.map((item, index) => (
-              <AdviceCard
-                key={index}
-                title={item.category}
-                description={item.category}
-                image={require("../../../assets/Suggestion/people-yoga.png")}
-              />
-            ))}
+          {randomBlogs.map((item, index) => (
+            <AdviceBlogCard
+              key={index}
+              title={item.title}
+              content={item.content}
+              image={item.image} 
+              blogId={item.blogId}            />
+          ))}
           </ScrollView>
         </ScrollView>
       )}

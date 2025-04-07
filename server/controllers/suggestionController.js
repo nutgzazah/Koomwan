@@ -4,6 +4,7 @@ const Record = require('../models/recordModel');         // โมเดล reco
 const User = require('../models/userModel'); // นำเข้า User Model
 const Doctor = require('../models/doctorModel'); // นำเข้า Doctor Model
 const Suggestion = require('../models/suggestionModel');
+const Blog = require('../models/blogModel'); // สมมุติว่าโมเดลชื่อ Blog
 
 exports.getUserHealthLastWeek = async (req, res) => {
     try {
@@ -127,4 +128,27 @@ exports.getUserDiabetesType = async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 };
-  
+
+exports.getRandomBlogFromCategory = async (req, res) => {
+  try {
+    const category = req.params.category;
+    if (!category) {
+      return res.status(400).json({ message: 'Category is required' });
+    }
+
+    // ใช้ aggregate เพื่อสุ่ม blog จาก category ที่ระบุ
+    const randomBlog = await Blog.aggregate([
+      { $match: { category: category } },
+      { $sample: { size: 1 } }
+    ]);
+
+    if (randomBlog.length === 0) {
+      return res.status(404).json({ message: 'No blog found in this category' });
+    }
+
+    res.status(200).json(randomBlog[0]);
+  } catch (error) {
+    console.error('Error getting random blog:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

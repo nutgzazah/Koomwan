@@ -80,6 +80,7 @@ export default function SuggestionResult() {
             'เนื่องจากไม่มีข้อมูลค่าน้ำตาลเฉลี่ยสะสมในเลือดแบบเจาะจง แอพจึงคำนวนให้เป็นค่าประมาณในการวิเคราะห์ครั้งนี้' 
           );
         }
+
       } catch (error: any) {
         console.error('Error:', error?.response?.data || error);
 
