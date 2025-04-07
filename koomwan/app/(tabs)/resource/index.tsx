@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   SafeAreaView,
   Image,
   ScrollView,
-  ImageSourcePropType,
   Alert,
   Pressable,
   Text,
@@ -16,7 +15,7 @@ import PopupScreen from "../../../global/components/PopupScreen";
 import Loading from "../../../global/components/Loading";
 import BASE_URL from "../../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 interface Blog {
   _id: string;
@@ -57,79 +56,85 @@ export default function ResourceScreen() {
     );
   }, [blogsData, searchQuery, selectedCategories]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const authData = await AsyncStorage.getItem("@auth");
 
-        if (!authData) {
-          Alert.alert("Session Expired ", "Please login again");
-          router.push("/user/login");
-          return;
-        }
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const authData = await AsyncStorage.getItem("@auth");
 
-        const auth = JSON.parse(authData);
-        const token = auth.token;
-        const userId = auth.user._id;
+      if (!authData) {
+        Alert.alert("Session Expired ", "Please login again");
+        router.push("/user/login");
+        return;
+      }
 
-        if (!userId || !token) {
-          Alert.alert("Session Expired", "Please login again");
-          router.push("/user/login");
-          return;
-        }
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+      const userId = auth.user._id;
 
-        const resourceResponse = await axios.get(`${BASE_URL}/api/v1/admin/blog`);
+      if (!userId || !token) {
+        Alert.alert("Session Expired", "Please login again");
+        router.push("/user/login");
+        return;
+      }
 
-        if (resourceResponse.data.success) {
-          const blogs = resourceResponse.data.data;
+      const resourceResponse = await axios.get(`${BASE_URL}/api/v1/admin/blog`);
 
-          // Fetch image URLs for each blog
-          const blogsWithImageUrls = await Promise.all(
-            blogs.map(async (blog: Blog) => {
-              const [folder, fileName] = blog.image.includes("/")
-                ? blog.image.split("/")
-                : ["blogImage", blog.image];
-              if (folder.includes("http")) {
-                return blog.image;
-              }
+      if (resourceResponse.data.success) {
+        const blogs = resourceResponse.data.data;
 
+        // Fetch image URLs for each blog
+        const blogsWithImageUrls = await Promise.all(
+          blogs.map(async (blog: Blog) => {
+            const [folder, fileName] = blog.image.includes("/")
+              ? blog.image.split("/")
+              : ["blogImage", blog.image];
+            if (folder.includes("http")) {
+              return blog.image;
+            }
+  
+            try {
               const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
                 params: { fileName, folder },
                 headers: { "Cache-Control": "no-cache" },
               });
-
+  
               const imageUrl = response.data.success
                 ? response.data.url
                 : `${BASE_URL}/uploads/${blog.image}`;
+  
+              return { ...blog, image: imageUrl || "" }; // Fallback to default image
+            } catch (error) {
+              return { ...blog, image: "" }; // Fallback to default image
+            }
+          })
+        );
 
-              return { ...blog, image: imageUrl };
-            })
-          );
-
-          setBlogsData(blogsWithImageUrls);
-        }
-      } catch (error) {
-
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-          await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
-          Alert.alert("Session Expired", "Please login again", [
-            { text: "OK", onPress: () => router.push("/user/login") },
-          ]);
-        } else {
-          Alert.alert(
-            "Error",
-            "Failed to load profile data. Please try again later.",
-            [{ text: "OK", onPress: () => router.back() }]
-          );
-        }
-      } finally {
-        setLoading(false);
+        setBlogsData(blogsWithImageUrls);
       }
-    };
+    } catch (error) {
 
-    fetchData();
-  }, []);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
+        Alert.alert("Session Expired", "Please login again", [
+          { text: "OK", onPress: () => router.push("/user/login") },
+        ]);
+      } else {
+        Alert.alert(
+          "Error",
+          "Failed to load profile data. Please try again later.",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   if (loading || !blogsData) {
     return <Loading />;

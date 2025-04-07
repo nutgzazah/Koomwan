@@ -71,7 +71,7 @@ function ArticleStructure({
           headers: { "Cache-Control": "no-cache" },
         });
 
-        setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${image}`);
+        setImageUrl(response.data.success ? response.data.url : "");
       } catch (error) {
         setImageUrl("");
       }
@@ -93,11 +93,13 @@ function ArticleStructure({
           <Text className="font-sans text-tag text-secondary w-full ml-4">{formatDate(new Date(date))}</Text>
           <Text className="font-sans text-tag text-secondary w-full ml-4 mb-3">เขียนโดย : {refs}</Text>
           <View className="mx-4 w-full min-h-[9.375rem] max-h-[18rem] mb-3">
-            <Image
-              className="w-full h-full"
-              source={{ uri: imageUrl } as ImageSourcePropType}
-              resizeMode="contain"
-            />
+            {imageUrl && (
+              <Image
+                className="w-full h-full"
+                source={{ uri: imageUrl } as ImageSourcePropType}
+                resizeMode="contain"
+              />
+            )}
           </View>
           <View className="w-[24rem]">
             <HTMLView
