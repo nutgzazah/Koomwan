@@ -25,6 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../../config";
 import ImageUploader from "../../../global/components/ImageUploader";
 import ImageUploaderWithPreview from "../../../global/components/ImageUploader";
+import Modal from "../../../global/components/Modal";
 
 type ImagePickerResult = {
   canceled: boolean;
@@ -49,6 +50,15 @@ export default function MedicationForm() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState<"success" | "warning" | "error">(
+    "success"
+  );
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
+
   const pathname = usePathname();
   console.log("Current Path:" + pathname);
   console.log("Reminder Format:", reminderFormat);
@@ -59,6 +69,20 @@ export default function MedicationForm() {
       setReminderTimes([...reminderTimes, reminderFormat as string]);
     }
   }, [reminderFormat]);
+
+  // Show modal helper function
+  const showModal = (
+    title: string,
+    message: string,
+    type: "success" | "warning" | "error" = "success",
+    onConfirm: () => void = () => {}
+  ) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalType(type);
+    setConfirmAction(() => onConfirm);
+    setModalVisible(true);
+  };
 
   const uploadImageToServer = async (imageUri: string) => {
     try {
@@ -243,12 +267,21 @@ export default function MedicationForm() {
 
     // Validation
     if (!pillName.trim()) {
-      Alert.alert("กรุณากรอกชื่อยา", "ชื่อยาไม่สามารถเว้นว่างได้");
+      showModal("กรุณากรอกชื่อยา", "ชื่อยาไม่สามารถเว้นว่างได้", "error");
       return;
     }
 
-    setIsSubmitting(true);
+    showModal(
+      "ยืนยันการเพิ่มยา",
+      `คุณต้องการเพิ่มข้อมูลยา ${pillName} ใช่หรือไม่?`,
+      "success",
+      submitMedication
+    );
+  };
+
+  const submitMedication = async () => {
     try {
+      setIsSubmitting(true);
       // ดึง auth token
       const authData = await AsyncStorage.getItem("@auth");
       if (!authData) {
@@ -320,27 +353,23 @@ export default function MedicationForm() {
 
       if (response.data.success) {
         // แสดงข้อความสำเร็จ
-        Alert.alert("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", [
-          {
-            text: "ตกลง",
-            onPress: () => {
-              // ถ้ามาจากหน้า beginner setup (มี healthInfoId จาก params) ให้กลับไปที่หน้านั้น
-              if (healthInfoId) {
-                router.back();
-              } else {
-                router.back();
-              }
-            },
-          },
-        ]);
+        showModal("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", "success", () => {
+          // ถ้ามาจากหน้า beginner setup (มี healthInfoId จาก params) ให้กลับไปที่หน้านั้น
+          if (healthInfoId) {
+            router.back();
+          } else {
+            router.back();
+          }
+        });
       } else {
         throw new Error(response.data.message || "ไม่สามารถเพิ่มข้อมูลยาได้");
       }
     } catch (error) {
       console.error("Error adding medication:", error);
-      Alert.alert(
+      showModal(
         "เกิดข้อผิดพลาด",
-        "ไม่สามารถเพิ่มข้อมูลยาได้ กรุณาลองใหม่อีกครั้ง"
+        "ไม่สามารถเพิ่มข้อมูลยาได้ กรุณาลองใหม่อีกครั้ง",
+        "error"
       );
     } finally {
       setIsSubmitting(false);
@@ -348,9 +377,16 @@ export default function MedicationForm() {
   };
 
   const handleRemoveReminder = (index: number) => {
-    const updatedReminders = [...reminderTimes];
-    updatedReminders.splice(index, 1);
-    setReminderTimes(updatedReminders);
+    showModal(
+      "ลบการแจ้งเตือน",
+      "คุณต้องการลบการแจ้งเตือนนี้ใช่หรือไม่?",
+      "warning",
+      () => {
+        const updatedReminders = [...reminderTimes];
+        updatedReminders.splice(index, 1);
+        setReminderTimes(updatedReminders);
+      }
+    );
   };
 
   return (
@@ -542,6 +578,21 @@ export default function MedicationForm() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Custom Modal */}
+      <Modal
+        visible={modalVisible}
+        title={modalTitle}
+        message={modalMessage}
+        confirmText={modalType === "warning" ? "ยืนยัน" : "ตกลง"}
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          setModalVisible(false);
+          confirmAction();
+        }}
+        onCancel={() => setModalVisible(false)}
+        type={modalType}
+      />
     </SafeAreaView>
   );
 }
