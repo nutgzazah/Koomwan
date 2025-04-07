@@ -245,12 +245,12 @@ const CalendarScreen = () => {
             )}
           </View>
 
-          <View className="flex-row flex-wrap justify-center gap-4 mt-4 items-center">
+          <View className="flex-row justify-center gap-4 mt-4 items-center">
             {log.weight && log.height && (
               <View className="flex-row items-center">
                 <Image
                   source={require("../../assets/Home/body-blue.png")}
-                  className="w-6 h-6"
+                  className="w-5 h-5"
                 />
                 <Text className="text-description text-secondary font-regular ml-1">
                   {calculateBMI(log.weight, log.height).toFixed(2)}

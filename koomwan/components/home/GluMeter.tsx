@@ -92,51 +92,52 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
       setHasRecords(true);
 
       if (response.data.records.length > 0) {
-        // Sort records by date to get the most recent
+        // Sort records by date to get the most recent records first
         const sortedRecords = response.data.records.sort(
           (a: Record, b: Record) =>
             new Date(b.recordtime).getTime() - new Date(a.recordtime).getTime()
         );
 
+        // First, check the latest record
         const latestRecord = sortedRecords[0];
 
-        // Check if we have bloodsugar or a1c data
+        // Check if the latest record has blood sugar data
         if (
-          latestRecord.bloodsugar !== undefined ||
-          latestRecord.a1c !== undefined
+          (latestRecord.bloodsugar !== undefined &&
+            latestRecord.bloodsugar !== null) ||
+          (latestRecord.a1c !== undefined && latestRecord.a1c !== null)
         ) {
+          // Use the latest record
           setBloodSugarData({
             bloodsugar: latestRecord.bloodsugar,
             a1c: latestRecord.a1c,
             recordtime: latestRecord.recordtime,
           });
 
-          // Determine status based on blood sugar levels
-          if (latestRecord.bloodsugar) {
-            if (latestRecord.bloodsugar < 100) {
-              setStatus("normal");
-            } else if (
-              latestRecord.bloodsugar >= 100 &&
-              latestRecord.bloodsugar < 126
-            ) {
-              setStatus("risk");
-            } else if (latestRecord.bloodsugar >= 126) {
-              setStatus("diabetes");
-            }
-          } else if (latestRecord.a1c) {
-            // If bloodsugar is not available, use A1C if available
-            if (latestRecord.a1c < 5.7) {
-              setStatus("normal");
-            } else if (latestRecord.a1c >= 5.7 && latestRecord.a1c < 6.5) {
-              setStatus("risk");
-            } else if (latestRecord.a1c >= 6.5) {
-              setStatus("diabetes");
-            }
+          // Determine status
+          determineStatus(latestRecord);
+        } else {
+          // If latest record doesn't have blood sugar data, find the most recent record that does
+          const recordWithBloodSugar = sortedRecords.find(
+            (record: Record) =>
+              (record.bloodsugar !== undefined && record.bloodsugar !== null) ||
+              (record.a1c !== undefined && record.a1c !== null)
+          );
+
+          if (recordWithBloodSugar) {
+            // Found a record with blood sugar data
+            setBloodSugarData({
+              bloodsugar: recordWithBloodSugar.bloodsugar,
+              a1c: recordWithBloodSugar.a1c,
+              recordtime: recordWithBloodSugar.recordtime,
+            });
+
+            // Determine status
+            determineStatus(recordWithBloodSugar);
           } else {
+            // No records with blood sugar data found
             setStatus("none");
           }
-        } else {
-          setStatus("none");
         }
       } else {
         setStatus("none");
@@ -156,6 +157,54 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
       }
 
       setLoading(false);
+    }
+  };
+
+  // Helper function to determine status based on blood sugar or a1c values
+  const determineStatus = (record: Record) => {
+    // จัดเก็บสถานะจากค่าน้ำตาลในเลือดและค่า A1C
+    let bloodSugarStatus = "none";
+    let a1cStatus = "none";
+
+    // ตรวจสอบค่าน้ำตาลในเลือด
+    if (record.bloodsugar !== undefined && record.bloodsugar !== null) {
+      if (record.bloodsugar < 100) {
+        bloodSugarStatus = "normal";
+      } else if (record.bloodsugar >= 100 && record.bloodsugar < 126) {
+        bloodSugarStatus = "risk";
+      } else if (record.bloodsugar >= 126) {
+        bloodSugarStatus = "diabetes";
+      }
+    }
+
+    // ตรวจสอบค่า A1C
+    if (record.a1c !== undefined && record.a1c !== null) {
+      if (record.a1c < 5.7) {
+        a1cStatus = "normal";
+      } else if (record.a1c >= 5.7 && record.a1c < 6.5) {
+        a1cStatus = "risk";
+      } else if (record.a1c >= 6.5) {
+        a1cStatus = "diabetes";
+      }
+    }
+
+    // ถ้ามีทั้งสองค่า ให้เลือกค่าที่แย่กว่า (diabetes > risk > normal)
+    if (bloodSugarStatus !== "none" && a1cStatus !== "none") {
+      if (bloodSugarStatus === "diabetes" || a1cStatus === "diabetes") {
+        setStatus("diabetes");
+      } else if (bloodSugarStatus === "risk" || a1cStatus === "risk") {
+        setStatus("risk");
+      } else {
+        setStatus("normal");
+      }
+    }
+    // ถ้ามีแค่ค่าใดค่าหนึ่ง ให้ใช้ค่านั้น
+    else if (bloodSugarStatus !== "none") {
+      setStatus(bloodSugarStatus as "normal" | "risk" | "diabetes");
+    } else if (a1cStatus !== "none") {
+      setStatus(a1cStatus as "normal" | "risk" | "diabetes");
+    } else {
+      setStatus("none");
     }
   };
 
@@ -279,10 +328,12 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
   if (status === "none" && hasRecords) {
     return (
       <EmptyHomeCard
-        title="ยังไม่มีข้อมูลค่าน้ำตาลในเลือดล่าสุด"
-        subtitle="คุณมีข้อมูลบันทึกสุขภาพแล้ว แต่ยังไม่มีข้อมูลน้ำตาลในเลือดล่าสุด กรุณาบันทึกข้อมูลเพิ่มเติม"
+        header="ระดับน้ำตาลในเลือดล่าสุด"
+        title="ยังไม่มีข้อมูลค่าน้ำตาลในเลือด"
+        subtitle="คุณมีข้อมูลบันทึกสุขภาพแล้ว แต่ยังไม่มีข้อมูลน้ำตาลในเลือด กรุณาบันทึกข้อมูลเพิ่มเติม"
         buttonText="บันทึกข้อมูลสุขภาพ"
         navigateTo="/(tabs)/tracking"
+        icon={require("../../assets/Home/a1c-none.png")}
       />
     );
   }
@@ -327,12 +378,13 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
         </Text>
       )}
 
-      {/* {bloodSugarData?.a1c && (
-        <Text className="text-headline font-bold text-center mt-1">
+      {/* A1C Value (if available) */}
+      {bloodSugarData?.a1c && (
+        <Text className="text-description font-regular text-center mt-1">
           <Text className="text-secondary">ค่า A1C: </Text>
           <Text className={currentStatus.color}>{bloodSugarData.a1c}%</Text>
         </Text>
-      )} */}
+      )}
 
       {/* Blood Sugar Display */}
       <View className="pt-4">

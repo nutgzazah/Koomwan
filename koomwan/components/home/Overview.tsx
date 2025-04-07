@@ -53,17 +53,19 @@ const Overview = () => {
   };
 
   // Process the records to get the last 7 days of data
-  const processRecords = (records: any[]) => {
+  // ปรับปรุงฟังก์ชัน processRecords ให้ตรวจสอบทั้งยาประจำและยาเพิ่มเติม
+  const processRecords = (
+    healthRecords: any[] = [],
+    regularPillData: any = {}
+  ) => {
     const days = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
-    // ใช้เวลาไทย (GMT+7) แทนเวลาเครื่อง
     const today = getCurrentThaiDate();
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-    // Create an array of the last 7 days (including today)
+    // สร้างข้อมูลสำหรับ 7 วันล่าสุด
     const weekData: WeeklyDataItem[] = [];
     for (let i = 6; i >= 0; i--) {
       const currentDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-      const dayIndex = currentDate.getDay(); // ใช้วันจาก currentDate โดยตรง
+      const dayIndex = currentDate.getDay();
 
       weekData.push({
         day: days[dayIndex],
@@ -75,35 +77,99 @@ const Overview = () => {
       });
     }
 
-    // Map the records to the days
-    if (records && records.length > 0) {
-      setHasRecords(true);
-      records.forEach((record) => {
-        // ปรับเวลาของข้อมูลให้เป็น GMT+7 เช่นกัน
-        const recordTime = new Date(record.recordtime);
-        const recordDateThai = new Date(recordTime);
+    // ตรวจสอบว่ามีข้อมูลใดๆ หรือไม่
+    const hasHealthRecords = healthRecords && healthRecords.length > 0;
+    const hasRegularPillData =
+      regularPillData && Object.keys(regularPillData).length > 0;
 
-        // Only consider records from the last 7 days
-        weekData.forEach((day) => {
-          // เปรียบเทียบเฉพาะวันที่ เดือน ปี (ไม่รวมเวลา)
-          const recordDate = recordDateThai.toDateString();
-          const dayDate = day.date.toDateString();
+    setHasRecords(hasHealthRecords || hasRegularPillData);
 
-          if (recordDate === dayDate) {
-            day.bmi = calculateBMI(record.weight, record.height).toFixed(2);
-            // Handle the mood from the API - ensure it's a valid Mood type if possible
-            day.mood = record.moodstatus || "neutral";
-            // Check if any pills were taken that day
-            day.hasPill = record.additionpill && record.additionpill.length > 0;
-          }
-        });
-      });
-    } else {
-      setHasRecords(false);
+    if (!hasHealthRecords && !hasRegularPillData) {
+      return weekData.reverse();
     }
 
-    // Reverse to display Sunday first
+    // ประมวลผลข้อมูลสุขภาพ (health records)
+    if (hasHealthRecords) {
+      // จัดกลุ่มข้อมูลสุขภาพตามวัน
+      const healthRecordsByDay: { [key: string]: any[] } = {};
+      healthRecords.forEach((record) => {
+        const recordDate = new Date(record.recordtime).toDateString();
+        if (!healthRecordsByDay[recordDate]) {
+          healthRecordsByDay[recordDate] = [];
+        }
+        healthRecordsByDay[recordDate].push(record);
+      });
+
+      // อัปเดตข้อมูลในแต่ละวัน
+      weekData.forEach((day) => {
+        const dayDateString = day.date.toDateString();
+
+        // ตรวจสอบข้อมูลสุขภาพ
+        const dayHealthRecords = healthRecordsByDay[dayDateString] || [];
+        if (dayHealthRecords.length > 0) {
+          // เลือกบันทึกล่าสุดสำหรับ BMI และ mood
+          const latestRecord = dayHealthRecords.sort(
+            (a, b) =>
+              new Date(b.recordtime).getTime() -
+              new Date(a.recordtime).getTime()
+          )[0];
+
+          day.bmi = calculateBMI(
+            latestRecord.weight,
+            latestRecord.height
+          ).toFixed(2);
+          day.mood = latestRecord.moodstatus || "neutral";
+
+          // ตรวจสอบยาเพิ่มเติมในทุกบันทึกของวันนั้น
+          const hasAdditionPills = dayHealthRecords.some(
+            (record) =>
+              Array.isArray(record.additionpill) &&
+              record.additionpill.length > 0
+          );
+
+          if (hasAdditionPills) {
+            day.hasPill = true;
+          }
+        }
+      });
+    }
+
+    // ประมวลผลข้อมูลยาประจำ (regular pill tracking)
+    if (hasRegularPillData) {
+      weekData.forEach((day) => {
+        // ถ้ายังไม่มียา ให้ตรวจสอบยาประจำ
+        if (!day.hasPill) {
+          // แปลงวันที่เป็นรูปแบบ YYYY-MM-DD สำหรับเปรียบเทียบกับข้อมูลจาก API
+          const formattedDate = formatDateToString(day.date);
+
+          // ตรวจสอบว่ามีข้อมูลยาประจำในวันนั้นหรือไม่
+          if (regularPillData[formattedDate]) {
+            const dayPillData = regularPillData[formattedDate];
+
+            // ตรวจสอบว่ามียาที่ทานแล้วในวันนั้นหรือไม่
+            const hasTakenRegularPills = dayPillData.medications.some(
+              (timeGroup: { medications: { taken: boolean }[] }) => {
+                return timeGroup.medications.some((med) => med.taken === true);
+              }
+            );
+
+            if (hasTakenRegularPills) {
+              day.hasPill = true;
+            }
+          }
+        }
+      });
+    }
+
+    // กลับลำดับให้วันอาทิตย์อยู่ด้านซ้าย
     return weekData.reverse();
+  };
+
+  const formatDateToString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
   // Fetch data from API
@@ -111,48 +177,73 @@ const Overview = () => {
     try {
       setLoading(true);
 
-      // Get auth data from local storage
       const authData = await AsyncStorage.getItem("@auth");
-
       if (!authData) {
         console.error("Session expired or user not logged in");
         setLoading(false);
         return;
       }
 
-      // Parse auth data
+      // แปลงข้อมูล
       const auth = JSON.parse(authData);
       const token = auth.token;
       const userId = auth.user._id;
       const userHealthInfoId = auth.user.healthinfo;
 
-      console.log("User ID:", userId);
-      console.log("Health Info ID:", userHealthInfoId);
-
       if (!userHealthInfoId) {
         throw new Error("Health information not found");
       }
 
-      console.log("Fetching records from API...");
-      const response = await axios.get(
+      // 1. ดึงข้อมูลบันทึกสุขภาพ (มียาเพิ่มเติม - additionpill)
+      console.log("Fetching health records...");
+      const recordsResponse = await axios.get(
         `${BASE_URL}/api/v1/user/getRecord/${userId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      console.log("API Response:", response.status);
-      console.log("Records count:", response.data.records?.length || 0);
+      let regularPillData = {};
 
-      // Process the data
-      const processedData = processRecords(response.data.records);
-      console.log("Processed weekly data:", processedData);
+      try {
+        // 2. ดึงข้อมูลยาประจำ (regularPillTracking)
+        console.log("Fetching regular pill tracking data...");
+        // ดึงข้อมูลยาประจำสำหรับช่วง 7 วันล่าสุด
+        const today = new Date();
+        const weekAgo = new Date(today);
+        weekAgo.setDate(today.getDate() - 7);
+
+        const formattedToday = today.toISOString().split("T")[0];
+        const formattedWeekAgo = weekAgo.toISOString().split("T")[0];
+
+        const regularPillResponse = await axios.get(
+          `${BASE_URL}/api/v1/regular-pills/range/${userId}?startDate=${formattedWeekAgo}&endDate=${formattedToday}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // ถ้าการเรียก API สำเร็จ เก็บข้อมูล
+        if (regularPillResponse.data && regularPillResponse.data.data) {
+          regularPillData = regularPillResponse.data.data;
+          console.log("Regular pill data fetched successfully");
+        }
+      } catch (pillError) {
+        // ถ้าเกิดข้อผิดพลาดในการดึงข้อมูลยาประจำ ให้บันทึกข้อผิดพลาดแต่ยังดำเนินการต่อไป
+        console.error("Error fetching regular pill data:", pillError);
+        console.log("Continuing with health records only");
+      }
+
+      // ประมวลผลข้อมูลทั้งหมด
+      const processedData = processRecords(
+        recordsResponse.data.records || [],
+        regularPillData
+      );
+
       setWeeklyData(processedData);
     } catch (error) {
       setHasRecords(false);
-      console.error("Error fetching emotion data:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }

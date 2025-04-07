@@ -189,23 +189,44 @@ export default function TrackingScreen() {
 
   // Validation for required fields
   const requiredFields = ["date", "time", "weight", "height"];
-  const isFormComplete =
-    requiredFields.every(
+
+  // ฟังก์ชันตรวจสอบว่าฟอร์มสมบูรณ์และสามารถไปหน้าต่อไปได้หรือไม่
+  const isFormValid = (): boolean => {
+    // ตรวจสอบว่าฟิลด์ที่จำเป็นมีการกรอกครบหรือไม่
+    const requiredFieldsComplete = requiredFields.every(
       (field) => formData[field as keyof typeof formData] !== ""
-    ) && errorMessages.date === "";
+    );
+
+    // ตรวจสอบว่าไม่มีข้อผิดพลาดใดๆ ในฟอร์ม
+    const noErrors = Object.values(errorMessages).every((error) => {
+      if (typeof error === "string") {
+        return error === "";
+      } else if (typeof error === "object") {
+        return Object.values(error).every((e) => e === "");
+      }
+      return true;
+    });
+
+    return requiredFieldsComplete && noErrors;
+  };
 
   // Validation For Input
   const ranges: Record<string, [number, number]> = {
     weight: [30, 300],
     height: [100, 250],
-    bloodSugar: [50, 600],
-    a1c: [4, 14],
+    bloodSugar: [10, 600],
+    a1c: [1, 14],
     bloodPressureSystolic: [50, 250],
     bloodPressureDiastolic: [30, 200],
   };
 
   // Validate Input
   const validateInput = (name: string, value: string) => {
+    // ถ้าค่าว่าง (ไม่กรอก) สำหรับฟิลด์ที่เป็น optional ให้ผ่านไปเลยโดยไม่ต้องตรวจสอบ
+    if (value === "" && !requiredFields.includes(name)) {
+      return "";
+    }
+
     const numValue = parseFloat(value);
     const fieldNames: Record<string, string> = {
       weight: "น้ำหนัก",
@@ -216,13 +237,22 @@ export default function TrackingScreen() {
       bloodPressureDiastolic: "ความดันตัวล่าง",
     };
 
+    // ตรวจสอบว่าเป็นตัวเลขที่ถูกต้อง และอยู่ในช่วงที่กำหนดหรือไม่
+    if (!/^\d*\.?\d*$/.test(value)) {
+      return `กรุณากรอก ${fieldNames[name] || name} เฉพาะตัวเลขเท่านั้น`;
+    }
+
+    if (isNaN(numValue)) {
+      return `กรุณากรอก ${fieldNames[name] || name} ให้ถูกต้อง`;
+    }
+
     if (
-      !/^\d*\.?\d*$/.test(value) ||
-      (ranges[name] &&
-        (numValue < ranges[name][0] || numValue > ranges[name][1]))
+      ranges[name] &&
+      (numValue < ranges[name][0] || numValue > ranges[name][1])
     ) {
       return `กรุณากรอก ${fieldNames[name] || name} ให้ถูกต้อง`;
     }
+
     return "";
   };
 
@@ -232,6 +262,7 @@ export default function TrackingScreen() {
     value: string | { systolic: string; diastolic: string }
   ) => {
     if (field === "bloodPressure" && typeof value === "object") {
+      // ตรวจสอบความถูกต้องของทั้งสองค่าแยกกัน
       const systolicError = validateInput(
         "bloodPressureSystolic",
         value.systolic
@@ -241,6 +272,7 @@ export default function TrackingScreen() {
         value.diastolic
       );
 
+      // อัปเดตข้อความแสดงข้อผิดพลาด
       setErrorMessages((prev) => ({
         ...prev,
         bloodPressure: {
@@ -249,18 +281,29 @@ export default function TrackingScreen() {
         },
       }));
 
+      // อัปเดตข้อมูลฟอร์ม
       setFormData((prev) => ({
         ...prev,
         bloodPressure: { ...prev.bloodPressure, ...value },
       }));
+    } else if (field === "mood") {
+      // สำหรับอารมณ์ ไม่ต้องตรวจสอบความถูกต้อง
+      if (field === "mood" && typeof value === "string") {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+      } else if (field !== "mood") {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+      }
     } else {
+      // สำหรับฟิลด์อื่นๆ ที่ไม่ใช่ความดัน
       const error = validateInput(field, value as string);
 
+      // อัปเดตข้อความแสดงข้อผิดพลาด
       setErrorMessages((prev) => ({
         ...prev,
         [field]: error,
       }));
 
+      // อัปเดตข้อมูลฟอร์ม
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
   };
@@ -277,25 +320,83 @@ export default function TrackingScreen() {
     return "";
   };
 
-  // Validation Before Submit
-  const handleSubmit = () => {
-    const requiredFields = ["date", "time", "weight", "height"];
-    if (
-      requiredFields.some((field) => !formData[field as keyof typeof formData])
-    ) {
-      Alert.alert("กรุณากรอกข้อมูลให้ครบถ้วน");
-      return;
+  // ตรวจสอบความสมบูรณ์ของฟอร์มก่อนส่ง
+  const validateForm = (): boolean => {
+    // ตรวจสอบฟิลด์ที่จำเป็น
+    for (const field of requiredFields) {
+      if (!formData[field as keyof typeof formData]) {
+        Alert.alert(
+          "กรุณากรอกข้อมูลให้ครบถ้วน",
+          `กรุณากรอก${
+            field === "date"
+              ? "วันที่"
+              : field === "time"
+              ? "เวลา"
+              : field === "weight"
+              ? "น้ำหนัก"
+              : "ส่วนสูง"
+          }`
+        );
+        return false;
+      }
     }
 
-    // ตรวจสอบวันที่อีกครั้งก่อนส่งข้อมูล
+    // ตรวจสอบวันที่
     const dateError = validateDate(formData.date);
     if (dateError) {
       setErrorMessages((prev) => ({ ...prev, date: dateError }));
       Alert.alert("ข้อผิดพลาด", dateError);
+      return false;
+    }
+
+    // ตรวจสอบข้อผิดพลาดในฟิลด์ต่างๆ
+    for (const [field, error] of Object.entries(errorMessages)) {
+      if (field === "bloodPressure") {
+        if (
+          typeof error === "object" &&
+          error.systolic &&
+          formData.bloodPressure.systolic !== ""
+        ) {
+          Alert.alert("ข้อมูลไม่ถูกต้อง", error.systolic);
+          return false;
+        }
+        if (
+          typeof error === "object" &&
+          error.diastolic &&
+          formData.bloodPressure.diastolic !== ""
+        ) {
+          Alert.alert("ข้อมูลไม่ถูกต้อง", error.diastolic);
+          return false;
+        }
+      } else if (error && formData[field as keyof typeof formData] !== "") {
+        Alert.alert("ข้อมูลไม่ถูกต้อง", error as string);
+        return false;
+      }
+    }
+
+    // ตรวจสอบความสอดคล้องของค่าความดัน (ถ้ามีการกรอกเพียงค่าเดียว)
+    if (
+      (formData.bloodPressure.systolic && !formData.bloodPressure.diastolic) ||
+      (!formData.bloodPressure.systolic && formData.bloodPressure.diastolic)
+    ) {
+      Alert.alert(
+        "ข้อมูลไม่ครบถ้วน",
+        "กรุณากรอกค่าความดันให้ครบทั้งค่าบนและค่าล่าง"
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  // Validation Before Submit
+  const handleSubmit = () => {
+    // ตรวจสอบความสมบูรณ์ของฟอร์ม
+    if (!validateForm()) {
       return;
     }
 
-    // Store form data to pass to next screen
+    // บันทึกข้อมูลและไปหน้าถัดไป
     AsyncStorage.setItem("trackingFormData", JSON.stringify(formData))
       .then(() => {
         router.push({
@@ -401,7 +502,7 @@ export default function TrackingScreen() {
           <View className="flex-row justify-between">
             <View className="w-1/2">
               <InputFieldOne
-                label="น้ำหนัก"
+                label="น้ำหนัก *"
                 value={formData.weight}
                 onChangeText={(value) => handleChange("weight", value)}
                 placeholder=" เช่น 60"
@@ -412,7 +513,7 @@ export default function TrackingScreen() {
 
             <View className="w-1/2">
               <InputFieldOne
-                label="ส่วนสูง"
+                label="ส่วนสูง *"
                 value={formData.height}
                 onChangeText={(value) => handleChange("height", value)}
                 placeholder="เช่น 160"
@@ -499,9 +600,9 @@ export default function TrackingScreen() {
           <LongButton
             title="ถัดไป"
             onPress={handleSubmit}
-            disabled={!isFormComplete || loading}
-            isCompleted={isFormComplete}
-            customStyle={isFormComplete ? "bg-primary" : "bg-gray"}
+            disabled={!isFormValid()}
+            isCompleted={isFormValid()}
+            customStyle={isFormValid() ? "bg-primary" : "bg-gray"}
           />
         </View>
 
