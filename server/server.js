@@ -23,6 +23,7 @@ app.use(morgan("dev"));
 //ROUTES
 app.use("/api/v1/auth", require("./routes/authRoutes"));
 app.use("/api/v1/user", require("./routes/userRoutes"));
+app.use("/api/v1/suggestion", require("./routes/suggestionRoutes"));
 app.use("/api/v1/forum", require("./routes/forumRoutes"));
 app.use("/api/v1/admin", require("./routes/adminRoutes"));
 app.use("/api/v1/storage", require("./routes/storageRoutes"));

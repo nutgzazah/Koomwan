@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Text,
   SafeAreaView,
@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import Card from '../../../global/components/Card';
+import { AuthContext } from "../../../context/authContext";
 import BreakLine from '../../../global/components/BreakLine';
 import { ShortButton } from '../tracking/components/ShortButton';
 import AdviceCard from './components/AdviceCard';
@@ -32,7 +33,9 @@ interface SuggestionResultData {
 
 export default function SuggestionResult() {
   const router = useRouter();
+  const [state] = useContext(AuthContext)
   const [result, setResult] = useState<SuggestionResultData | null>(null);
+  console.log("State SuggestionResult: ",state)
 
   useEffect(() => {
     const fetchSuggestion = async () => {

@@ -6,16 +6,19 @@ import {
   Modal, 
   Pressable 
 } from "react-native";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useRouter } from "expo-router";
 import Card from "../../../global/components/Card";
+import { AuthContext } from "../../../context/authContext";
 import BreakLine from "../../../global/components/BreakLine";
 import { ShortButton } from "../tracking/components/ShortButton";
 import Loading from "../../../global/components/Loading";
 
 export default function SuggestionScreen() {
   const router = useRouter();
+  const [state] = useContext(AuthContext)
   const [showModal, setShowModal] = useState(false);
+  console.log("State Suggestion: ",state)
 
   const handleConfirm = () => {
     setShowModal(false);

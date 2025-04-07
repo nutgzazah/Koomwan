@@ -1,0 +1,19 @@
+const express = require('express')
+const { requireSignIn } = require('../controllers/authController')
+const multer = require('multer');
+const { getUserHealthLastWeek } = require('../controllers/suggestionController');
+
+// ตั้งค่าอัปโหลดไฟล์ (ใช้หน่วยความจำแทน disk storage)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+//router object
+const router = express.Router()
+
+//ROUTES
+
+//GETUserHealthLastWeek || GET
+router.get('/getUserHealthLastWeek',requireSignIn , getUserHealthLastWeek)
+
+//export
+module.exports = router
