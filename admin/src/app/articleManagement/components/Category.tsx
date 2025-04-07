@@ -18,14 +18,15 @@ const SearchCategory: React.FC<SearchCategoryProps> = ({ selectedCategory, setSe
 
     const categories: Category[] = [
         { value: "ทั้งหมด", label: "ทั้งหมด" },
-        { value: "การดูแลสุขภาพ", label: "การดูแลสุขภาพ" },
         { value: "ความรู้", label: "ความรู้" },
         { value: "โภชนาการ", label: "โภชนาการ" },
-        { value: "การออกกำลังกาย", label: "การออกกำลังกาย" },
         { value: "โรค", label: "โรค" },
-        { value: "ผู้ป่วยเบาหวาน", label: "ผู้ป่วยเบาหวาน" },
+        { value: "ออกกำลังกาย", label: "ออกกำลังกาย" },
+        { value: "แรงบันดาลใจ", label: "แรงบันดาลใจ" },
+        { value: "ข่าวสาร", label: "ข่าวสาร" },
+        { value: "อื่นๆ", label: "อื่นๆ" },
     ];
-
+    
     const handleSelect = (value: string) => {
         setSelectedCategory(value);
         setIsOpen(false);

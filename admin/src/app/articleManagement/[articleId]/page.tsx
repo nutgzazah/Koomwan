@@ -7,6 +7,7 @@ import Link from "next/link";
 import axios from "axios";
 import { formatDate } from "@/utils/formatDate.";
 import BlogImageHandler from "@/utils/blogImageHandler";
+import Image from "next/image";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
@@ -88,13 +89,12 @@ const ArticleId: React.FC = () => {
       </div>
 
       {/* Image */}
-      <div className="w-full h-64 md:h-80 lg:h-96 mb-6 overflow-hidden rounded-md">
+      <div className="relative w-full h-64 md:h-80 lg:h-96 mb-6 overflow-hidden rounded-md">
         {!loading && (
-          <img
-            src={imageUrl}
-            alt={blog.title}
-            className="w-full h-full object-cover rounded-md"
-          />
+          <Image src={imageUrl}
+          alt={blog.title}
+          fill
+          className="w-full h-full object-cover rounded-md"/>
         )}
       </div>
 

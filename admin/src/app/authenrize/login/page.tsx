@@ -46,5 +46,3 @@ export default function Login() {
     </div>
   );
 }
-
-export const layout = null;

@@ -28,7 +28,20 @@ export default class BlogImageHandler {
     }
   }
  
-
+  static async updateBlogImage(articleId: string, imageFileName: string): Promise<boolean> {
+    try {
+      const response = await axios.put(`${BASE_URL}/api/v1/admin/updateBlogImage/${articleId}`, {
+        image: imageFileName,
+      });
+  
+      console.log("Blog image updated successfully:", response.data);
+      return response.data.success ?? true; // ปรับตามโครงสร้าง backend ที่คุณใช้
+    } catch (error) {
+      console.error("Error updating blog image:", error);
+      return false;
+    }
+  }
+  
   /**
    * อัปโหลดรูปภาพบทความใหม่
    * @param imageFile ไฟล์รูปภาพที่ต้องการอัปโหลด
@@ -99,7 +112,7 @@ export default class BlogImageHandler {
       console.log("New blog image:", newImageFileName);
       
       // 3️⃣ Update blog post with new image
-      const updateSuccess = await this.updateBlogImage(articleId, newImageFileName);
+      const updateSuccess = await BlogImageHandler.updateBlogImage(articleId, newImageFileName);
       if (!updateSuccess) {
         return { success: false, newImageFileName: null };
       }

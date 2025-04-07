@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BlogInterface } from "@/interfaces/blogInterface";
 import axios from "axios";
+import Image from "next/image";
 
 const CreateArticle: React.FC = () => {
   const [blog, setBlog] = useState<Partial<BlogInterface>>({
@@ -19,16 +20,15 @@ const CreateArticle: React.FC = () => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(blog.image || null);
-  const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const router = useRouter();
 
   const categories = [
-    "การดูแลสุขภาพ",
     "ความรู้",
     "โภชนาการ",
-    "การออกกำลังกาย",
     "โรค",
-    "ผู้ป่วยเบาหวาน",
+    "ออกกำลังกาย",
+    "แรงบันดาลใจ",
+    "ข่าวสาร",
     "อื่นๆ",
   ];
 
@@ -60,7 +60,7 @@ const CreateArticle: React.FC = () => {
   const validate = () => {
     const errors: Record<string, string> = {};
     if (!blog.title) errors.title = "กรุณาใส่ชื่อบทความ";
-    if (!croppedImage && !imageFile && !blog.image) errors.image = "กรุณาเพิ่มรูปภาพ";
+    if (!imageFile) errors.image = "กรุณาเพิ่มรูปภาพ";
     if (!blog.category || blog.category.length === 0) errors.category = "กรุณาเลือกหมวดหมู่";
     if (!blog.content) errors.content = "กรุณาใส่เนื้อหา";
     if (!blog.ref) errors.ref = "กรุณาใส่แหล่งอ้างอิง";
@@ -84,11 +84,7 @@ const CreateArticle: React.FC = () => {
       formData.append("category", Array.isArray(blog.category) ? blog.category.join(", ") : blog.category || "");
       formData.append("ref", blog.ref || "");
 
-      if (croppedImage) {
-        const response = await fetch(croppedImage);
-        const blob = await response.blob();
-        formData.append("image", new File([blob], "cropped-image.png", { type: "image/png" }));
-      } else if (imageFile) {
+      if (imageFile) {
         formData.append("image", imageFile);
       }
 
@@ -125,7 +121,12 @@ const CreateArticle: React.FC = () => {
           onChange={handleFileChange}
         />
         {previewImage ? (
-          <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+          <Image
+            src={previewImage}
+            alt="Preview"
+            fill
+            className="object-cover"
+          />
         ) : (
           <div className="w-full h-full flex justify-center items-center bg-gray-200 text-gray-500 text-sm">
             คลิกเพื่ออัปโหลดรูปภาพ

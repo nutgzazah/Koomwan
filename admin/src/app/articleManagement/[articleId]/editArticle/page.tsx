@@ -6,18 +6,20 @@ import { BlogInterface } from "@/interfaces/blogInterface";
 import axios from "axios";
 import DeletePopup from "./components/DeletePopup";
 import BlogImageHandler from "@/utils/blogImageHandler";
+import Image from "next/image";
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
 const categories = [
-  "การดูแลสุขภาพ",
   "ความรู้",
   "โภชนาการ",
-  "การออกกำลังกาย",
   "โรค",
-  "ผู้ป่วยเบาหวาน",
+  "ออกกำลังกาย",
+  "แรงบันดาลใจ",
+  "ข่าวสาร",
   "อื่นๆ",
 ];
+
 
 const EditBlogForm: React.FC = () => {
   const { articleId } = useParams() as { articleId?: string };
@@ -27,7 +29,6 @@ const EditBlogForm: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [errors, setErrors] = useState<{ image?: string }>({});
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -64,7 +65,7 @@ const EditBlogForm: React.FC = () => {
 
   const fetchImageUrl = async (imagePath: string) => {
     try {
-      let [folder, fileName] = imagePath.includes("/") ? imagePath.split("/") : ["blogImage", imagePath];
+      const [folder, fileName] = imagePath.includes("/") ? imagePath.split("/") : ["blogImage", imagePath];
       console.log(`Fetching image URL from: ${BASE_URL}/api/v1/storage/getFileUrl?fileName=${fileName}&folder=${folder}`);
 
       const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, { params: { fileName, folder } });
@@ -156,9 +157,9 @@ const EditBlogForm: React.FC = () => {
       {/* อัปโหลดรูปภาพ */}
       <div className="relative w-full h-64 flex justify-center items-center border border-gray-300 rounded-lg overflow-hidden">
         {previewImage ? (
-          <img src={previewImage} alt="New Preview" className="w-full h-full object-cover" />
+          <Image src={previewImage} alt="New Preview" fill className="object-cover"/>
         ) : imageUrl ? (
-          <img src={imageUrl} alt="Existing Image" className="w-full h-full object-cover" />
+          <Image src={imageUrl} alt="Existing Image" fill className="object-cover"/>
         ) : (
           <div className="w-full h-full flex justify-center items-center bg-gray-200 text-gray-500 text-sm">
             ไม่มีรูปภาพ
@@ -170,7 +171,6 @@ const EditBlogForm: React.FC = () => {
           คลิกเพื่ออัปโหลดรูปภาพใหม่
         </div>
       </div>
-      {errors.image && <p className="text-red-500">{errors.image}</p>}
 
       <div>
         <label htmlFor="title">ชื่อบทความ</label>

@@ -8,6 +8,7 @@ import DeleteReasonPopup from "../components/deleteReason";
 import ApprovePopup from "../components/ApprovePopup";
 import DetailPopup from "../components/detailPopup";
 import ForumImageHandler from "@/utils/forumImageHandler";
+import Image from "next/image";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
@@ -19,14 +20,12 @@ const ForumID: React.FC = () => {
   const [isApprovePopupOpen, setIsApprovePopupOpen] = useState(false);
   const [isDetailPopupOpen, setIsDetailPopupOpen] = useState(false);
 
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchForum = async () => {
       if (!forumId || typeof forumId !== "string") return;
 
       try {
-        const response = await axios.get(`http://localhost:8080/api/v1/admin/forum/reported/${forumId}`);
+        const response = await axios.get(`${BASE_URL}/api/v1/admin/forum/reported/${forumId}`);
         console.log("Fetched forum data:", response.data);
 
         setForum(response.data.data || response.data);
@@ -42,10 +41,8 @@ const ForumID: React.FC = () => {
   useEffect(() => {
     const loadImageUrl = async () => {
       if (!forum?.image) {
-        setLoading(false);
         return;
       }
-
       try {
         console.log(`Fetching forum image using getCurrentForumImage: ${forum.image}`);
         const fetchedImageUrl = await ForumImageHandler.getCurrentForumImage(forum.image);
@@ -53,9 +50,7 @@ const ForumID: React.FC = () => {
         setImageUrl(fetchedImageUrl || "/assets/forum-default.jpg"); 
       } catch (error) {
         console.error("Error fetching image URL:", error);
-        setImageUrl("/assets/forum-default.jpg"); 
-      } finally {
-        setLoading(false);
+        setImageUrl("/assets/forum-default.jpg");
       }
     };
 
@@ -88,8 +83,13 @@ const ForumID: React.FC = () => {
        
        {/* ✅ Display image only if `imageUrl` exists */}
        {imageUrl && (
-        <div className="w-full h-auto mb-6">
-          <img src={imageUrl} alt="forum image" className="max-w-full md:max-w-2xl lg:max-w-3xl h-auto rounded-lg shadow-md" />
+        <div className="relative w-full max-w-full md:max-w-2xl lg:max-w-3xl h-[300px] mb-6 rounded-lg shadow-md overflow-hidden">
+          <Image
+            src={imageUrl}
+            alt="forum image"
+            fill
+            className="object-cover"
+          />
         </div>
       )}
 
