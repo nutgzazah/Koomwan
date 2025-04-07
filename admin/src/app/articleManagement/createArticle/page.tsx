@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BlogInterface } from "@/interfaces/blogInterface";
 import axios from "axios";
 import Image from "next/image";
+import TiptapEditor from "@/components/TiptapEditor";
 
 const CreateArticle: React.FC = () => {
   const [blog, setBlog] = useState<Partial<BlogInterface>>({
@@ -162,8 +163,8 @@ const CreateArticle: React.FC = () => {
 
       <div>
         <label className="text-bold_detail" htmlFor="content">เนื้อหา</label>
-        <textarea id="content" name="content" placeholder="กรอกเนื้อหา" value={blog.content || ""} onChange={handleChange} className="input h-64"></textarea>
-        {errors.content && <p className="text-red-500 mt-2">{errors.content}</p>}
+        <TiptapEditor content={blog.content || ""} onChange={(html) => setBlog({ ...blog, content: html })} />
+  {errors.content && <p className="text-red-500 mt-2">{errors.content}</p>}
       </div>
 
       <div className="flex justify-center space-x-4">

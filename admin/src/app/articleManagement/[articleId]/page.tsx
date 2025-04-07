@@ -99,7 +99,10 @@ const ArticleId: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="text-detail_2 text-secondary leading-relaxed">{blog.content}</div>
+      <div
+        className="prose prose-lg max-w-none text-secondary"
+        dangerouslySetInnerHTML={{ __html: blog.content }}
+      />
     </div>
   );
 };
