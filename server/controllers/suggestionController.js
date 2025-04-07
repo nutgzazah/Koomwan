@@ -3,6 +3,7 @@ const HealthInfo = require('../models/healthInfoModel'); // โมเดล heal
 const Record = require('../models/recordModel');         // โมเดล record
 const User = require('../models/userModel'); // นำเข้า User Model
 const Doctor = require('../models/doctorModel'); // นำเข้า Doctor Model
+const Suggestion = require('../models/suggestionModel');
 
 exports.getUserHealthLastWeek = async (req, res) => {
     try {
@@ -81,4 +82,49 @@ exports.getUserHealthLastWeek = async (req, res) => {
       return res.status(500).json({ message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' });
     }
   };
+
+// API getSuggestionData
+exports.getSuggestionData = async (req, res) => {
+  try {
+    const userId = req.auth._id;
+
+    const suggestion = await Suggestion.findOne({ user: userId })
+      .sort({ createdAt: -1 }) // เอาอันล่าสุด
+      .lean();
+
+    if (!suggestion) {
+      return res.status(404).json({
+        message: 'ไม่พบข้อมูลคำแนะนำสุขภาพของคุณ'
+      });
+    }
+
+    return res.status(200).json(suggestion);
+
+  } catch (error) {
+    console.error('Error fetching suggestion data:', error);
+    return res.status(500).json({
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลคำแนะนำ',
+      error: error.message
+    });
+  }
+};
+
+exports.getUserDiabetesType = async (req, res) => {
+  try {
+    const userId = req.auth._id;
+
+    const healthInfo = await HealthInfo.findOne({ user: userId });
+
+    if (!healthInfo) {
+      return res.status(404).json({ message: 'Health info not found for this user' });
+    }
+
+    const diabetesType = healthInfo.diabetestype || 'none';
+
+    return res.status(200).json({ diabetestype: diabetesType });
+  } catch (error) {
+    console.error('Error fetching diabetes type:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
   

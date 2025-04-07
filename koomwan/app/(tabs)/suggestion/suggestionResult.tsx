@@ -7,8 +7,9 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import axios from 'axios';
 import Card from '../../../global/components/Card';
 import { AuthContext } from "../../../context/authContext";
@@ -16,6 +17,7 @@ import BreakLine from '../../../global/components/BreakLine';
 import { ShortButton } from '../tracking/components/ShortButton';
 import AdviceCard from './components/AdviceCard';
 import BASE_URL from "../../../config"
+import motivationalQuotes from './motivationalQuotes';
 
 interface SuggestionResultData {
   health_score: number;
@@ -38,31 +40,11 @@ export default function SuggestionResult() {
   const [result, setResult] = useState<SuggestionResultData | null>(null);
   const [loading, setLoading] = useState(true);
   const [quote, setQuote] = useState("");
-  const [isEstimatedA1C, setIsEstimatedA1C] = useState(false);
+  const [diabetestype, setDiabetestype] = useState<string | null>(null);
   console.log("State SuggestionResult: ",state)
 
-  const motivationalQuotes = [
-    "อย่าลืมเช็กน้ำตาลเป็นประจำนะ 💉🩸",
-    "อาหารดี พาชีวิตดีขึ้นเสมอ 🍲💚",
-    "เดินวันละนิด สุขภาพดีทุกวัน 🚶‍♂️☀️",
-    "เบาหวานก็สู้ได้ ถ้าใส่ใจตัวเอง 💪🛡️",
-    "ลดหวานวันละนิด หัวใจยิ้มได้ 💓🍬",
-    "ออกกำลังกายคือยาที่ดีที่สุด 🏃‍♀️🔥",
-    "อย่าท้อ ถึงช้าก็ยังดีกว่าไม่เริ่ม 😊🕊️",
-    "ใส่ใจสุขภาพวันนี้ เพื่ออนาคตที่แข็งแรง 🌱📆",
-    "เบาหวานไม่ได้น่ากลัว ถ้าเราไม่ละเลย 🧠💡",
-    "ทุกมื้อที่เลือกดี คือก้าวสู่สุขภาพดี 🥗✅",
-    "สุขภาพคือของขวัญที่เราดูแลได้ 🎁❤️",
-    "น้ำเปล่าคือเพื่อนที่ดีที่สุดของร่างกาย 💧👫",
-    "พักผ่อนให้พอ แล้วพลังจะกลับมา 🌙😌",
-    "เลือกรักตัวเอง ด้วยการใส่ใจสุขภาพ 💖🏥",
-    "ค่อย ๆ ปรับ ก็ชนะเบาหวานได้แน่นอน 🛤️👏",
-    "สู้ไปทีละวัน สุขภาพดีอยู่ไม่ไกล 🌄🚴‍♀️",
-    "ชีวิตดีขึ้นได้ ถ้าร่างกายแข็งแรง ✨🧘‍♂️",
-    "ใจที่สู้ คือยาที่ดีที่สุด 💊💗",
-    "ไม่ต้องเร็ว ขอแค่ไม่หยุดก็พอ 🐢⏩",
-    "คุณไม่สู้คนเดียว ยังมีร่างกายคุณอยู่ข้าง ๆ 🤝🧬"
-  ];
+  const navigation = useNavigation();
+
 
   useEffect(() => {
     const fetchHealthAndSuggest = async () => {
@@ -71,8 +53,7 @@ export default function SuggestionResult() {
 
         const healthData = healthRes.data.data;
         console.log("HealthData =>", healthData);
-
-        setIsEstimatedA1C(healthRes.data.estimatedA1C);
+        setDiabetestype(healthData.diabetestype);
 
         // ถ้าข้อมูลครบ ค่อยส่งไปยัง Flask
         const response = await axios.post(`${BASE_URL}/api/v1/ai/predict`, {
@@ -92,7 +73,8 @@ export default function SuggestionResult() {
         const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
         setQuote(randomQuote);
         // ตรวจสอบว่า isEstimatedA1C เป็น true หรือไม่
-        if (isEstimatedA1C) {
+        console.log("isEstimatedA1C:",healthRes.data.estimatedA1C)
+        if (healthRes.data.estimatedA1C) {
           Alert.alert(
             'HbA1c เป็นค่าประมาณ',
             'เนื่องจากไม่มีข้อมูลค่าน้ำตาลเฉลี่ยสะสมในเลือดแบบเจาะจง แอพจึงคำนวนให้เป็นค่าประมาณในการวิเคราะห์ครั้งนี้' 
@@ -127,7 +109,7 @@ export default function SuggestionResult() {
     };
 
     fetchHealthAndSuggest();
-  }, [isEstimatedA1C]);
+  }, []);
 
   const calculateAge = (birthdate: string): number => {
     const birth = new Date(birthdate);
@@ -148,9 +130,19 @@ export default function SuggestionResult() {
 
   if (loading || !result) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center">
+      <SafeAreaView className="flex-1 justify-center items-center bg-white">
         <ActivityIndicator size="large" color="#3972F0" />
-        <Text className="font-sans text-description mt-4 text-secondary">กำลังประเมินผลสุขภาพ...</Text>
+        <Text className="font-sans text-description mt-4 text-secondary">
+          กำลังประเมินผลสุขภาพ...
+        </Text>
+  
+        {/* ปุ่มยกเลิก / ย้อนกลับ */}
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          className="bg-primary mt-6 px-8 py-4 rounded-xl"
+        >
+          <Text className="text-white font-sans">ยกเลิก</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
@@ -177,7 +169,8 @@ export default function SuggestionResult() {
             <Text className="text-body font-sans text-secondary">/10</Text>
           </Text>
 
-          <Text className="text-headline font-bold font-sans text-secondary text-center mb-2">
+          {diabetestype !== "diabetes" && (
+          <Text className="text-headline font-bold font-sans text-secondary text-center mb-2"> 
             ความเสี่ยงเบาหวาน
             <Text className="text-display font-bold font-sans text-primary text-center ">
               {result.diabetes_risk_percent}%
@@ -187,6 +180,7 @@ export default function SuggestionResult() {
               ({result.diabetes_risk})
             </Text>
           </Text>
+        )}
           <BreakLine />
 
           <Text className="text-description font-sans text-secondary text-center mb-4">
