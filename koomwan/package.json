@@ -44,6 +44,7 @@
     "react-native-document-picker": "^9.3.1",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-get-random-values": "^1.11.0",
+    "react-native-htmlview": "^0.17.0",
     "react-native-image-picker": "^7.2.3",
     "react-native-is-edge-to-edge": "^1.1.6",
     "react-native-reanimated": "~3.16.1",
@@ -60,6 +61,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~18.3.12",
+    "@types/react-native-htmlview": "^0.16.5",
     "expo": "^52.0.31",
     "typescript": "^5.7.3"
   },

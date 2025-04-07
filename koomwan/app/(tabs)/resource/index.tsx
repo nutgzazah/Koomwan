@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   SafeAreaView,
   Image,
   ScrollView,
-  ImageSourcePropType,
   Alert,
   Pressable,
   Text,
@@ -16,7 +15,7 @@ import PopupScreen from "../../../global/components/PopupScreen";
 import Loading from "../../../global/components/Loading";
 import BASE_URL from "../../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 interface Blog {
   _id: string;
@@ -51,48 +50,50 @@ export default function ResourceScreen() {
 
   const filteredBlogs = useMemo(() => {
     return blogsData.filter(blog =>
-      blog.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (selectedCategories.length === 0 || selectedCategories.some(category => blog.category.includes(category))) // ใช้เงื่อนไข OR ในการ Filter
+      blog.title.toLowerCase().includes(searchQuery.toLowerCase())
+      && blog.content.toLowerCase().includes(searchQuery.toLowerCase())
+      && (selectedCategories.length === 0 || selectedCategories.some(category => blog.category.includes(category))) // ใช้เงื่อนไข OR ในการ Filter
     );
   }, [blogsData, searchQuery, selectedCategories]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const authData = await AsyncStorage.getItem("@auth");
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const authData = await AsyncStorage.getItem("@auth");
+
+      if (!authData) {
+        Alert.alert("Session Expired ", "Please login again");
+        router.push("/user/login");
+        return;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+      const userId = auth.user._id;
+
+      if (!userId || !token) {
+        Alert.alert("Session Expired", "Please login again");
+        router.push("/user/login");
+        return;
+      }
+
+      const resourceResponse = await axios.get(`${BASE_URL}/api/v1/admin/blog`);
+
+      if (resourceResponse.data.success) {
+        const blogs = resourceResponse.data.data;
+
+        // Fetch image URLs for each blog
+        const blogsWithImageUrls = await Promise.all(
+          blogs.map(async (blog: Blog) => {
+            const [folder, fileName] = blog.image.includes("/")
+              ? blog.image.split("/")
+              : ["blogImage", blog.image];
+            if (folder.includes("http")) {
+              return blog.image;
+            }
   
-        if (!authData) {
-          Alert.alert("Session Expired ", "Please login again");
-          router.push("/user/login");
-          return;
-        }
-  
-        const auth = JSON.parse(authData);
-        const token = auth.token;
-        const userId = auth.user._id;
-  
-        if (!userId || !token) {
-          Alert.alert("Session Expired", "Please login again");
-          router.push("/user/login");
-          return;
-        }
-  
-        const resourceResponse = await axios.get(`${BASE_URL}/api/v1/admin/blog`);
-  
-        if (resourceResponse.data.success) {
-          const blogs = resourceResponse.data.data;
-  
-          // Fetch image URLs for each blog
-          const blogsWithImageUrls = await Promise.all(
-            blogs.map(async (blog: Blog) => {
-              const [folder, fileName] = blog.image.includes("/")
-                ? blog.image.split("/")
-                : ["blogImage", blog.image];
-              if (folder.includes("http")) {
-                return blog.image;
-              }
-  
+            try {
               const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
                 params: { fileName, folder },
                 headers: { "Cache-Control": "no-cache" },
@@ -102,33 +103,38 @@ export default function ResourceScreen() {
                 ? response.data.url
                 : `${BASE_URL}/uploads/${blog.image}`;
   
-              return { ...blog, image: imageUrl };
-            })
-          );
-  
-          setBlogsData(blogsWithImageUrls);
-        }
-      } catch (error) {
-  
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-          await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
-          Alert.alert("Session Expired", "Please login again", [
-            { text: "OK", onPress: () => router.push("/user/login") },
-          ]);
-        } else {
-          Alert.alert(
-            "Error",
-            "Failed to load profile data. Please try again later.",
-            [{ text: "OK", onPress: () => router.back() }]
-          );
-        }
-      } finally {
-        setLoading(false);
+              return { ...blog, image: imageUrl || "" }; // Fallback to default image
+            } catch (error) {
+              return { ...blog, image: "" }; // Fallback to default image
+            }
+          })
+        );
+
+        setBlogsData(blogsWithImageUrls);
       }
-    };
-  
-    fetchData();
-  }, []);
+    } catch (error) {
+
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
+        Alert.alert("Session Expired", "Please login again", [
+          { text: "OK", onPress: () => router.push("/user/login") },
+        ]);
+      } else {
+        Alert.alert(
+          "Error",
+          "Failed to load profile data. Please try again later.",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   if (loading || !blogsData) {
     return <Loading />;
@@ -178,7 +184,7 @@ export default function ResourceScreen() {
           ))
         ) : (
           <View className="flex-1 justify-center items-center mt-[16.125rem]">
-          {/* Display if no blogs data is found */}
+            {/* Display if no blogs data is found */}
             <Image
               source={require("../../../assets/Resource/search-status.png")}
               className="w-[3.375rem] h-[3.375rem] mb-2"
