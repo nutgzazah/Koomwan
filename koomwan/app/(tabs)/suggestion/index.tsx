@@ -35,6 +35,14 @@ export default function SuggestionScreen() {
   const [randomBlogs, setRandomBlogs] = useState<any[]>([]);
   console.log("State Suggestion: ",state)
 
+  const isCooldownActive = () => {
+    if (!result?.createdAt) return false;
+    const createdTime = new Date(result.createdAt).getTime();
+    const now = new Date().getTime();
+    const diffMinutes = (now - createdTime) / (1000 * 60);
+    return diffMinutes < 5;
+  };
+
   const fetchDiabetesType = async () => {
     setLoading(true);  // Start loading
     try {
@@ -229,8 +237,14 @@ export default function SuggestionScreen() {
             </View>
 
             <ShortButton
-              title="สร้างการประเมินใหม่"
-              onPress={() => setShowModal(true)}
+              title={isCooldownActive() ? "กรุณารอสักครู่..." : "สร้างการประเมินใหม่"}
+              onPress={() => {
+                if (isCooldownActive()) {
+                  Alert.alert("กรุณารอสักครู่", "คุณสามารถสร้างการประเมินใหม่ได้ทุก 5 นาที");
+                } else {
+                  setShowModal(true);
+                }
+              }}
               iconSrc={require("../../../assets/Suggestion/rotate-left.png")}
               iconPosition="left"
               className="mt-2 mb-1"
