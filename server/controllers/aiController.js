@@ -11,7 +11,6 @@ exports.predictFromAI = async (req, res) => {
       diabetes_risk_percent,
       summary,
       healthAdvice,
-      motivation
     } = flaskRes.data;
     
     const suggestion = new Suggestion({
@@ -25,7 +24,6 @@ exports.predictFromAI = async (req, res) => {
         exercise: healthAdvice.exercise,
         blog: healthAdvice.blog
       },
-      motivation
     });
     
 
