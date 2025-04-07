@@ -9,9 +9,21 @@ interface DetailPopupProps {
   forumId: string;
 }
 
+interface ReportReason {
+  reason: string;
+}
+
+interface ForumData {
+  reports?: {
+    count?: number;
+    reasons?: ReportReason[];
+  };
+}
+
+
 export default function DetailPopup({ onClose, forumId }: DetailPopupProps) {
   const [activeTab, setActiveTab] = useState<string>("ทั้งหมด");
-  const [forum, setForum] = useState<any | null>(null);
+  const [forum, setForum] = useState<ForumData | null>(null);
 
   useEffect(() => {
     const fetchForumData = async () => {
@@ -47,7 +59,7 @@ export default function DetailPopup({ onClose, forumId }: DetailPopupProps) {
     if (category === "ทั้งหมด") {
       acc[category] = reportsArray.length;
     } else {
-      acc[category] = reportsArray.filter((r) => r?.reason && ForumReportTitle[r.reason] === category).length || 0;
+      acc[category] = reportsArray.filter((r: ReportReason) => r?.reason && ForumReportTitle[r.reason] === category).length || 0;
     }
     return acc;
   }, {} as { [key: string]: number });
@@ -55,7 +67,7 @@ export default function DetailPopup({ onClose, forumId }: DetailPopupProps) {
   // filter reported title
   const filteredReports = activeTab === "ทั้งหมด" 
     ? reportsArray 
-    : reportsArray.filter((r) => r?.reason && ForumReportTitle[r.reason] === activeTab);
+    : reportsArray.filter((r: ReportReason) => r?.reason && ForumReportTitle[r.reason] === activeTab);
 
   return (
     <PopupCard title={`จำนวนครั้งที่ถูกรายงาน ${forum.reports?.count || 0} ครั้ง`} onClose={onClose} className="w-[1300px] min-h-[500px]">

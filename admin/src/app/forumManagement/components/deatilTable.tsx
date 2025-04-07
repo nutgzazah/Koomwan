@@ -33,7 +33,7 @@ const DetailTable: React.FC<DetailTableProps> = ({ forums = [] }) => {
 
   const tableData = forums.map((report) => [
     report?.user?.username || "ไม่ระบุ",
-    ForumReportTitle[report?.reason] || "ไม่ระบุ",
+    ForumReportTitle[report?.reason ?? "Other"] || "ไม่ระบุ"
   ]);
 
   return (

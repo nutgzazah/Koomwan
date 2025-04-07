@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import type { PluginAPI } from "tailwindcss/types/config";
+import typography from "@tailwindcss/typography"; // เพิ่มบรรทัดนี้
 
 export default {
   content: [
@@ -90,6 +91,7 @@ export default {
     },
   },
   plugins: [
+    typography,
     function ({ addBase, theme }: PluginAPI) {
       addBase({
         ":root": {
