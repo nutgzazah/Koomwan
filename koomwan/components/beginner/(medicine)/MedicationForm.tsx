@@ -9,8 +9,9 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
+  Pressable,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams, usePathname } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -22,8 +23,8 @@ import { MEDICATION_TYPES } from "../../../constant/medication";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../../config";
+import ImageUploader from "../../../global/components/ImageUploader";
 import ImageUploaderWithPreview from "../../../global/components/ImageUploader";
-import MedicationFormModal from "./MedicationFormModal";
 
 type ImagePickerResult = {
   canceled: boolean;
@@ -48,14 +49,6 @@ export default function MedicationForm() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Modal states
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalTitle, setModalTitle] = useState("");
-  const [modalMessage, setModalMessage] = useState("");
-  const [modalType, setModalType] = useState<"confirm" | "success" | "error">(
-    "confirm"
-  );
-  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
   const pathname = usePathname();
   console.log("Current Path:" + pathname);
   console.log("Reminder Format:", reminderFormat);
@@ -67,20 +60,6 @@ export default function MedicationForm() {
     }
   }, [reminderFormat]);
 
-  // Show modal helper function
-  const showModal = (
-    title: string,
-    message: string,
-    type: "confirm" | "success" | "error" = "confirm",
-    onConfirm: () => void = () => {}
-  ) => {
-    setModalTitle(title);
-    setModalMessage(message);
-    setModalType(type);
-    setConfirmAction(() => onConfirm);
-    setModalVisible(true);
-  };
-
   const uploadImageToServer = async (imageUri: string) => {
     try {
       setIsUploadingImage(true);
@@ -88,9 +67,8 @@ export default function MedicationForm() {
       // ดึง auth token
       const authData = await AsyncStorage.getItem("@auth");
       if (!authData) {
-        showModal("Session Expired", "Please login again", "error", () =>
-          router.push("/user/login")
-        );
+        Alert.alert("Session Expired", "Please login again");
+        router.push("/user/login");
         return null;
       }
 
@@ -263,28 +241,19 @@ export default function MedicationForm() {
       return; // Prevent double submission
     }
 
+    // Validation
     if (!pillName.trim()) {
-      showModal("กรุณากรอกชื่อยา", "ชื่อยาไม่สามารถเว้นว่างได้", "error");
+      Alert.alert("กรุณากรอกชื่อยา", "ชื่อยาไม่สามารถเว้นว่างได้");
       return;
     }
 
-    showModal(
-      "ยืนยันการเพิ่มยา",
-      "คุณต้องการเพิ่มข้อมูลยา " + pillName + " ใช่หรือไม่?",
-      "confirm",
-      submitMedication
-    );
-  };
-
-  const submitMedication = async () => {
     setIsSubmitting(true);
     try {
       // ดึง auth token
       const authData = await AsyncStorage.getItem("@auth");
       if (!authData) {
-        showModal("Session Expired", "Please login again", "error", () =>
-          router.push("/user/login")
-        );
+        Alert.alert("Session Expired", "Please login again");
+        router.push("/user/login");
         return;
       }
 
@@ -351,23 +320,27 @@ export default function MedicationForm() {
 
       if (response.data.success) {
         // แสดงข้อความสำเร็จ
-        showModal("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", "success", () => {
-          // ถ้ามาจากหน้า beginner setup (มี healthInfoId จาก params) ให้กลับไปที่หน้านั้น
-          if (healthInfoId) {
-            router.back();
-          } else {
-            router.back();
-          }
-        });
+        Alert.alert("สำเร็จ", "เพิ่มข้อมูลยาเรียบร้อยแล้ว", [
+          {
+            text: "ตกลง",
+            onPress: () => {
+              // ถ้ามาจากหน้า beginner setup (มี healthInfoId จาก params) ให้กลับไปที่หน้านั้น
+              if (healthInfoId) {
+                router.back();
+              } else {
+                router.back();
+              }
+            },
+          },
+        ]);
       } else {
         throw new Error(response.data.message || "ไม่สามารถเพิ่มข้อมูลยาได้");
       }
     } catch (error) {
       console.error("Error adding medication:", error);
-      showModal(
+      Alert.alert(
         "เกิดข้อผิดพลาด",
-        "ไม่สามารถเพิ่มข้อมูลยาได้ กรุณาลองใหม่อีกครั้ง",
-        "error"
+        "ไม่สามารถเพิ่มข้อมูลยาได้ กรุณาลองใหม่อีกครั้ง"
       );
     } finally {
       setIsSubmitting(false);
@@ -375,16 +348,9 @@ export default function MedicationForm() {
   };
 
   const handleRemoveReminder = (index: number) => {
-    showModal(
-      "ลบการแจ้งเตือน",
-      "คุณต้องการลบการแจ้งเตือนนี้ใช่หรือไม่?",
-      "confirm",
-      () => {
-        const updatedReminders = [...reminderTimes];
-        updatedReminders.splice(index, 1);
-        setReminderTimes(updatedReminders);
-      }
-    );
+    const updatedReminders = [...reminderTimes];
+    updatedReminders.splice(index, 1);
+    setReminderTimes(updatedReminders);
   };
 
   return (
@@ -576,22 +542,6 @@ export default function MedicationForm() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-
-      {/* Custom Modal */}
-      <MedicationFormModal
-        visible={modalVisible}
-        title={modalTitle}
-        message={modalMessage}
-        confirmText={modalType === "confirm" ? "ยืนยัน" : "ตกลง"}
-        cancelText="ยกเลิก"
-        onConfirm={() => {
-          setModalVisible(false);
-          confirmAction();
-        }}
-        onCancel={() => setModalVisible(false)}
-        type={modalType}
-        isLoading={modalType === "confirm" && isSubmitting}
-      />
     </SafeAreaView>
   );
 }
