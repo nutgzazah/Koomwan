@@ -5,75 +5,80 @@ const User = require('../models/userModel'); // นำเข้า User Model
 const Doctor = require('../models/doctorModel'); // นำเข้า Doctor Model
 
 exports.getUserHealthLastWeek = async (req, res) => {
-  try {
-    const userId = req.auth._id;
-
-    // หา healthinfo ล่าสุดของ user
-    const healthInfo = await HealthInfo.findOne({ user: userId }).sort({ createdAt: -1 });
-    if (!healthInfo) return res.status(404).json({ message: 'Health info not found' });
-
-    const healthInfoId = healthInfo._id;
-
-    // คำนวณวันย้อนหลัง 7 วัน
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-    // ดึง records ที่สร้างใน 7 วันที่ผ่านมา
-    const recentRecords = await Record.find({
-      healthinfo: healthInfoId,
-      recordtime: { $gte: oneWeekAgo }
-    }).sort({ recordtime: -1 });;
-
-    // ตรวจสอบว่าข้อมูลครบหรือไม่
-    let hasBloodSugar = false;
-    let hasA1C = false;
-    let hasBP = false;
-
-    recentRecords.forEach(record => {
-      if (record.bloodsugar !== undefined) hasBloodSugar = true;
-      if (record.a1c !== undefined) hasA1C = true;
-      if (record.bloodpressure?.systolic && record.bloodpressure?.diastolic) hasBP = true;
-    });
-
-    // ถ้ายังไม่ครบทุกข้อมูลที่ต้องการ
-    if (!(hasBloodSugar && hasA1C && hasBP)) {
-      return res.status(400).json({
-        message: 'ไม่พบข้อมูลสุขภาพครบทุกประเภทในช่วง 7 วันที่ผ่านมา',
-        missing: {
-          bloodsugar: !hasBloodSugar,
-          a1c: !hasA1C,
-          bloodpressure: !hasBP,
-        }
+    try {
+      const userId = req.auth._id;
+  
+      // หา healthinfo ล่าสุดของ user
+      const healthInfo = await HealthInfo.findOne({ user: userId }).sort({ createdAt: -1 });
+      if (!healthInfo) return res.status(404).json({ message: 'Health info not found' });
+  
+      const healthInfoId = healthInfo._id;
+  
+      // คำนวณวันย้อนหลัง 7 วัน
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  
+      // ดึง records ที่สร้างใน 7 วันที่ผ่านมา
+      const recentRecords = await Record.find({
+        healthinfo: healthInfoId,
+        recordtime: { $gte: oneWeekAgo }
+      }).sort({ recordtime: -1 });
+  
+      // ตรวจสอบว่ามีค่าที่ต้องการหรือไม่
+      const bloodSugarRecords = recentRecords.filter(r => r.bloodsugar !== undefined);
+      const hasEnoughBloodSugar = bloodSugarRecords.length >= 5;
+  
+      const hasBP = recentRecords.some(r => r.bloodpressure?.systolic && r.bloodpressure?.diastolic);
+      const a1cRecord = recentRecords.find(r => r.a1c !== undefined);
+      const hasA1C = !!a1cRecord;
+  
+      // ถ้ายังไม่ครบทุกข้อมูลที่ต้องการ (ยกเว้น a1c)
+      if (!(hasEnoughBloodSugar && hasBP)) {
+        return res.status(400).json({
+          message: 'ไม่พบข้อมูลสุขภาพครบทุกประเภทในช่วง 7 วันที่ผ่านมา',
+          missing: {
+            bloodsugar: !hasEnoughBloodSugar,
+            bloodpressure: !hasBP,
+          }
+        });
+      }
+  
+      // คำนวณ HbA1c โดยประมาณถ้าไม่มีค่า a1c
+      let estimatedA1C = null;
+      if (!hasA1C) {
+        const avgBloodSugar = bloodSugarRecords.reduce((sum, r) => sum + r.bloodsugar, 0) / bloodSugarRecords.length;
+        estimatedA1C = parseFloat(((avgBloodSugar + 46.7) / 28.7).toFixed(2)); // Official ADAG formula
+      }
+  
+      // ดึง moodstatus ล่าสุด 3 ค่า
+      const moodStatuses = recentRecords
+        .filter(r => r.moodstatus)
+        .slice(0, 3)
+        .map(r => r.moodstatus);
+  
+      // เตรียมข้อมูลเพื่อนำไปใช้กับ AI
+      const latestData = {
+        gender: healthInfo.gender,
+        diabetestype: healthInfo.diabetestype,
+        birthdate: healthInfo.birthdate,
+        height: healthInfo.height,
+        weight: healthInfo.weight,
+        bloodsugar: bloodSugarRecords[0]?.bloodsugar,
+        a1c: hasA1C ? a1cRecord.a1c : estimatedA1C,
+        systolic: recentRecords.find(r => r.bloodpressure?.systolic)?.bloodpressure.systolic,
+        diastolic: recentRecords.find(r => r.bloodpressure?.diastolic)?.bloodpressure.diastolic,
+        moodstatus: moodStatuses
+      };
+  
+      return res.json({
+        message: 'ดึงข้อมูลสุขภาพใน 1 สัปดาห์ล่าสุดสำเร็จ',
+        data: latestData,
+        estimatedA1C: !hasA1C // บอก frontend ว่านี่คือค่าประมาณหรือจริง
       });
+  
+    } catch (error) {
+      console.error('Error in getUserHealthLastWeek:', error);
+      return res.status(500).json({ message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' });
     }
-
-    // ดึง moodstatus ล่าสุด 3 ค่า
-    const moodStatuses = recentRecords
-      .filter(r => r.moodstatus)
-      .slice(0, 3)
-      .map(r => r.moodstatus);
-
-    // เตรียมข้อมูลเพื่อนำไปใช้กับ AI
-    const latestData = {
-      gender: healthInfo.gender,
-      diabetestype: healthInfo.diabetestype,
-      birthdate: healthInfo.birthdate,
-      height: healthInfo.height,
-      weight: healthInfo.weight,
-      bloodsugar: recentRecords.find(r => r.bloodsugar !== undefined)?.bloodsugar,
-      a1c: recentRecords.find(r => r.a1c !== undefined)?.a1c,
-      systolic: recentRecords.find(r => r.bloodpressure?.systolic)?.bloodpressure.systolic,
-      diastolic: recentRecords.find(r => r.bloodpressure?.diastolic)?.bloodpressure.diastolic,
-      moodstatus: moodStatuses
-    };
-
-    return res.json({
-      message: 'ดึงข้อมูลสุขภาพใน 1 สัปดาห์ล่าสุดสำเร็จ',
-      data: latestData
-    });
-
-  } catch (error) {
-    console.error('Error in getUserHealthLastWeek:', error);
-    return res.status(500).json({ message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' });
-  }
-};
+  };
+  

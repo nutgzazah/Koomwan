@@ -6,6 +6,7 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
@@ -35,36 +36,117 @@ export default function SuggestionResult() {
   const router = useRouter();
   const [state] = useContext(AuthContext)
   const [result, setResult] = useState<SuggestionResultData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [quote, setQuote] = useState("");
+  const [isEstimatedA1C, setIsEstimatedA1C] = useState(false);
   console.log("State SuggestionResult: ",state)
 
-  useEffect(() => {
-    const fetchSuggestion = async () => {
-      try {
-        const response = await axios.post(
-          `${BASE_URL}/api/v1/ai/predict`,
-          {
-            userId: '66144c9e33fa4a7b12345698',
-            gender: 'male',
-            age: 21,
-            bmi: 31,
-            blood_glucose_level: 91,
-            HbA1c_level: 5.2,
-            systolic_bp: 100,
-            diastolic_bp: 70,
-          }
-        );
-        console.log("flaskRes",response)
-        console.log("flaskRes Data",response.data)
-        setResult(response.data);
-      } catch (err) {
-        console.error('Error fetching prediction:', err);
+  const motivationalQuotes = [
+    "อย่าลืมเช็กน้ำตาลเป็นประจำนะ 💉🩸",
+    "อาหารดี พาชีวิตดีขึ้นเสมอ 🍲💚",
+    "เดินวันละนิด สุขภาพดีทุกวัน 🚶‍♂️☀️",
+    "เบาหวานก็สู้ได้ ถ้าใส่ใจตัวเอง 💪🛡️",
+    "ลดหวานวันละนิด หัวใจยิ้มได้ 💓🍬",
+    "ออกกำลังกายคือยาที่ดีที่สุด 🏃‍♀️🔥",
+    "อย่าท้อ ถึงช้าก็ยังดีกว่าไม่เริ่ม 😊🕊️",
+    "ใส่ใจสุขภาพวันนี้ เพื่ออนาคตที่แข็งแรง 🌱📆",
+    "เบาหวานไม่ได้น่ากลัว ถ้าเราไม่ละเลย 🧠💡",
+    "ทุกมื้อที่เลือกดี คือก้าวสู่สุขภาพดี 🥗✅",
+    "สุขภาพคือของขวัญที่เราดูแลได้ 🎁❤️",
+    "น้ำเปล่าคือเพื่อนที่ดีที่สุดของร่างกาย 💧👫",
+    "พักผ่อนให้พอ แล้วพลังจะกลับมา 🌙😌",
+    "เลือกรักตัวเอง ด้วยการใส่ใจสุขภาพ 💖🏥",
+    "ค่อย ๆ ปรับ ก็ชนะเบาหวานได้แน่นอน 🛤️👏",
+    "สู้ไปทีละวัน สุขภาพดีอยู่ไม่ไกล 🌄🚴‍♀️",
+    "ชีวิตดีขึ้นได้ ถ้าร่างกายแข็งแรง ✨🧘‍♂️",
+    "ใจที่สู้ คือยาที่ดีที่สุด 💊💗",
+    "ไม่ต้องเร็ว ขอแค่ไม่หยุดก็พอ 🐢⏩",
+    "คุณไม่สู้คนเดียว ยังมีร่างกายคุณอยู่ข้าง ๆ 🤝🧬"
+  ];
 
+  useEffect(() => {
+    const fetchHealthAndSuggest = async () => {
+      try {
+        const healthRes = await axios.get(`${BASE_URL}/api/v1/suggestion/getUserHealthLastWeek`);
+
+        const healthData = healthRes.data.data;
+        console.log("HealthData =>", healthData);
+
+        setIsEstimatedA1C(healthRes.data.estimatedA1C);
+
+        // ถ้าข้อมูลครบ ค่อยส่งไปยัง Flask
+        const response = await axios.post(`${BASE_URL}/api/v1/ai/predict`, {
+          userId: state.user._id,
+          diabetestype: healthData.diabetestype,
+          gender: healthData.gender,
+          age: calculateAge(healthData.birthdate),
+          bmi: calculateBMI(healthData.weight, healthData.height),
+          blood_glucose_level: healthData.bloodsugar,
+          HbA1c_level: healthData.a1c,
+          systolic_bp: healthData.systolic,
+          diastolic_bp: healthData.diastolic,
+          moodstatus: healthData.moodstatus,
+        });
+
+        setResult(response.data);
+        const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+        setQuote(randomQuote);
+        // ตรวจสอบว่า isEstimatedA1C เป็น true หรือไม่
+        if (isEstimatedA1C) {
+          Alert.alert(
+            'HbA1c เป็นค่าประมาณ',
+            'เนื่องจากไม่มีข้อมูลค่าน้ำตาลเฉลี่ยสะสมในเลือดแบบเจาะจง แอพจึงคำนวนให้เป็นค่าประมาณในการวิเคราะห์ครั้งนี้' 
+          );
+        }
+      } catch (error: any) {
+        console.error('Error:', error?.response?.data || error);
+
+        if (error?.response?.data?.message === 'Health info not found') {
+          Alert.alert(
+            'แจ้งเตือน',
+            'ดูเหมือนว่าคุณยังไม่ได้บันทึกข้อมูลพื้นฐานเลยนะ ไปบันทึกตอนนี้เลย!',
+            [{ text: 'ตกลง', onPress: () => router.replace('/user/beginner') }]
+          );
+        } else if (error?.response?.data?.message === 'ไม่พบข้อมูลสุขภาพครบทุกประเภทในช่วง 7 วันที่ผ่านมา') {
+          const missing = error.response.data.missing;
+          const missingList = [
+            missing.bloodsugar ? 'ระดับน้ำตาลในเลือด 5 ครั้ง' : null,
+            missing.a1c ? 'HbA1c' : null,
+            missing.bloodpressure ? 'ความดันโลหิต' : null
+          ].filter(Boolean).join(', ');
+
+          Alert.alert(
+            'แจ้งเตือน',
+            `ดูเหมือนว่าใน 7 วันที่ผ่านมาคุณบันทึกข้อมูล ${missingList} ยังไม่ครบเลยนะ ไปบันทึกกันเลยตอนนี้!`,
+            [{ text: 'ตกลง', onPress: () => router.replace('/tracking') }]
+          );
+        }
+      } finally {
+        setLoading(false);
       }
     };
-    fetchSuggestion();
-  }, []);
 
-  if (!result) {
+    fetchHealthAndSuggest();
+  }, [isEstimatedA1C]);
+
+  const calculateAge = (birthdate: string): number => {
+    const birth = new Date(birthdate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    if (
+      today.getMonth() < birth.getMonth() ||
+      (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
+
+  const calculateBMI = (weight: number, height: number): number => {
+    return +(weight / ((height / 100) ** 2)).toFixed(2);
+  };
+
+  if (loading || !result) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#3972F0" />
@@ -113,7 +195,7 @@ export default function SuggestionResult() {
 
           <View className="bg-background p-4 rounded-lg mb-4 ">
             <Text className="text-tag font-sans text-secondary text-center">
-              {result.motivation}
+              {quote}
             </Text>
           </View>
 
