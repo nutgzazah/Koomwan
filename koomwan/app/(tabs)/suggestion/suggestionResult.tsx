@@ -11,13 +11,8 @@ import {
 } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import axios from 'axios';
-import Card from '../../../global/components/Card';
 import { AuthContext } from "../../../context/authContext";
-import BreakLine from '../../../global/components/BreakLine';
-import { ShortButton } from '../tracking/components/ShortButton';
-import AdviceCard from './components/AdviceCard';
 import BASE_URL from "../../../config"
-import motivationalQuotes from './motivationalQuotes';
 
 interface SuggestionResultData {
   health_score: number;
@@ -39,8 +34,6 @@ export default function SuggestionResult() {
   const [state] = useContext(AuthContext)
   const [result, setResult] = useState<SuggestionResultData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [quote, setQuote] = useState("");
-  const [diabetestype, setDiabetestype] = useState<string | null>(null);
   console.log("State SuggestionResult: ",state)
 
   const navigation = useNavigation();
@@ -53,7 +46,6 @@ export default function SuggestionResult() {
 
         const healthData = healthRes.data.data;
         console.log("HealthData =>", healthData);
-        setDiabetestype(healthData.diabetestype);
 
         // ถ้าข้อมูลครบ ค่อยส่งไปยัง Flask
         const response = await axios.post(`${BASE_URL}/api/v1/ai/predict`, {
@@ -70,8 +62,6 @@ export default function SuggestionResult() {
         });
 
         setResult(response.data);
-        const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-        setQuote(randomQuote);
         // ตรวจสอบว่า isEstimatedA1C เป็น true หรือไม่
         console.log("isEstimatedA1C:",healthRes.data.estimatedA1C)
         if (healthRes.data.estimatedA1C) {
@@ -79,6 +69,14 @@ export default function SuggestionResult() {
             'HbA1c เป็นค่าประมาณ',
             'เนื่องจากไม่มีข้อมูลค่าน้ำตาลเฉลี่ยสะสมในเลือดแบบเจาะจง แอพจึงคำนวนให้เป็นค่าประมาณในการวิเคราะห์ครั้งนี้' 
           );
+        }
+
+        // ถ้ามีผลลัพธ์แล้ว ไปหน้า /suggestion
+        if (response.data) {
+          router.replace('/suggestion');
+        }else {
+          // ถ้าไม่มีผลลัพธ์จาก API
+          Alert.alert('ไม่พบข้อมูล', 'ไม่สามารถประเมินผลได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง');
         }
 
       } catch (error: any) {
@@ -147,116 +145,4 @@ export default function SuggestionResult() {
       </SafeAreaView>
     );
   }
-
-  return (
-    <SafeAreaView className="flex-1">
-      <ScrollView mb-24>
-        <Card>
-          <Text className="text-title font-bold font-sans text-secondary text-center mt-2 mb-1">
-            ประเมินสุขภาพ
-          </Text>
-          <BreakLine />
-
-          <Image
-            source={require('../../../assets/Suggestion/heart-primary.png')}
-            className="w-32 h-32 mx-auto mb-1"
-          />
-
-          <Text className="text-headline font-bold font-sans text-secondary text-center mb-1 ">
-            คะแนนสุขภาพ
-            <Text className="text-display font-bold font-sans text-primary text-center ">
-              {result.health_score}
-            </Text>
-            <Text className="text-body font-sans text-secondary">/10</Text>
-          </Text>
-
-          {diabetestype !== "diabetes" && (
-          <Text className="text-headline font-bold font-sans text-secondary text-center mb-2"> 
-            ความเสี่ยงเบาหวาน
-            <Text className="text-display font-bold font-sans text-primary text-center ">
-              {result.diabetes_risk_percent}%
-            </Text>
-            <Text className="text-body font-sans text-secondary">
-              {' '}
-              ({result.diabetes_risk})
-            </Text>
-          </Text>
-        )}
-          <BreakLine />
-
-          <Text className="text-description font-sans text-secondary text-center mb-4">
-            {result.summary}
-          </Text>
-
-          <View className="bg-background p-4 rounded-lg mb-4 ">
-            <Text className="text-tag font-sans text-secondary text-center">
-              {quote}
-            </Text>
-          </View>
-
-          <ShortButton
-            title="สร้างการประเมินใหม่"
-            onPress={() => router.push('/suggestion')}
-            iconSrc={require('../../../assets/Suggestion/rotate-left.png')}
-            iconPosition="left"
-            className="mt-2 mb-1"
-          />
-        </Card>
-
-        {/* Recommended Food */}
-        <View className="px-6">
-          <Text className="text-headline font-bold font-sans text-secondary mt-1 mb-1">
-            เมนูอาหารที่แนะนำ
-          </Text>
-        </View>
-
-        <ScrollView horizontal className="mt-4 px-4 " showsHorizontalScrollIndicator={false}>
-          {result.healthAdvice.food.map((item, index) => (
-            <AdviceCard
-              key={index}
-              title={item.title}
-              description={item.description}
-              image={require('../../../assets/Suggestion/people-healthy.png')}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Recommended Exercise */}
-        <View className="px-6">
-          <Text className="text-headline font-bold font-sans text-secondary mt-2 mb-1">
-            การออกกำลังกายที่แนะนำ
-          </Text>
-        </View>
-
-        <ScrollView horizontal className="mt-4 px-4" showsHorizontalScrollIndicator={false}>
-          {result.healthAdvice.exercise.map((item, index) => (
-            <AdviceCard
-              key={index}
-              title={item.title}
-              description={item.description}
-              image={require('../../../assets/Suggestion/people-exercise.png')}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Recommended Articles */}
-        <View className="px-6">
-          <Text className="text-headline font-bold font-sans text-secondary mt-2 mb-1">
-            บทความที่แนะนำ
-          </Text>
-        </View>
-
-        <ScrollView horizontal className="mt-4 px-1" showsHorizontalScrollIndicator={false}>
-          {result.healthAdvice.blog.map((item, index) => (
-            <AdviceCard
-              key={index}
-              title={item.category}
-              description={item.category}
-              image={require('../../../assets/Suggestion/people-yoga.png')}
-            />
-          ))}
-        </ScrollView>
-      </ScrollView>
-    </SafeAreaView>
-  );
 }
