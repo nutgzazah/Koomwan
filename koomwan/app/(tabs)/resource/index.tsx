@@ -38,12 +38,14 @@ export default function ResourceScreen() {
   const choices: string[] = extractCategories(blogsData);
 
   function extractCategories(blogList: Blog[]): string[] {
-    const categorySet = new Set<string>();
-    blogList.forEach(blog => {
-      const categories = blog.category;
-      const split_Categories = categories.split(", ");
-      split_Categories.forEach(category => categorySet.add(category));
-    });
+    const categorySet = new Set<string>([
+      "ความรู้",
+      "โภชนาการ",
+      "โรค",
+      "ออกกำลังกาย",
+      "แรงบันดาลใจ",
+      "ข่าวสาร",
+    ]);
     return Array.from(categorySet);
   }
 

@@ -1,5 +1,5 @@
 import { SafeAreaView, ScrollView, Text, View, ActivityIndicator, Alert } from "react-native"; // Added Alert import
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Card from "../../../global/components/Card";
 import DoctorDisplayCard from "./components/DoctorDisplayCard";
 import BreakLine from "../../../global/components/BreakLine";
@@ -9,7 +9,7 @@ import axios from 'axios'; // Import Axios
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../../config";
 import { useNavigation } from '@react-navigation/native'; // Import the navigation hook
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 
 export default function ResourceScreen() {
   const role: string = "doctor"; // Change this dynamically as per the user role
@@ -20,45 +20,47 @@ export default function ResourceScreen() {
   const [error, setError] = useState<string>("");
 
   // Fetch notifications from the backend API
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        setLoading(true);
-        const authData = await AsyncStorage.getItem("@auth");
-        if (!authData) {
-          Alert.alert("Session Expired", "Please login again");
-          navigation.navigate("/user/login");
-          return;
-        }
-
-        const auth = JSON.parse(authData);
-        const token = auth.token;
-
-        // Make the request with the token
-        const response = await axios.get(`${BASE_URL}/api/v1/user/getAllNotification`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        console.log("Notifications received:", response.data);
-
-        // Log only helpRequest for each notification
-        response.data.notifications.forEach((notification: any) => {
-          console.log("HelpRequest:", notification.helpRequest);
-        });
-
-        setNotifications(response.data.notifications || []);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching notifications:', err);
-        setError('Failed to load notifications');
-        setLoading(false);
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        Alert.alert("Session Expired", "Please login again");
+        router.push("/user/login");
+        return;
       }
-    };
 
-    fetchNotifications();
-  }, []);
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+
+      // Make the request with the token
+      const response = await axios.get(`${BASE_URL}/api/v1/user/getAllNotification`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Notifications received:", response.data);
+
+      // Log only helpRequest for each notification
+      response.data.notifications.forEach((notification: any) => {
+        console.log("HelpRequest:", notification.helpRequest);
+      });
+
+      setNotifications(response.data.notifications || []);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      setError('Failed to load notifications');
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotifications(); // Fetch notifications when the screen is focused
+    }, []
+  ));
 
   // Filter notifications based on type
   const filteredNotifications = notifications.filter((notification) => {
