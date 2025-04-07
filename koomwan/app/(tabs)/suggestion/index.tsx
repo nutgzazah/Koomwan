@@ -254,7 +254,7 @@ export default function SuggestionScreen() {
           {/* Recommended Food */}
           <View className="px-6">
             <Text className="text-headline font-bold font-sans text-secondary mt-1 mb-1">
-              เมนูอาหารที่แนะนำ
+             โภชนาการที่แนะนำ
             </Text>
           </View>
           <ScrollView horizontal className="mt-4 px-4" showsHorizontalScrollIndicator={false}>
