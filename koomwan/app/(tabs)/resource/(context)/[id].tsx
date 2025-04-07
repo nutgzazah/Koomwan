@@ -16,6 +16,7 @@ import Loading from "../../../../global/components/Loading";
 import BASE_URL from "../../../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import HTMLView from "react-native-htmlview";
 
 interface Blog {
   title: string;
@@ -38,12 +39,12 @@ function formatDate(date: Date): string {
   ];
 
   const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   };
 
-  const formattedDate = new Intl.DateTimeFormat('th-TH', options).format(date);
+  const formattedDate = new Intl.DateTimeFormat("th-TH", options).format(date);
   const weekdayIndex = date.getDay();
   const thaiWeekday = thaiWeekdays[weekdayIndex];
 
@@ -58,7 +59,6 @@ function ArticleStructure({
   category,
   refs,
 }: Blog) {
-
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,24 +66,20 @@ function ArticleStructure({
       try {
         const [folder, fileName] = image.includes("/") ? image.split("/") : ["blogImage", image];
 
-        console.log(`Fetching image URL from: ${BASE_URL}/api/v1/storage/getFileUrl?fileName=${fileName}&folder=${folder}`);
-
         const response = await axios.get(`${BASE_URL}/api/v1/storage/getFileUrl`, {
           params: { fileName, folder },
           headers: { "Cache-Control": "no-cache" },
         });
 
-        console.log("Image URL fetched:", response.data);
-
         setImageUrl(response.data.success ? response.data.url : `${BASE_URL}/uploads/${image}`);
       } catch (error) {
-        console.error("Error fetching image URL:", error);
         setImageUrl("");
       }
     }
 
     fetchImage();
   }, [image]);
+
   return (
     <SafeAreaView className="flex-1">
       <ScrollView
@@ -103,7 +99,36 @@ function ArticleStructure({
               resizeMode="contain"
             />
           </View>
-          <Text className="font-sans text-description text-secondary w-full ml-4 pr-4">{content}</Text>
+          <View className="w-[24rem]">
+            <HTMLView
+              value={content} // Pass the HTML content
+              stylesheet={{
+                p: {
+                  fontFamily: "K2D-Regular",
+                  fontSize: 14,
+                  color: "#3E3B5B",
+                },
+                strong: {
+                  fontFamily: "K2D-Bold",
+                  fontSize: 16,
+                  color: "#3E3B5B",
+                  fontWeight: "bold",
+                },
+                a: {
+                  fontFamily: "K2D-Bold",
+                  fontSize: 14,
+                  color: "#3E3B5B",
+                  textDecorationLine: "underline",
+                  fontWeight: "bold",
+                },
+                li: {
+                  fontFamily: "K2D-Regular",
+                  fontSize: 14,
+                  color: "#3E3B5B",
+                },
+              }}
+            />
+          </View>
         </Card>
       </ScrollView>
     </SafeAreaView>
@@ -121,7 +146,6 @@ export default function ArticleContent() {
       try {
         setLoading(true);
         const authData = await AsyncStorage.getItem("@auth");
-        console.log(resource_id)
 
         if (!authData) {
           Alert.alert("Session Expired ", "Please login again");
@@ -140,15 +164,12 @@ export default function ArticleContent() {
           return;
         }
 
-        const resourceResponse = await axios.get(`${BASE_URL}/api/v1/admin/blog/${resource_id.id}`)
+        const resourceResponse = await axios.get(`${BASE_URL}/api/v1/admin/blog/${resource_id.id}`);
 
         if (resourceResponse.data.success) {
           setBlogData(resourceResponse.data.data);
-          console.log(resourceResponse.data.data);
         }
       } catch (error) {
-        console.error("Error fetching profile data:", error);
-
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
           Alert.alert("Session Expired", "Please login again", [
@@ -157,7 +178,7 @@ export default function ArticleContent() {
         } else {
           Alert.alert(
             "Error",
-            "Failed to load profile data. Please try again later.",
+            "Failed to fetch the article. Please try again later.",
             [{ text: "OK", onPress: () => router.back() }]
           );
         }
@@ -181,5 +202,5 @@ export default function ArticleContent() {
       category={blogData.category}
       refs={blogData.ref}
     />
-  )
+  );
 }
