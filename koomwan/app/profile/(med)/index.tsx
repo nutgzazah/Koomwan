@@ -16,6 +16,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../../config";
 import Loading from "../../../global/components/Loading";
+import Modal from "../../../global/components/Modal";
 
 interface Medication {
   _id: string;
@@ -38,19 +39,27 @@ export default function RegularMedScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [isSuccessModal, setIsSuccessModal] = useState(true);
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
+
   useFocusEffect(
     React.useCallback(() => {
       fetchMedications();
     }, [])
-  ); // แสดงหน้าที่อัพเดทแล้ว
+  );
+
   const fetchMedications = async () => {
     try {
       setLoading(true);
       const authData = await AsyncStorage.getItem("@auth");
 
       if (!authData) {
-        Alert.alert("Session Expired", "Please login again");
-        router.push("/user/login");
+        showModal("Session Expired", "Please login again", "error", () => {
+          router.push("/user/login");
+        });
         return;
       }
       const auth = JSON.parse(authData);
@@ -144,97 +153,102 @@ export default function RegularMedScreen() {
     }
   };
 
+  // Show custom modal with specified params
+  const showModal = (
+    title: string,
+    message: string,
+    type: "success" | "warning" | "error" = "success",
+    onConfirm: () => void = () => {}
+  ) => {
+    setModalMessage(message);
+    setIsSuccessModal(type === "success");
+    setConfirmAction(() => onConfirm);
+    setModalVisible(true);
+  };
+
   const handleDelete = () => {
     // Count selected items
     const selectedCount = medications.filter((med) => med.checked).length;
 
-    Alert.alert(
+    showModal(
       "คำเตือน",
       `คุณต้องการลบรายการยาที่เลือก ${selectedCount} รายการ?`,
-      [
-        {
-          text: "ยกเลิก",
-          style: "cancel",
-        },
-        {
-          text: "ยืนยัน",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setLoading(true);
-              const authData = await AsyncStorage.getItem("@auth");
-              if (!authData) {
-                Alert.alert("Session Expired", "Please login again");
-                router.push("/user/login");
-                return;
-              }
-
-              const auth = JSON.parse(authData);
-              const token = auth.token;
-              const userId = auth.user._id;
-
-              // Get the healthInfoId first from user profile
-              const userResponse = await axios.get(
-                `${BASE_URL}/api/v1/user/profile/${userId}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              );
-
-              if (
-                userResponse.data.success &&
-                userResponse.data.user.healthinfo
-              ) {
-                const healthInfoId = userResponse.data.user.healthinfo._id;
-
-                // Get selected medications to delete
-                const medsToDelete = medications.filter((med) => med.checked);
-                const pillIdsToDelete = medsToDelete.map((med) => med._id);
-
-                // Delete images from R2 storage
-                for (const med of medsToDelete) {
-                  if (med.pillImage) {
-                    await deleteImageFromR2(med.pillImage, token);
-                  }
-                }
-
-                // Update the healthinfo by removing selected pills
-                await axios.put(
-                  `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}/remove-pills`,
-                  {
-                    removePills: pillIdsToDelete,
-                  },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                    },
-                  }
-                );
-
-                // Update the UI after successful deletion
-                const remainingMeds = medications.filter((med) => !med.checked);
-                setMedications(remainingMeds);
-
-                Alert.alert("สำเร็จ", "ลบรายการยาเรียบร้อยแล้ว");
-              } else {
-                console.error("ไม่พบข้อมูลสุขภาพของผู้ใช้");
-                Alert.alert("เกิดข้อผิดพลาด", "ไม่พบข้อมูลสุขภาพของผู้ใช้");
-              }
-            } catch (err) {
-              console.error("Error deleting medication:", err);
-              Alert.alert(
-                "เกิดข้อผิดพลาด",
-                "ไม่สามารถลบรายการยาได้ กรุณาลองใหม่อีกครั้ง"
-              );
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
+      "warning",
+      performDelete
     );
+  };
+
+  const performDelete = async () => {
+    try {
+      setLoading(true);
+      const authData = await AsyncStorage.getItem("@auth");
+      if (!authData) {
+        showModal("Session Expired", "Please login again", "error", () => {
+          router.push("/user/login");
+        });
+        return;
+      }
+
+      const auth = JSON.parse(authData);
+      const token = auth.token;
+      const userId = auth.user._id;
+
+      // Get the healthInfoId first from user profile
+      const userResponse = await axios.get(
+        `${BASE_URL}/api/v1/user/profile/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (userResponse.data.success && userResponse.data.user.healthinfo) {
+        const healthInfoId = userResponse.data.user.healthinfo._id;
+
+        // Get selected medications to delete
+        const medsToDelete = medications.filter((med) => med.checked);
+        const pillIdsToDelete = medsToDelete.map((med) => med._id);
+
+        // Delete images from R2 storage
+        for (const med of medsToDelete) {
+          if (med.pillImage) {
+            await deleteImageFromR2(med.pillImage, token);
+          }
+        }
+
+        // Update the healthinfo by removing selected pills
+        await axios.put(
+          `${BASE_URL}/api/v1/user/healthinfo/${healthInfoId}/remove-pills`,
+          {
+            removePills: pillIdsToDelete,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Update the UI after successful deletion
+        const remainingMeds = medications.filter((med) => !med.checked);
+        setMedications(remainingMeds);
+
+        showModal("สำเร็จ", "ลบรายการยาเรียบร้อยแล้ว", "success");
+      } else {
+        console.error("ไม่พบข้อมูลสุขภาพของผู้ใช้");
+        showModal("เกิดข้อผิดพลาด", "ไม่พบข้อมูลสุขภาพของผู้ใช้", "error");
+      }
+    } catch (err) {
+      console.error("Error deleting medication:", err);
+      showModal(
+        "เกิดข้อผิดพลาด",
+        "ไม่สามารถลบรายการยาได้ กรุณาลองใหม่อีกครั้ง",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleMedicationDetails = (medId: string) => {
@@ -255,13 +269,6 @@ export default function RegularMedScreen() {
             <Text className="text-title font-bold text-secondary">ยาประจำ</Text>
             <BreakLine />
           </View>
-
-          {/* Error Message if any */}
-          {/* {error && (
-            <View className="px-4 py-3 mb-4 ">
-              <Text className="font-regular text-description">{error}</Text>
-            </View>
-          )} */}
 
           {/* Medication List */}
           {medications.length > 0 ? (
@@ -329,6 +336,21 @@ export default function RegularMedScreen() {
           </View>
         </Card>
       </ScrollView>
+
+      {/* Custom Modal */}
+      <Modal
+        visible={modalVisible}
+        title={isSuccessModal ? "สำเร็จ" : "คำเตือน"}
+        message={modalMessage}
+        confirmText={isSuccessModal ? "ตกลง" : "ยืนยัน"}
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          setModalVisible(false);
+          confirmAction();
+        }}
+        onCancel={() => setModalVisible(false)}
+        type={isSuccessModal ? "success" : "warning"}
+      />
     </SafeAreaView>
   );
 }
