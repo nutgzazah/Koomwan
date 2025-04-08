@@ -5,11 +5,12 @@ import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import React from "react";
 import { AuthProvider } from "../context/authContext";
+import { LogBox } from "react-native";
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
+LogBox.ignoreAllLogs(true);
 
 //global state
-
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     "K2D-Bold": require("../assets/fonts/K2D-Bold.ttf"),
