@@ -1,18 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { useRouter } from "expo-router";
 
 import { AuthLayout } from "../../components/login_signin/AuthLayout";
 import { OTPScreen } from "../../components/login_signin/OTPScreen";
 import { StatusScreen } from "../../components/login_signin/StatusScreen";
-import BASE_URL from "../../config"
+import BASE_URL from "../../config";
 
 //firebase SMS OTP
 // import auth from "@react-native-firebase/auth"
 
-import Toast from 'react-native-toast-message';
+import Toast from "react-native-toast-message";
 import axios from "axios";
-
 
 type FormData = {
   username: string;
@@ -32,8 +39,6 @@ export default function UserSignInScreen() {
     phone: "",
     role: "user",
   });
-
-  
 
   const router = useRouter();
 
@@ -90,36 +95,35 @@ export default function UserSignInScreen() {
 
   const validateForm = () => {
     const newErrors: Partial<FormData> = {};
-  
+
     if (!formData.username) {
       newErrors.username = "กรุณากรอกชื่อผู้ใช้";
     }
-  
+
     if (!formData.email) {
       newErrors.email = "กรุณากรอกอีเมล";
     } else if (!validateEmail(formData.email)) {
       newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
     }
-  
+
     if (!formData.password) {
       newErrors.password = "กรุณากรอกรหัสผ่าน";
     } else if (formData.password.length < 6) {
       newErrors.password = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
     }
-  
+
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "กรุณายืนยันรหัสผ่าน";
     } else if (formData.confirmPassword !== formData.password) {
       newErrors.confirmPassword = "รหัสผ่านไม่ตรงกัน";
     }
-  
+
     if (!formData.phone) {
       newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
     } else if (!validatePhone(formData.phone)) {
-      newErrors.phone =
-        "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (เช่น 08X-XXX-XXXX)";
+      newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (เช่น 08X-XXX-XXXX)";
     }
-  
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -128,8 +132,11 @@ export default function UserSignInScreen() {
     if (validateForm()) {
       try {
         // เช็คว่ามีข้อมูลไรซ้ำไหม
-        const response = await axios.post(`${BASE_URL}/api/v1/auth/checkDuplicate`, formData);
-        console.log(formData)
+        const response = await axios.post(
+          `${BASE_URL}/api/v1/auth/checkDuplicate`,
+          formData
+        );
+        console.log(formData);
         if (response.status === 201) {
           setShowOTP(true);
           setResendDisabled(true);
@@ -138,24 +145,23 @@ export default function UserSignInScreen() {
         }
       } catch (error) {
         // ตรวจสอบว่าคือ AxiosError หรือไม่
-      if (axios.isAxiosError(error)) {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: error.response?.data.message || "Unknown error occurred",
-        });
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Unexpected Error',
-          text2: 'An unexpected error occurred',
-        });
-      }
-      console.error("Error submitting form:", error);
+        if (axios.isAxiosError(error)) {
+          Toast.show({
+            type: "error",
+            text1: "Error",
+            text2: error.response?.data.message || "Unknown error occurred",
+          });
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Unexpected Error",
+            text2: "An unexpected error occurred",
+          });
+        }
+        console.error("Error submitting form:", error);
       }
     }
   };
-
 
   const handleOtpChange = (text: string) => {
     setOtp(text);
@@ -163,12 +169,15 @@ export default function UserSignInScreen() {
 
   const handleVerifyOTP = async () => {
     console.log("Verifying OTP:", otp);
-  
-    if (otp === "123456") { 
+
+    if (otp === "123456") {
       try {
         // ส่งข้อมูลไปยัง backend หลังจาก OTP ยืนยันสำเร็จ
-        const response = await axios.post(`${BASE_URL}/api/v1/auth/register`, formData);
-  
+        const response = await axios.post(
+          `${BASE_URL}/api/v1/auth/register`,
+          formData
+        );
+
         if (response.status === 201) {
           setShowOTP(false);
           setShowStatus("success");
@@ -179,9 +188,9 @@ export default function UserSignInScreen() {
       } catch (error) {
         console.error("Error submitting form:", error);
         Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Failed to register. Please try again.',
+          type: "error",
+          text1: "Error",
+          text2: "Failed to register. Please try again.",
         });
         setShowStatus("error");
       }
@@ -245,174 +254,178 @@ export default function UserSignInScreen() {
     }
 
     return (
-      <AuthLayout
-        backgroundImage={require("../../assets/Signup/images/signup1.png")}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
       >
-        <View className="flex-1">
-          <TouchableOpacity
-            className="absolute left-0 top-0 p-2 z-10"
-            onPress={() => router.back()}
-          >
-            <Image
-              source={require("../../assets/Signup/arrow-circle-left.png")}
-              className="w-8 h-8"
-            />
-          </TouchableOpacity>
-
-          <View className="items-center mb-8">
-            <Text className="text-display font-bold text-secondary mb-5">
-              ลงทะเบียน
-            </Text>
-            <Text className="text-description font-regular text-secondary">
-              มาเป็นส่วนหนึ่งเดียวกับพวกเรา!
-            </Text>
-          </View>
-
-          <View className="h-[1px] bg-gray mb-8" />
-
-          <View className="space-y-4">
-            <View className="relative mb-3">
-              <Image
-                source={require("../../assets/Signup/user.png")}
-                className="w-6 h-6 absolute left-4 top-4 z-10"
-                resizeMode="contain"
-              />
-              <TextInput
-                className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
-                  errors.username ? "border-abnormal" : "border-gray"
-                }`}
-                placeholder="ชื่อผู้ใช้"
-                value={formData.username}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, username: text })
-                }
-              />
-              {errors.username && (
-                <Text className="text-abnormal text-tag font-regular mt-1">
-                  {errors.username}
-                </Text>
-              )}
-            </View>
-
-
-            <View className="relative mb-3">
-              <Image
-                source={require("../../assets/Login/email.png")}
-                className="w-6 h-6 absolute left-4 top-4 z-10"
-                resizeMode="contain"
-              />
-              <TextInput
-                className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
-                  errors.email ? "border-abnormal" : "border-gray"
-                }`}
-                placeholder="อีเมล"
-                value={formData.email}
-                
-                onChangeText={(text) => setFormData({ ...formData, email: text })}
-                keyboardType="email-address"
-              />
-              {errors.email && (
-                <Text className="text-abnormal text-tag font-regular mt-1">
-                  {errors.email}
-                </Text>
-              )}
-            </View>
-
-
-            <View className="relative mb-3">
-              <Image
-                source={require("../../assets/Signup/lock.png")}
-                className="w-6 h-6 absolute left-4 top-4 z-10"
-                resizeMode="contain"
-              />
-              <TextInput
-                className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
-                  errors.password ? "border-abnormal" : "border-gray"
-                }`}
-                placeholder="รหัสผ่าน"
-                secureTextEntry
-                value={formData.password}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, password: text })
-                }
-              />
-              {errors.password && (
-                <Text className="text-abnormal text-tag font-regular mt-1">
-                  {errors.password}
-                </Text>
-              )}
-            </View>
-
-            <View className="relative mb-3">
-              <Image
-                source={require("../../assets/Signup/lock.png")}
-                className="w-6 h-6 absolute left-4 top-4 z-10"
-                resizeMode="contain"
-              />
-              <TextInput
-                className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
-                  errors.confirmPassword ? "border-abnormal" : "border-gray"
-                }`}
-                placeholder="ยืนยันรหัสผ่าน"
-                secureTextEntry
-                value={formData.confirmPassword}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, confirmPassword: text })
-                }
-              />
-              {errors.confirmPassword && (
-                <Text className="text-abnormal text-tag font-regular mt-1">
-                  {errors.confirmPassword}
-                </Text>
-              )}
-            </View>
-
-            <View className="relative mb-5">
-              <Image
-                source={require("../../assets/Signup/phone.png")}
-                className="w-6 h-6 absolute left-4 top-4 z-10"
-                resizeMode="contain"
-              />
-              <TextInput
-                className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
-                  errors.phone ? "border-abnormal" : "border-gray"
-                }`}
-                placeholder="โทรศัพท์"
-                keyboardType="phone-pad"
-                value={formData.phone}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, phone: text })
-                }
-              />
-              {errors.phone && (
-                <Text className="text-abnormal text-tag font-regular mt-1">
-                  {errors.phone}
-                </Text>
-              )}
-            </View>
-
+        <AuthLayout
+          backgroundImage={require("../../assets/Signup/images/signup1.png")}
+        >
+          <View className="flex-1">
             <TouchableOpacity
-              className="w-full bg-primary py-4 rounded-[5px] mt-5 mb-5"
-              onPress={handleSubmit}
+              className="absolute left-0 top-0 p-2 z-10"
+              onPress={() => router.back()}
             >
-              <Text className="text-card text-center font-bold text-button">
-                ถัดไป
-              </Text>
+              <Image
+                source={require("../../assets/Signup/arrow-circle-left.png")}
+                className="w-8 h-8"
+              />
             </TouchableOpacity>
 
-            <View className="flex-row justify-center mb-5">
-              <Text className="text-description text-gray font-regular">
-                มีบัญชีผู้ใช้แล้วใช่ไหม?{"  "}
+            <View className="items-center mb-8">
+              <Text className="text-display font-bold text-secondary mb-5">
+                ลงทะเบียน
               </Text>
-              <TouchableOpacity onPress={() => router.push("/user/login")}>
-                <Text className="text-button font-bold text-primary font-regular">
-                  เข้าสู่ระบบ
+              <Text className="text-description font-regular text-secondary">
+                มาเป็นส่วนหนึ่งเดียวกับพวกเรา!
+              </Text>
+            </View>
+
+            <View className="h-[1px] bg-gray mb-8" />
+
+            <View className="space-y-4">
+              <View className="relative mb-3">
+                <Image
+                  source={require("../../assets/Signup/user.png")}
+                  className="w-6 h-6 absolute left-4 top-4 z-10"
+                  resizeMode="contain"
+                />
+                <TextInput
+                  className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
+                    errors.username ? "border-abnormal" : "border-gray"
+                  }`}
+                  placeholder="ชื่อผู้ใช้"
+                  value={formData.username}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, username: text })
+                  }
+                />
+                {errors.username && (
+                  <Text className="text-abnormal text-tag font-regular mt-1">
+                    {errors.username}
+                  </Text>
+                )}
+              </View>
+
+              <View className="relative mb-3">
+                <Image
+                  source={require("../../assets/Login/email.png")}
+                  className="w-6 h-6 absolute left-4 top-4 z-10"
+                  resizeMode="contain"
+                />
+                <TextInput
+                  className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
+                    errors.email ? "border-abnormal" : "border-gray"
+                  }`}
+                  placeholder="อีเมล"
+                  value={formData.email}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, email: text })
+                  }
+                  keyboardType="email-address"
+                />
+                {errors.email && (
+                  <Text className="text-abnormal text-tag font-regular mt-1">
+                    {errors.email}
+                  </Text>
+                )}
+              </View>
+
+              <View className="relative mb-3">
+                <Image
+                  source={require("../../assets/Signup/lock.png")}
+                  className="w-6 h-6 absolute left-4 top-4 z-10"
+                  resizeMode="contain"
+                />
+                <TextInput
+                  className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
+                    errors.password ? "border-abnormal" : "border-gray"
+                  }`}
+                  placeholder="รหัสผ่าน"
+                  secureTextEntry
+                  value={formData.password}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, password: text })
+                  }
+                />
+                {errors.password && (
+                  <Text className="text-abnormal text-tag font-regular mt-1">
+                    {errors.password}
+                  </Text>
+                )}
+              </View>
+
+              <View className="relative mb-3">
+                <Image
+                  source={require("../../assets/Signup/lock.png")}
+                  className="w-6 h-6 absolute left-4 top-4 z-10"
+                  resizeMode="contain"
+                />
+                <TextInput
+                  className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
+                    errors.confirmPassword ? "border-abnormal" : "border-gray"
+                  }`}
+                  placeholder="ยืนยันรหัสผ่าน"
+                  secureTextEntry
+                  value={formData.confirmPassword}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, confirmPassword: text })
+                  }
+                />
+                {errors.confirmPassword && (
+                  <Text className="text-abnormal text-tag font-regular mt-1">
+                    {errors.confirmPassword}
+                  </Text>
+                )}
+              </View>
+
+              <View className="relative mb-5">
+                <Image
+                  source={require("../../assets/Signup/phone.png")}
+                  className="w-6 h-6 absolute left-4 top-4 z-10"
+                  resizeMode="contain"
+                />
+                <TextInput
+                  className={`w-full h-[50px] pl-12 pr-4 border rounded-[5px] text-description font-bold ${
+                    errors.phone ? "border-abnormal" : "border-gray"
+                  }`}
+                  placeholder="โทรศัพท์"
+                  keyboardType="phone-pad"
+                  value={formData.phone}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, phone: text })
+                  }
+                />
+                {errors.phone && (
+                  <Text className="text-abnormal text-tag font-regular mt-1">
+                    {errors.phone}
+                  </Text>
+                )}
+              </View>
+
+              <TouchableOpacity
+                className="w-full bg-primary py-4 rounded-[5px] mt-5 mb-5"
+                onPress={handleSubmit}
+              >
+                <Text className="text-card text-center font-bold text-button">
+                  ถัดไป
                 </Text>
               </TouchableOpacity>
+
+              <View className="flex-row justify-center mb-5">
+                <Text className="text-description text-gray font-regular">
+                  มีบัญชีผู้ใช้แล้วใช่ไหม?{"  "}
+                </Text>
+                <TouchableOpacity onPress={() => router.push("/user/login")}>
+                  <Text className="text-button font-bold text-primary font-regular">
+                    เข้าสู่ระบบ
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </AuthLayout>
+        </AuthLayout>
+      </KeyboardAvoidingView>
     );
   };
 
