@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Modal,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -23,6 +22,7 @@ import Loading from "../../../global/components/Loading";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import BASE_URL from "../../../config";
+import Modal from "../../../global/components/Modal";
 
 const CalendarHealthScreen = () => {
   const router = useRouter();
@@ -114,6 +114,7 @@ const CalendarHealthScreen = () => {
       );
 
       if (response.data.success) {
+        setShowConfirmModal(false);
         Alert.alert("สำเร็จ", "ลบข้อมูลบันทึกเรียบร้อยแล้ว", [
           {
             text: "ตกลง",
@@ -132,9 +133,9 @@ const CalendarHealthScreen = () => {
         "เกิดข้อผิดพลาด",
         "ไม่สามารถลบข้อมูลบันทึกได้ กรุณาลองใหม่อีกครั้ง"
       );
+      setShowConfirmModal(false);
     } finally {
       setIsDeleting(false);
-      setShowConfirmModal(false);
     }
   };
 
@@ -527,45 +528,18 @@ const CalendarHealthScreen = () => {
         </Card>
       </ScrollView>
 
-      {/* Confirmation Modal */}
-      <Modal visible={showConfirmModal} transparent animationType="fade">
-        <View className="flex-1 justify-center items-center bg-background/80">
-          <View className="bg-card rounded-2xl p-5 w-5/6 items-center">
-            <Text className="text-headline text-secondary font-bold text-center">
-              ยืนยันการลบ
-            </Text>
-            <Text className="text-description text-secondary font-regular text-center mt-2 mb-4">
-              คุณต้องการลบบันทึกนี้ใช่หรือไม่?
-            </Text>
-
-            <View className="flex-row justify-around w-full">
-              <TouchableOpacity
-                className="py-3 px-8 rounded-lg bg-primary"
-                onPress={() => setShowConfirmModal(false)}
-                disabled={isDeleting}
-              >
-                <Text className="text-description text-white font-bold">
-                  ยกเลิก
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="py-3 px-6 bg-abnormal rounded-lg"
-                onPress={deleteRecord}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <Text className="text-button text-card font-regular">
-                    ลบบันทึก
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* Custom Confirmation Modal */}
+      <Modal
+        visible={showConfirmModal}
+        title="ยืนยันการลบ"
+        message="คุณต้องการลบบันทึกนี้ใช่หรือไม่?"
+        confirmText="ลบบันทึก"
+        cancelText="ยกเลิก"
+        onConfirm={deleteRecord}
+        onCancel={() => setShowConfirmModal(false)}
+        type="warning"
+        showCancelButton={true}
+      />
     </SafeAreaView>
   );
 };
