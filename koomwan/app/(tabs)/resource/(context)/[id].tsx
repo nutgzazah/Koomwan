@@ -86,7 +86,7 @@ function ArticleStructure({
         className="mb-24"
         showsVerticalScrollIndicator={false}
       >
-        <BackButton title="ย้อนกลับ" />
+        <BackButton title="ย้อนกลับ" path="/resource" />
         <Card>
           <Text className="font-sans text-headline text-secondary w-full ml-4">{title}</Text>
           <BreakLine />
