@@ -48,7 +48,6 @@ export default function TabsLayout() {
       });
       return res.data.url;
     } catch (error) {
-      console.error(`Error fetching image from ${endpoint}:`, error);
       return null;
     }
   };
@@ -66,10 +65,10 @@ export default function TabsLayout() {
 
     const { image, role: userRole } = state.user;
     setRole(userRole);
+    const defaultAvatar = getDefaultAvatar(image);
 
     try {
       // Handle default avatars
-      const defaultAvatar = getDefaultAvatar(image);
       if (defaultAvatar) {
         setImageUrl(defaultAvatar);
         return;
@@ -85,7 +84,7 @@ export default function TabsLayout() {
         setImageUrl(url);
       }
     } catch (error) {
-      console.error("Error fetching profile image:", error);
+      setImageUrl(defaultAvatar)
     }
   }, [state?.user?.image, state?.user?.role]);
 

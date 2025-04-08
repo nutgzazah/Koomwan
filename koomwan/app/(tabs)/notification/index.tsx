@@ -55,8 +55,7 @@ export default function ResourceScreen() {
       setNotifications(sortedNotifications || []);
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching notifications:', err);
-      setError('Failed to load notifications');
+      setNotifications([]);
       setLoading(false);
     }
   };
