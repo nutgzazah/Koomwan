@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ReportDataInterface } from "@/interfaces/reportInterface";
 import axios from "axios";
+import { formatDate } from "@/utils/formatDate.";
 
 const UserReportForm: React.FC = () => {
   const { reportId } = useParams();
@@ -59,7 +60,7 @@ const UserReportForm: React.FC = () => {
 
   return (
     <div className="w-full flex flex-col gap-4 text-secondary">
-      <p className="text-detail_3">แจ้งเมื่อ {report.date}</p>
+      <p className="text-detail_3">แจ้งเมื่อ {formatDate(report.date)}</p>
 
       <div className="flex justify-start items-center w-full">
         <table className="w-full text-left">

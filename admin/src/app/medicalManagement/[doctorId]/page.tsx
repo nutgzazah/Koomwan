@@ -131,15 +131,17 @@ const DoctorID: React.FC = () => {
     <div className="w-full">
       <div className="flex justify-between w-full py-2 px-10 gap-20">
         {/* Image Section */}
-        <div className="w-2/5 h-96 flex justify-center items-center">
+        <div className="w-2/5 h-fullflex justify-center items-center">
           {!loading && (
-            <Image
-              src={imageUrl || "/assets/doctor-default.jpg"}
-              alt={`${doctor.firstname} ${doctor.lastname}'s profile`}
-              width={300}
-              height={300}
-              className="rounded-full"
-            />
+            <div className="w-full h-full flex justify-center items-center">
+              <Image
+                src={imageUrl || "/assets/doctor-default.jpg"}
+                alt={`${doctor.firstname} ${doctor.lastname}'s profile`}
+                width={300}
+                height={300}
+                className="rounded-none object-cover" 
+              />
+            </div>
           )}
         </div>
 

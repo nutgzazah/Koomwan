@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import Table from "@/components/Table";
 import { ReportDataInterface } from "@/interfaces/reportInterface";
+import { formatDate } from "@/utils/formatDate.";
 
 interface ReportTableProps {
   reports: ReportDataInterface[];
@@ -24,7 +25,7 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports }) => {
       report.user?.username || "N/A",
       report.title || "N/A",
       report.detail || "N/A",
-      report.date || "N/A",
+      report.date ? formatDate(report.date) : "N/A",
     ];
     if (!isPending) {
       row.push(report.response || "N/A");

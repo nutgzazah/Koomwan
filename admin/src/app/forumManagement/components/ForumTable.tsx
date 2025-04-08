@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import Table from "@/components/Table";
 import { ForumDataInterface } from "@/interfaces/forumInterface";
+import { formatDate } from "@/utils/formatDate.";
 
 interface ForumTableProps {
   forums: ForumDataInterface[];
@@ -24,7 +25,7 @@ const ForumTable: React.FC<ForumTableProps> = ({ forums }) => {
     index + 1,
     forum.postedBy?.username || "ไม่พบข้อมูล", 
     forum.title,
-    forum.createdAt ? new Date(forum.createdAt).toLocaleString() : "ไม่ระบุ",
+    forum.createdAt ? formatDate(forum.createdAt).toLocaleString() : "ไม่ระบุ",
     forum.reports?.count ?? 0,
   ]);
 
