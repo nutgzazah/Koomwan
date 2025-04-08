@@ -151,8 +151,6 @@ export default function ResourceScreen() {
       <ScrollView className="mb-24" showsVerticalScrollIndicator={false}>
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
-        ) : error ? (
-          <Text>{error}</Text>
         ) : (
           <>
             {role === "doctor" && <DoctorView notifications={notifications} />}
