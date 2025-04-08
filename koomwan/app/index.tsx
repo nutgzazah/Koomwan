@@ -2,7 +2,6 @@ import React, { createContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../context/authContext";
 
-
 export const AuthProvider = ({ children }) => {
   const [state, setState] = useState({
     token: "",
