@@ -45,7 +45,7 @@ const MedDropdown = ({
 
       {isOpen && (
         <View className="absolute top-12 left-0 right-0 bg-card border border-gray rounded z-10">
-          <ScrollView className="max-h-48">
+          <ScrollView className="max-h-48" nestedScrollEnabled={true}>
             {options.map((item) => (
               <TouchableOpacity
                 key={item}
