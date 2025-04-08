@@ -60,7 +60,6 @@ export default function ForumScreen() {
   const [loading, setLoading] = useState(true);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   console.log("State2: ",state)
-  console.log("State Image: ",state.user.image)
 
   // ใช้ useFocusEffect เพื่อรีโหลดโพสต์ทุกครั้งที่หน้าถูกเรียกใหม่
   useFocusEffect(
@@ -71,12 +70,17 @@ export default function ForumScreen() {
   );
 
   useEffect(() => {
-    if (!state?.user?.image) return; // ป้องกัน state.user.image เป็น null หรือ undefined
+    if (!state?.user) {
+      router.replace("/login"); 
+    }
+  }, [state]);
 
-    console.log("State User Role:", state?.user.role);
-    console.log("State User Image:", state?.user.image);
 
-    if (state?.user.image.startsWith("koomwanAvatar")) {
+  useEffect(() => {
+  
+    if (!state?.user || !state.user.image) return;
+
+    if ((state?.user.image ?? "none").startsWith("koomwanAvatar")) {
       setProfileImageUrl(
         state.user.image === "koomwanAvatar01.png" ? defaultUserAvatar01 :
         state.user.image === "koomwanAvatar02.png" ? defaultUserAvatar02 :
@@ -84,28 +88,26 @@ export default function ForumScreen() {
         state.user.image === "koomwanAvatar04.png" ? defaultUserAvatar04 :
         defaultUserAvatar01
       );
-    } else if (state?.user.image.startsWith("koomwanDoctorAvatar")) {
+    } else if ((state?.user.image ?? "none").startsWith("koomwanDoctorAvatar")) {
       setProfileImageUrl(
         state.user.image === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
         state.user.image === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
         defaultDoctorAvatar01
       );
     }else if (state?.user.role === "doctor") {
-      console.log("Fetching doctor image...");
       getImageUrl(state.user.image).then((url) => {
-        console.log("Doctor Image URL:", url);
         setProfileImageUrl(url);
       }).catch((error) => {
         console.error("Error fetching doctor image:", error);
       });
     } else if (state?.user.role === "user") {
-      console.log("Fetching user image...");
       getProfileImageUrl(state.user.image, "user").then((url) => { 
-        console.log("User Image URL:", url);
         setProfileImageUrl(url);
       }).catch((error) => {
         console.error("Error fetching user image:", error);
       });
+    }else{
+      setProfileImageUrl(defaultDoctorAvatar01)
     }
     fetchPosts();
   }, [currentFilterChoice, state?.user.image]);
@@ -119,7 +121,6 @@ export default function ForumScreen() {
      // กรองโพสต์เฉพาะภายใน 1 เดือนที่ผ่านมา
      const oneMonthAgo = new Date();
      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-     console.log("currentFilterChoice:",currentFilterChoice)
  
      if (currentFilterChoice === 1) {
       // โชว์โพสต์ทุกโพสต์ เรียงจากวันล่าสุดไปเก่า
@@ -269,7 +270,7 @@ export default function ForumScreen() {
           </View>
 
           <View className="mx-6 mb-4">
-            {state.user.role === 'doctor' ? (
+            {state?.user?.role === 'doctor' ? (
               <TwoChoiceFilterBox
                 first_choice="ล่าสุด"
                 second_choice="ยอดนิยม"
@@ -277,7 +278,7 @@ export default function ForumScreen() {
                 second_onPress={() => setCurrentFilterChoice(2)}
                 current_choice={currentFilterChoice}
               />
-            ) : state.user.role === 'user' ? (
+            ) : state?.user?.role === 'user' ? (
               <ThreeChoiceFilterBox
                 first_choice="ล่าสุด"
                 second_choice="ยอดนิยม"
@@ -299,7 +300,7 @@ export default function ForumScreen() {
               />}
             </View>
 
-          {state.user.role !== "doctor" && <CreatePostTrigger />}
+          {state?.user?.role !== "doctor" && <CreatePostTrigger />}
 
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />
@@ -375,13 +376,13 @@ export default function ForumScreen() {
         <Image
             className="w-12 h-12 self-start ml-5 rounded-full"
             source={
-              state?.user.image.startsWith("koomwanAvatar") 
+              (state?.user.image ?? "none").startsWith("koomwanAvatar") 
               ? state.user.image === "koomwanAvatar01.png" ? defaultUserAvatar01 :
                 state.user.image === "koomwanAvatar02.png" ? defaultUserAvatar02 :
                 state.user.image === "koomwanAvatar03.png" ? defaultUserAvatar03 :
                 state.user.image === "koomwanAvatar04.png" ? defaultUserAvatar04 :
                 defaultUserAvatar01 // fallback หากไม่ตรงกับที่กำหนด
-              : state?.user.image.startsWith("koomwanDoctorAvatar") 
+              : (state?.user.image ?? "none").startsWith("koomwanDoctorAvatar") 
                 ? state.user.image === "koomwanDoctorAvatar01.png" ? defaultDoctorAvatar01 :
                   state.user.image === "koomwanDoctorAvatar02.png" ? defaultDoctorAvatar02 :
                   defaultDoctorAvatar01 // fallback หากไม่ตรงกับที่กำหนด
