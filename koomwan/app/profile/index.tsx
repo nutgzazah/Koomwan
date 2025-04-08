@@ -171,7 +171,7 @@ export default function IndexProfileScreen() {
             setLatestRecord(latestRec);
           }
         } catch (recordsError) {
-          console.error("Error fetching records:", recordsError);
+          console.log("Error fetching records:", recordsError);
         }
 
         // Calculate age from birthdate
@@ -188,7 +188,7 @@ export default function IndexProfileScreen() {
         console.log("Final profile data:", formattedData);
         setProfileData(formattedData);
       } catch (error) {
-        console.error("Error fetching profile data:", error);
+        console.log("Error fetching profile data:", error);
 
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           await AsyncStorage.multiRemove(["userId", "token", "@auth"]);
