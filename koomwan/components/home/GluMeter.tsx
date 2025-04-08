@@ -52,8 +52,6 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
       const authData = await AsyncStorage.getItem("@auth");
 
       if (!authData) {
-        Alert.alert("Session Expired", "Please login again");
-        router.push("/user/login");
         setLoading(false);
         return;
       }
@@ -145,7 +143,7 @@ const BloodSugarStatus: React.FC<BloodSugarStatusProps> = ({
 
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching blood sugar data:", error);
+      console.log("Error fetching blood sugar data:", error);
 
       // Handle unauthorized access
       if (axios.isAxiosError(error) && error.response?.status === 401) {

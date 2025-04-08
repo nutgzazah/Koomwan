@@ -90,7 +90,7 @@ const AddMedicineScreen: React.FC = () => {
 
       return null;
     } catch (error) {
-      console.error("Error extracting folder and filename:", error);
+      console.log("Error extracting folder and filename:", error);
       return null;
     }
   };
@@ -277,7 +277,7 @@ const AddMedicineScreen: React.FC = () => {
         },
       });
     } catch (error) {
-      console.error("Error submitting medicine:", error);
+      console.log("Error submitting medicine:", error);
       Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลยาได้");
     } finally {
       setIsSubmitting(false);

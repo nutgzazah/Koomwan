@@ -170,7 +170,6 @@ const HealthDashboard: React.FC = () => {
       const authData = await AsyncStorage.getItem("@auth");
 
       if (!authData) {
-        console.error("Session expired or user not logged in");
         setLoading(false);
         return;
       }
@@ -251,7 +250,7 @@ const HealthDashboard: React.FC = () => {
         console.log("No health records found for this user");
       }
     } catch (error) {
-      console.error("Error fetching health records:", error);
+      console.log("Error fetching health records:", error);
       // Reset all data arrays
       setWeightData([]);
       setBmiData([]);

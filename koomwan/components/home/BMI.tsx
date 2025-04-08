@@ -279,7 +279,7 @@ export default function BMI() {
       setLastUpdated(lastUpdatedText);
       setLoading(false);
     } catch (err: any) {
-      console.error("Error fetching user data:", err);
+      console.log("Error fetching user data:", err);
       setError(err.message || "ไม่สามารถโหลดข้อมูลได้");
       setLoading(false);
     }

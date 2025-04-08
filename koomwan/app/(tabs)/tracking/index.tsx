@@ -404,8 +404,10 @@ export default function TrackingScreen() {
         });
       })
       .catch((error) => {
-        console.error("Error saving form data:", error);
-        Alert.alert("ข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้");
+        Alert.alert(
+          "ข้อผิดพลาด",
+          "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง"
+        );
       });
   };
 

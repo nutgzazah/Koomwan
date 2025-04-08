@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Modal,
   Image,
+  Alert,
 } from "react-native";
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -62,7 +63,7 @@ const MedicineNotification = () => {
 
   const handleAddNotification = () => {
     if (!selectedDay || !selectedTime) {
-      alert("กรุณาเลือกวันและเวลาให้ครบ");
+      Alert.alert("กรุณาเลือกวันและเวลาให้ครบ");
       return;
     }
 

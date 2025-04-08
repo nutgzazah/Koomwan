@@ -39,8 +39,6 @@ const CalendarHealthScreen = () => {
       // Get auth token
       const authData = await AsyncStorage.getItem("@auth");
       if (!authData) {
-        Alert.alert("ข้อผิดพลาด", "กรุณาเข้าสู่ระบบใหม่");
-        router.push("/user/login");
         return;
       }
 

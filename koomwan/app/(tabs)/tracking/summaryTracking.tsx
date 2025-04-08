@@ -47,7 +47,7 @@ export default function SummaryTrackingScreen() {
         ]);
 
         if (!formDataStr) {
-          console.error("No form data found");
+          console.log("No form data found");
           Alert.alert("ข้อมูลไม่ครบถ้วน", "ไม่พบข้อมูลสุขภาพที่บันทึกไว้");
           router.back();
           return;
@@ -73,7 +73,7 @@ export default function SummaryTrackingScreen() {
         setRegularMedicines(regular);
         setAdditionalMedicines(additional);
       } catch (error) {
-        console.error("Error loading data:", error);
+        console.log("Error loading data:", error);
         Alert.alert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลได้");
       } finally {
         setDataLoading(false);
@@ -135,7 +135,7 @@ export default function SummaryTrackingScreen() {
 
       throw new Error("Image upload failed");
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.log("Error uploading image:", error);
       return null;
     }
   };

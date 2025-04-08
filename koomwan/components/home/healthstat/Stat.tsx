@@ -216,7 +216,7 @@ export default function HealthStats() {
         console.log("No health records found for this user");
       }
     } catch (err) {
-      console.error("Error fetching health records:", err);
+      console.log("Error fetching health records:", err);
       setError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);
@@ -277,7 +277,7 @@ export default function HealthStats() {
             </View>
           ) : error ? (
             <View className="h-96 justify-center items-center">
-              <Text className="text-description text-secondary text-center">
+              <Text className="text-description text-secondary text-center font-regular">
                 {error}
               </Text>
             </View>
@@ -312,10 +312,10 @@ export default function HealthStats() {
               {/* Chart or No Data Message */}
               {statsData[currentIndex].data.length === 0 ? (
                 <View className="h-56 justify-center items-center">
-                  <Text className="text-description text-secondary text-center">
+                  <Text className="text-description text-secondary text-center font-regular">
                     ไม่มีข้อมูล{statsData[currentIndex].title}
                   </Text>
-                  <Text className="text-tag text-secondary text-center mt-2">
+                  <Text className="text-tag text-secondary text-center mt-2 font-regular">
                     กรุณาเพิ่มข้อมูลสุขภาพ
                   </Text>
                 </View>
@@ -349,7 +349,7 @@ export default function HealthStats() {
               {/* Stats Section */}
               {statsData[currentIndex].data.length === 0 ? (
                 <View className="items-center py-4">
-                  <Text className="text-description text-secondary text-center">
+                  <Text className="text-description text-secondary text-center font-regular">
                     ไม่มีข้อมูลเชิงสถิติสำหรับ{statsData[currentIndex].title}
                   </Text>
                 </View>

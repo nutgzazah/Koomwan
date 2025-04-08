@@ -136,7 +136,7 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
 
       if (!authData) {
         Alert.alert("Session Expired", "Please login again");
-        /*  router.push("/user/login"); */
+        router.push("/user/login");
         return;
       }
 
@@ -234,7 +234,7 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
         setBloodSugarData([]);
       }
     } catch (err) {
-      console.error("Error fetching blood sugar data:", err);
+      console.log("Error fetching blood sugar data:", err);
       setError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);
@@ -301,6 +301,42 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
     );
   }
 
+  // If loading or error, still use Card wrapper
+  if (loading || error) {
+    return (
+      <Card>
+        <View className="w-full justify-center items-center">
+          <Text className="text-title font-bold text-secondary">
+            สุขภาพโดยรวม
+          </Text>
+          <BreakLine />
+
+          {loading ? (
+            <Loading />
+          ) : (
+            <View className="py-16">
+              <Text className="text-description text-secondary font-regular text-center">
+                กรุณาลองใหม่อีกครั้ง
+              </Text>
+            </View>
+          )}
+        </View>
+      </Card>
+    );
+  }
+
+  // If no blood sugar data, return EmptyHomeCard without Card wrapper
+  if (bloodSugarData.length === 0) {
+    return (
+      <EmptyHomeCard
+        title="ยังไม่มีข้อมูลน้ำตาลในเลือดล่าสุด"
+        subtitle="คุณมีข้อมูลบันทึกสุขภาพแล้ว แต่ยังไม่มีการบันทึกค่าน้ำตาลในเลือด"
+        buttonText="บันทึกข้อมูลสุขภาพ"
+        /* icon={require("../../assets/Home/graph_notfound.png")} */
+      />
+    );
+  }
+
   return (
     <Card>
       <View className="w-full justify-center items-center">
@@ -309,76 +345,57 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
         </Text>
         <BreakLine />
 
-        {loading ? (
-          <Loading />
-        ) : error ? (
-          <View className="py-16">
-            <Text className="text-description text-secondary font-regular text-center">
-              {error}
-            </Text>
-          </View>
-        ) : bloodSugarData.length === 0 ? (
-          <EmptyHomeCard
-            title="ยังไม่มีข้อมูลน้ำตาลในเลือดล่าสุด"
-            subtitle="คุณมีข้อมูลบันทึกสุขภาพแล้ว แต่ยังไม่มีการบันทึกค่าน้ำตาลในเลือด"
-            buttonText="บันทึกข้อมูลสุขภาพ"
-            /* icon={require("../../assets/Home/graph_notfound.png")} */
+        <Text className="text-headline font-regular text-secondary mb-2">
+          ระดับน้ำตาลในเลือดของฉัน
+        </Text>
+
+        <Text className="text-tag font-regular text-secondary mb-2">
+          บันทึกล่าสุด ณ {lastRecordDate}
+        </Text>
+
+        <View className="flex-row items-center mb-4 justify-center">
+          <Text className="text-description font-regular text-secondary">
+            {lastBloodSugarValue}
+          </Text>
+          <Text className="text-description font-regular text-secondary ml-1">
+            มก./ดล.
+          </Text>
+          <Text
+            className={`text-description font-medium ml-2 ${getStatusColor(
+              lastBloodSugarValue
+            )}`}
+          >
+            ({getBloodSugarStatus(lastBloodSugarValue)})
+          </Text>
+        </View>
+
+        <View className="w-full justify-center items-center p-1">
+          <LineChart
+            data={chartData}
+            width={screenWidth}
+            height={220}
+            chartConfig={chartConfig}
+            bezier
+            style={{
+              marginVertical: 8,
+              borderRadius: 16,
+            }}
+            withInnerLines={true}
+            withOuterLines={true}
+            withDots={true}
+            withShadow={true}
+            yAxisLabel=""
+            yAxisInterval={20}
+            fromZero={false}
+            segments={5}
           />
-        ) : (
-          <>
-            <Text className="text-headline font-regular text-secondary mb-2">
-              ระดับน้ำตาลในเลือดของฉัน
-            </Text>
+        </View>
 
-            <Text className="text-tag font-regular text-secondary mb-2">
-              บันทึกล่าสุด ณ {lastRecordDate}
-            </Text>
-
-            <View className="flex-row items-center mb-4 justify-center">
-              <Text className="text-description font-regular text-secondary">
-                {lastBloodSugarValue}
-              </Text>
-              <Text className="text-description font-regular text-secondary ml-1">
-                มก./ดล.
-              </Text>
-              <Text
-                className={`text-description font-medium ml-2 ${getStatusColor(
-                  lastBloodSugarValue
-                )}`}
-              >
-                ({getBloodSugarStatus(lastBloodSugarValue)})
-              </Text>
-            </View>
-
-            <View className="w-full justify-center items-center p-1">
-              <LineChart
-                data={chartData}
-                width={screenWidth}
-                height={220}
-                chartConfig={chartConfig}
-                bezier
-                style={{
-                  marginVertical: 8,
-                  borderRadius: 16,
-                }}
-                withInnerLines={true}
-                withOuterLines={true}
-                withDots={true}
-                withShadow={true}
-                yAxisLabel=""
-                yAxisInterval={20}
-                fromZero={false}
-                segments={5}
-              />
-            </View>
-
-            <View className="w-full mt-2 items-center justify-center">
-              <Text className="text-tag font-medium text-secondary">
-                ช่วงปกติ: 70 - 130 มก./ดล.
-              </Text>
-            </View>
-          </>
-        )}
+        <View className="w-full mt-2 items-center justify-center">
+          <Text className="text-tag font-medium text-secondary">
+            ช่วงปกติ: 70 - 130 มก./ดล.
+          </Text>
+        </View>
       </View>
     </Card>
   );

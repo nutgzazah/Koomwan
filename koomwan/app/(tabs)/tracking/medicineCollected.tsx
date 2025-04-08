@@ -312,9 +312,11 @@ export default function MedicineCollectedScreen() {
             }
           }
         }
-      } catch (error) {
-        console.error("Error fetching regular medicines:", error);
-        Alert.alert("ข้อผิดพลาด", "ไม่สามารถดึงข้อมูลยาประจำได้");
+      } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+          console.log("No Regular pill data found.");
+          return; // Do nothing if 404
+        }
       } finally {
         setLoading(false);
       }
