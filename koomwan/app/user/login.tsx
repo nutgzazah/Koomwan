@@ -110,10 +110,13 @@ export default function UserLoginScreen() {
         }
       }
     } catch (error) {
-      // ตรวจสอบว่าคือ AxiosError หรือไม่
       if (axios.isAxiosError(error)) {
-        Alert.alert("เกิดข้อผิดพลาด", "กรุณาลองใหม่อีกครั้ง");
-        console.log("API Error Response:", error.response?.data.message);
+        const errorMessage = error.response?.data?.reason
+          ? `${error.response.data.message}\n\nเหตุผล: ${error.response.data.reason}`
+          : error.response?.data?.message || "กรุณาลองใหม่อีกครั้ง";
+    
+        Alert.alert("เกิดข้อผิดพลาด", errorMessage);
+        console.log("API Error Response:", error.response?.data);
       } else {
         Alert.alert("เกิดข้อผิดพลาด", "กรุณาลองใหม่อีกครั้ง");
       }

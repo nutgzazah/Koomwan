@@ -76,10 +76,14 @@ export default function TabsLayout() {
       }
 
       // Handle custom images
-      const url =
-        userRole === "user"
-          ? await getProfileImageUrl(image, "user")
-          : await getImageUrl(image);
+      let url;
+
+      if (userRole === "user" && !image?.startsWith("koomwanAvatar")) {
+        console.log("test image",image)
+        url = await getProfileImageUrl(image, "user");
+      } else if (userRole === "doctor" && !image?.startsWith("koomwanDoctorAvatar")) {
+        url = await getImageUrl(image);
+      }
 
       if (url?.startsWith("https")) {
         setImageUrl(url);

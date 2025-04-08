@@ -20,10 +20,10 @@ export default function SettingsScreen() {
 
   //Logout
   const handleLogout = async () => {
-    router.replace('/user/login')
     setShowLogoutModal(false); // ปิด modal ด้วย
-    setState({token:'',user:null})
+    setState({token:'',user:''})
     await AsyncStorage.removeItem('@auth')
+    router.replace('/user/login')
     alert("ออกจากระบบเรียบร้อย")
   }
 

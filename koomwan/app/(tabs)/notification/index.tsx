@@ -11,6 +11,7 @@ import BASE_URL from "../../../config";
 import { useNavigation } from '@react-navigation/native'; // Import the navigation hook
 import { useRouter, useFocusEffect } from "expo-router";
 
+
 export default function ResourceScreen() {
   const role: string = "doctor"; // Change this dynamically as per the user role
   const router = useRouter();
@@ -87,6 +88,12 @@ export default function ResourceScreen() {
     } else if (header === "แจ้งเตือนการทานยา") {
       router.push(`/home/calendarView`);
       console.log(`${helpRequestId}`);
+    }else if (header === "หมอได้ตอบคำถามของคุณแล้ว") {
+      router.push({
+        pathname: `/forum/post/${helpRequestId}`,
+        params: { postId: helpRequestId },  // Add the postId as a parameter
+    })
+      console.log(`/forum/`);
     }
   };
 

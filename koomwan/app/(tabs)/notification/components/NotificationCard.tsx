@@ -11,6 +11,7 @@ export interface notificationCardProps {
   notificationType: string;
   createdAt: Date;
   pillId: string;
+  forum: string;
   pillName: string;
   isRead: boolean;
 }
@@ -28,6 +29,8 @@ export default function NotificationCard({ notification, onPress }: notification
       return "แจ้งเตือนการทานยา";
     } else if (["อื่นๆ", "บัญชี", "การติดตามสุขภาพ"].includes(title)) {
       return "การรายงานปัญหา";
+    }else if (["หมอได้ตอบคำถามของคุณแล้ว"].includes(title)) {
+      return "หมอได้ตอบคำถามของคุณแล้ว";
     }
     return ""; // Default case if no condition is met
   }
@@ -114,7 +117,13 @@ export default function NotificationCard({ notification, onPress }: notification
       className={`mx-3 rounded-2xl w-full 
         ${notification.isRead ? "bg-card" : "bg-background"} 
         mb-3 border-[1px] border-gray drop-shadow`}
-      onPress={() => onPress(notification.helpRequest, getHeader(notification.title))} // Pass header along with helpRequestId
+        onPress={() => {
+          if (notification.forum !== "") {
+            onPress(notification.forum, getHeader(notification.title));
+          } else {
+            onPress(notification.helpRequest, getHeader(notification.title));
+          }
+        }}
     >
       <View className="flex flex-col justify-between items-center mx-3 py-4">
         <View className="w-full">

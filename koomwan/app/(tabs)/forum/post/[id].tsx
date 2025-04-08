@@ -15,7 +15,7 @@ import axios from "axios";
 import BASE_URL from "../../../../config"
 import { AuthContext } from "../../../../context/authContext";
 import BackButton from "../../../../global/components/BackButton";
-
+import Loading from "../../../../global/components/Loading";
 const defaultUserAvatar01 = require("../../../../assets/Avatars/koomwanAvatar01.png");
 const defaultUserAvatar02 = require("../../../../assets/Avatars/koomwanAvatar02.png");
 const defaultUserAvatar03 = require("../../../../assets/Avatars/koomwanAvatar03.png");
@@ -64,9 +64,12 @@ export default function ForumScreen() {
   const [comments, setComments] = useState<any[]>([]);  // เก็บข้อมูลคอมเมนต์
   const [loading, setLoading] = useState(true); // เพิ่มสถานะโหลด
   const [doctorImageUrl, setDoctorImageUrl] = useState<string | null>(null);
-  const [commentUpdated, setCommentUpdated] = useState(false); // 👈 ตัวแปร trigger fetch ใหม่
+  const [commentUpdated, setCommentUpdated] = useState(false); // 👈 
+  const [notFound, setNotFound] = useState(false);
 
+  
   useEffect(() => {
+    if (!state?.user || !state.user.image) return;
     
     if (postId) {
       axios.get(`${BASE_URL}/api/v1/forum/getPostById/${postId}`)
@@ -86,7 +89,7 @@ export default function ForumScreen() {
               userImageUrl = await getProfileImageUrl(post.postedBy.image, "user");
             }
           }
-
+          
           // อัปเดตโพสต์พร้อมข้อมูลรูปภาพ
           setPostData({
             ...post,
@@ -169,6 +172,9 @@ export default function ForumScreen() {
         })
         .catch(error => {
           console.error("Error fetching post:", error);
+          if (error.response && error.response.status === 404) {
+            setNotFound(true);
+          }
         });
     }
     if (state.token) {
@@ -176,8 +182,8 @@ export default function ForumScreen() {
     }
 
     const fetchDoctorImage = async () => {
-    if (state.user.role === "doctor") {
-      if (state.user.image.startsWith("koomwanDoctorAvatar")) {
+    if (state?.user.role === "doctor") {
+      if (state?.user.image.startsWith("koomwanDoctorAvatar")) {
         setDoctorImageUrl(state.user.image);
         console.log("doctorImageUrl :", state.user.image);
       } else {
@@ -193,8 +199,20 @@ export default function ForumScreen() {
   }, [postId, commentUpdated]);
   if (!postData) {
     return (
-      <SafeAreaView className="flex-1">
-        <Text>กำลังโหลดข้อมูลโพสต์...</Text>
+      <SafeAreaView className="flex-1 justify-center items-center bg-white">
+        {notFound ? (
+          <>
+          <Text className="font-sans text-secondary text-headline">โพสต์นี้ถูกลบไปแล้ว</Text>
+          <TouchableOpacity
+            onPress={() => router.replace('/forum')}
+            className="bg-primary px-6 py-4 rounded-xl mt-4"
+          >
+            <Text className="text-white text-base">ย้อนกลับ</Text>
+          </TouchableOpacity>
+          </>
+        ) : (
+          <Loading />
+        )}
       </SafeAreaView>
     );
   }

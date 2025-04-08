@@ -290,13 +290,13 @@ const loginController = async (req,res) => {
         if (!username) {
           return res.status(500).send({
             success: false,
-            message: 'Please provide username or phone number',
+            message: 'กรุณากรอกบัญชีผู้ใช่หริเบอร์โทรศัพท์',
           });
         }
         if (!password) {
           return res.status(500).send({
             success: false,
-            message: 'Please provide password',
+            message: 'กรุณากรอกรหัสผ่าน',
           });
         }
     
@@ -313,13 +313,29 @@ const loginController = async (req,res) => {
             user = await userModel.findOne({ username });
             if (!user) {
                 user = await doctorModel.findOne({ username }); // Check in doctorModel if not found in userModel
+                if (user) {
+                  if (user.approval.status === 'pending') {
+                    return res.status(403).send({
+                      success: false,
+                      message: 'บัญชีของคุณอยู่ระหว่างการตรวจสอบข้อมูลการสมัคร',
+                    });
+                  }
+                
+                  if (user.approval.status === 'disapprove') {
+                    return res.status(403).send({
+                      success: false,
+                      message: 'บัญชีของคุณถูกปฏิเสธการสมัคร',
+                      reason: user.approval.reason,
+                    });
+                  }
+                }
             }
         }
     
         if (!user) {
           return res.status(500).send({
             success: false,
-            message: 'Username or phone number not found',
+            message: 'ไม่พบบัญชีผู้ใช้หรือเบอร์โทรศัพท์ที่ลงทะเบียน',
           });
         }
 
@@ -328,14 +344,14 @@ const loginController = async (req,res) => {
         if(!match){
             return res.status(500).send({
                 success:false,
-                message:'Invalid username or password'
+                message:'บัญชีผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'
             })
         }
         //TOKEN JWT
         const token = await JWT.sign(
             { _id: user._id, role: user.role },  // เพิ่ม role เข้าไปใน payload
             process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '7d' }
         );
 
         //แสดงข้อมูลหลัง Login สำเร็จแต่ไม่ต้องแสดง password ที่บันทึกไว้จริง
@@ -343,7 +359,7 @@ const loginController = async (req,res) => {
 
         res.status(200).send({
             success:true,
-            message:'Login successfully',
+            message:'เข้าสู่ระบบเสร็จสิ้น',
             token,
             user,
         })
