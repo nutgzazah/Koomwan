@@ -103,7 +103,17 @@ const ArticleId: React.FC = () => {
         className="prose prose-lg max-w-none text-secondary"
         dangerouslySetInnerHTML={{ __html: blog.content }}
       />
+
+      {/* Reference Link */}
+      {blog.ref && (
+        <div className="mt-6 text-detail_3 text-secondary">
+          <span className="font-semibold">แหล่งอ้างอิง : {blog.ref}</span>
+        </div>
+      )}
+
     </div>
+
+    
   );
 };
 

@@ -9,6 +9,7 @@ import ApprovePopup from "../components/ApprovePopup";
 import DetailPopup from "../components/detailPopup";
 import ForumImageHandler from "@/utils/forumImageHandler";
 import Image from "next/image";
+import { formatDate } from "@/utils/formatDate.";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
@@ -79,7 +80,7 @@ const ForumID: React.FC = () => {
         </button>
       </div>
       <h2 className="text-headline_3 text-secondary">{forum.title}</h2>
-      <p className="text-detail_3 text-secondary">เขียนเมื่อ {new Date(forum.createdAt).toLocaleString()}</p>
+      <p className="text-detail_3 text-secondary">เขียนเมื่อ {formatDate(forum.createdAt).toLocaleString()}</p>
        
        {/* ✅ Display image only if `imageUrl` exists */}
        {imageUrl && (
