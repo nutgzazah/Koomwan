@@ -13,7 +13,6 @@ import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import BASE_URL from "../../config";
-import { useFocusEffect } from "@react-navigation/native";
 
 interface ImageUploaderWithPreviewProps {
   imageUrl: string | null;
@@ -180,14 +179,6 @@ const ImageUploaderWithPreview: React.FC<ImageUploaderWithPreviewProps> = ({
       setIsProcessing(false);
     }
   };
-
-  useFocusEffect(
-    React.useCallback(() => {
-      // Reset or refresh state after image deletion
-      setLocalImage(null);
-      setImageUrl(null);
-    }, [])
-  );
 
   const handleImageUpload = async (): Promise<void> => {
     try {
