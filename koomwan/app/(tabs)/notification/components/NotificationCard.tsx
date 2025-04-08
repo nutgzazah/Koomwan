@@ -2,7 +2,6 @@ import { Text, Image, Pressable, View } from "react-native";
 import React from "react";
 import BreakLine from "../../../../global/components/BreakLine";
 
-// Future interface implement to handle notification model
 export interface notificationCardProps {
   helpRequest: string; // problemId or notificationId that will be used for navigation
   header: string; // This will be dynamically set based on the title
@@ -18,38 +17,36 @@ export interface notificationCardProps {
 
 export interface notificationInterface {
   notification: notificationCardProps;
-  onPress: () => void;
+  onPress: (helpRequestOrForum: string, header: string) => void;
 }
 
-export default function NotificationCard({ notification, onPress }: notificationInterface) {
-  
-  // Function to determine header based on the title
+const NotificationCard = ({ notification, onPress }: notificationInterface) => {
+  // Header mapping for simplified logic
+  const headerMapping: { [key: string]: string } = {
+    "แจ้งเตือนการทานยา": "แจ้งเตือนการทานยา",
+    "อื่นๆ": "การรายงานปัญหา",
+    "บัญชี": "การรายงานปัญหา",
+    "การติดตามสุขภาพ": "การรายงานปัญหา",
+    "หมอได้ตอบคำถามของคุณแล้ว": "หมอได้ตอบคำถามของคุณแล้ว",
+  };
+
+  // Function to get the header
   function getHeader(title: string): string {
-    if (["แจ้งเตือนการทานยา"].includes(title)) {
-      return "แจ้งเตือนการทานยา";
-    } else if (["อื่นๆ", "บัญชี", "การติดตามสุขภาพ"].includes(title)) {
-      return "การรายงานปัญหา";
-    }else if (["หมอได้ตอบคำถามของคุณแล้ว"].includes(title)) {
-      return "หมอได้ตอบคำถามของคุณแล้ว";
-    }
-    return ""; // Default case if no condition is met
+    return headerMapping[title] || "";
   }
 
   // Map icon according to notification type
-  function iconMap(notificationType: string) {
-    switch (notificationType) {
-      case "forum":
-        return require("../../../../assets/Notification/messages.png");
-      case "general":
-        return require("../../../../assets/Notification/info-circle.png");
-      case "medication":
-        return require("../../../../assets/Notification/notification.png");
-      case "system":
-        return require("../../../../assets/Notification/information.png");
-    }
-  }
+  const iconMap = (notificationType: string) => {
+    const icons: { [key: string]: any } = {
+      forum: require("../../../../assets/Notification/messages.png"),
+      general: require("../../../../assets/Notification/info-circle.png"),
+      medication: require("../../../../assets/Notification/notification.png"),
+      system: require("../../../../assets/Notification/information.png"),
+    };
+    return icons[notificationType] || icons["general"]; // Default to 'general' if no match
+  };
 
-  // Calculate Time difference between present and event times
+  // Calculate time difference between current and event times
   function formatDateDifference(targetDate: Date): string {
     const date = new Date(targetDate); // Ensure targetDate is a Date object
     const now = new Date();
@@ -59,7 +56,7 @@ export default function NotificationCard({ notification, onPress }: notification
     const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
 
     const formatTime = (date: Date): string => {
-      let hours = date.getHours();
+      const hours = date.getHours();
       const minutes = date.getMinutes();
       const minutesStr = minutes < 10 ? '0' + minutes : minutes;
       return `${hours}:${minutesStr}`;
@@ -91,24 +88,13 @@ export default function NotificationCard({ notification, onPress }: notification
   // Convert month in English to Thai
   function transformMonthToThai(monthInEnglish: string): string {
     const monthMapping: { [key: string]: string } = {
-      January: "มกราคม",
-      February: "กุมภาพันธ์",
-      March: "มีนาคม",
-      April: "เมษายน",
-      May: "พฤษภาคม",
-      June: "มิถุนายน",
-      July: "กรกฎาคม",
-      August: "สิงหาคม",
-      September: "กันยายน",
-      October: "ตุลาคม",
-      November: "พฤศจิกายน",
-      December: "ธันวาคม",
+      January: "มกราคม", February: "กุมภาพันธ์", March: "มีนาคม", April: "เมษายน", May: "พฤษภาคม",
+      June: "มิถุนายน", July: "กรกฎาคม", August: "สิงหาคม", September: "กันยายน", October: "ตุลาคม",
+      November: "พฤศจิกายน", December: "ธันวาคม",
     };
 
     // Convert the input to title case (e.g., "january" -> "January")
     const formattedMonth = monthInEnglish.charAt(0).toUpperCase() + monthInEnglish.slice(1).toLowerCase();
-
-    // Return the Thai month or a fallback if the input is invalid
     return monthMapping[formattedMonth] || "Invalid month";
   }
 
@@ -118,11 +104,8 @@ export default function NotificationCard({ notification, onPress }: notification
         ${notification.isRead ? "bg-card" : "bg-background"} 
         mb-3 border-[1px] border-gray drop-shadow`}
         onPress={() => {
-          if (notification.forum !== "") {
-            onPress(notification.forum, getHeader(notification.title));
-          } else {
-            onPress(notification.helpRequest, getHeader(notification.title));
-          }
+          const navTarget = notification.forum || notification.helpRequest;
+          onPress(navTarget, getHeader(notification.title));
         }}
     >
       <View className="flex flex-col justify-between items-center mx-3 py-4">
@@ -152,3 +135,5 @@ export default function NotificationCard({ notification, onPress }: notification
     </Pressable>
   );
 }
+
+export default NotificationCard;
