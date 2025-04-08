@@ -112,7 +112,7 @@ export default function MedicineDetailScreen() {
 
       return null;
     } catch (error) {
-      console.error("Error fetching image URL:", error);
+      console.log("Error fetching image URL:", error);
       return null;
     } finally {
       setImageLoading(false);
@@ -138,7 +138,7 @@ export default function MedicineDetailScreen() {
         setImageError(true);
       }
     } catch (error) {
-      console.error("Error loading image URL:", error);
+      console.log("Error loading image URL:", error);
       setImageError(true);
     } finally {
       setImageLoading(false);

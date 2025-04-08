@@ -54,7 +54,6 @@ const EmoteDisplay: React.FC<EmoteDisplayProps> = ({ Mood }) => {
       const authData = await AsyncStorage.getItem("@auth");
 
       if (!authData) {
-        console.error("Session expired or user not logged in");
         setLoading(false);
         return;
       }
@@ -103,7 +102,7 @@ const EmoteDisplay: React.FC<EmoteDisplayProps> = ({ Mood }) => {
         setMood("none");
       }
     } catch (error) {
-      console.error("Error fetching latest mood:", error);
+      console.log("Error fetching latest mood:", error);
       setMood("none");
     } finally {
       setLoading(false);

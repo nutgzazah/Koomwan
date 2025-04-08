@@ -37,7 +37,7 @@ const MedicationStatus = () => {
       // Fetch user data from AsyncStorage
       const authData = await AsyncStorage.getItem("@auth");
       if (!authData) {
-        console.warn("User not logged in");
+        console.log("User not logged in");
         setLoading(false);
         return;
       }
@@ -81,7 +81,7 @@ const MedicationStatus = () => {
         setHasTakenMeds(total > 0 && total === taken);
       }
     } catch (error) {
-      console.error("Error checking medication status:", error);
+      console.log("Error checking medication status:", error);
     } finally {
       setLoading(false);
     }
@@ -89,6 +89,7 @@ const MedicationStatus = () => {
 
   useFocusEffect(
     useCallback(() => {
+      checkMedicationStatus();
       // ตรวจสอบว่าข้ามวัน
       const todayFormatted = getTodayLocalDate();
       if (currentDate !== todayFormatted) {

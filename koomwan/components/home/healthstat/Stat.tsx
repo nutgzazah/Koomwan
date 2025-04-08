@@ -216,7 +216,7 @@ export default function HealthStats() {
         console.log("No health records found for this user");
       }
     } catch (err) {
-      console.error("Error fetching health records:", err);
+      console.log("Error fetching health records:", err);
       setError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);

@@ -179,7 +179,6 @@ const Overview = () => {
 
       const authData = await AsyncStorage.getItem("@auth");
       if (!authData) {
-        console.error("Session expired or user not logged in");
         setLoading(false);
         return;
       }
@@ -243,7 +242,7 @@ const Overview = () => {
       setWeeklyData(processedData);
     } catch (error) {
       setHasRecords(false);
-      console.error("Error fetching data:", error);
+      console.log("Error fetching data:", error);
     } finally {
       setLoading(false);
     }

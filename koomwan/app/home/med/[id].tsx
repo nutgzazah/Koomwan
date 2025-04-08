@@ -150,7 +150,7 @@ export default function MedicationDetail() {
 
       return null;
     } catch (error) {
-      console.error("Error fetching image URL:", error);
+      console.log("Error fetching image URL:", error);
       return null;
     } finally {
       setImageLoading(false);

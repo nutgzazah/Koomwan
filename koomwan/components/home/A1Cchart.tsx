@@ -136,7 +136,7 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
 
       if (!authData) {
         Alert.alert("Session Expired", "Please login again");
-        /*  router.push("/user/login"); */
+        router.push("/user/login");
         return;
       }
 
@@ -234,7 +234,7 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
         setBloodSugarData([]);
       }
     } catch (err) {
-      console.error("Error fetching blood sugar data:", err);
+      console.log("Error fetching blood sugar data:", err);
       setError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);
