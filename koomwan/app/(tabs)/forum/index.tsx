@@ -167,21 +167,29 @@ export default function ForumScreen() {
         let doctorName = null;
 
         if (latestDoctorComment) {
-          const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string }>(
-            `${BASE_URL}/api/v1/forum/getDoctorInfo`,
-            { params: { doctorId: latestDoctorComment.commenter } }
-          );
-
-          doctorName = doctorResponse.data.firstname+" "+doctorResponse.data.lastname;
-          if (doctorResponse.data?.image) {
-            if (
-            doctorResponse.data.image.startsWith("koomwanDoctorAvatar")
-            ) {
-              // Set the local path for the avatar image
-              doctorImageUrl = doctorResponse.data.image;
+          try {
+            const doctorResponse = await axios.get<{ firstname: string; lastname: string; image: string }>(
+              `${BASE_URL}/api/v1/forum/getDoctorInfo`,
+              { params: { doctorId: latestDoctorComment.commenter } }
+            );
+        
+            doctorName = doctorResponse.data.firstname + " " + doctorResponse.data.lastname;
+        
+            if (doctorResponse.data?.image) {
+              if (doctorResponse.data.image.startsWith("koomwanDoctorAvatar")) {
+                doctorImageUrl = doctorResponse.data.image;
+              } else {
+                doctorImageUrl = await getImageUrl(doctorResponse.data.image);
+              }
+            }
+          } catch (error: any) {
+            if (axios.isAxiosError(error) && error.response?.status === 404) {
+              // ไม่เจอข้อมูลหมอ -> ให้ส่ง null
+              doctorName = "คุณหมอ";
+              doctorImageUrl = null;
             } else {
-              // Fallback to fetching the image URL if not a local avatar
-              doctorImageUrl = await getImageUrl(doctorResponse.data.image);
+              // ถ้าเป็น error แบบอื่นก็ throw ทิ้งให้รู้ไปเลย
+              throw error;
             }
           }
         }
