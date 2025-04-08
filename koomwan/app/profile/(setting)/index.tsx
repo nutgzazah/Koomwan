@@ -4,14 +4,28 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
+  Modal,
 } from "react-native";
-import React from "react";
+import React, { useContext, useState } from "react";
 import BackButton from "../../../global/components/BackButton";
 import Card from "../../../global/components/Card";
+import { AuthContext } from "../../../context/authContext";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const [state, setState] = useContext(AuthContext)
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  //Logout
+  const handleLogout = async () => {
+    router.replace('/user/login')
+    setShowLogoutModal(false); // ปิด modal ด้วย
+    setState({token:'',user:null})
+    await AsyncStorage.removeItem('@auth')
+    alert("ออกจากระบบเรียบร้อย")
+  }
 
   return (
     <SafeAreaView>
@@ -66,16 +80,43 @@ export default function SettingsScreen() {
         {/* Log out Button */}
         <TouchableOpacity
           className="bg-abnormal mx-6 py-4 rounded-lg my-4"
-          onPress={() => {
-            // TODO: Handle Log out
-            router.dismissTo("/(tabs)");
-          }}
+          onPress={() => setShowLogoutModal(true)}
         >
           <Text className="text-white text-center font-bold text-button">
             ล็อกเอาท์
           </Text>
         </TouchableOpacity>
       </View>
+
+       {/* Confirm Logout Modal */}
+       <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showLogoutModal}
+        onRequestClose={() => setShowLogoutModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white p-6 rounded-2xl w-[75%]">
+            <Text className="font-sans text-lg font-bold text-center mb-4">
+              ยืนยันการออกจากระบบ
+            </Text>
+            <View className="flex-row justify-between mt-4">
+              <TouchableOpacity
+                className="px-4 py-2 rounded-lg"
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text className="font-sans px-4 py-2">ยกเลิก</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="bg-abnormal px-4 py-2 rounded-lg"
+                onPress={handleLogout}
+              >
+                <Text className="font-sans text-white px-4 py-2">ยืนยัน</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
