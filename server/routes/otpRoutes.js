@@ -36,6 +36,8 @@ function normalizeThaiPhoneNumber(phone) {
   
       const existingOtp = await Otp.findOne({ phoneNumber, verified: false });
       if (existingOtp) await existingOtp.deleteOne();
+
+      console.log('Sending SMS to:', phoneNumber);
   
       await twilioClient.messages.create({
         body: `Your verification code is ${otpCode}`,

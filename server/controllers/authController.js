@@ -416,6 +416,7 @@ const checkUserResetPasswordController = async (req, res) => {
             user = await userModel.findOne({ username });
             if (!user) {
                 user = await doctorModel.findOne({ username }); // Check in doctorModel if not found in userModel
+
             }
         }
     
@@ -428,6 +429,7 @@ const checkUserResetPasswordController = async (req, res) => {
         return res.status(200).send({
             success: true,
             message: 'Able to change password',
+            phone: user.phone
         });
     } catch (error) {
         console.log(error);
