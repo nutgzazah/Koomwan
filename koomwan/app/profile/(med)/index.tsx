@@ -283,7 +283,9 @@ export default function RegularMedScreen() {
                       color={med.checked ? "#3972F0" : undefined}
                     />
                     <Text className="pl-4 font-regular text-description text-secondary">
-                      {med.pillName}
+                      {med.pillName.length > 10
+                        ? `${med.pillName.substring(0, 10)}...`
+                        : med.pillName}
                     </Text>
                   </View>
 

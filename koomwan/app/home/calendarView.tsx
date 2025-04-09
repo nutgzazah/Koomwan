@@ -187,7 +187,11 @@ const CalendarScreen = () => {
                       className="w-6 h-6 ml-2"
                     />
                     <Text className="text-description text-secondary font-regular ml-2">
-                      {medication.name || "ไม่ระบุชื่อยา"}
+                      {medication.name
+                        ? medication.name.length > 10
+                          ? `${medication.name.substring(0, 10)}...`
+                          : medication.name
+                        : "ไม่ระบุชื่อยา"}
                     </Text>
                   </View>
                   <TouchableOpacity
