@@ -185,56 +185,57 @@ export default function ForumCard({
                 }}
             />
             <Card>
-                <View className="flex flex-row justify-evenly items-center">
-                    <Image 
-                    source={userimage}
-                    resizeMode="cover"
-                    onError={() => console.error("Error loading image:", userimage)}
-                    className="rounded-full w-11 h-10 mr-2 ml-3" />
-                    <View className="w-64">
-                        <Text
-                            className="font-sans text-description"
-                            numberOfLines={1}
-                            ellipsizeMode='tail'
-                        >
-                            {userName}
-                        </Text>
-                        <Text className="font-sans text-tag">{formatPostTime(posttime)}</Text>
-                    </View>
-                    <View className="ml-7 w-10">
-                    <Pressable
-                        className="w-6 h-6"
-                        onPress={() => {
-                            if (state.user.username === userName) {
-                                // ถ้าเป็นเจ้าของโพสต์ ให้แสดง Modal ลบโพสต์
-                                Alert.alert(
-                                    "ยืนยันการลบโพสต์",
-                                    "คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?",
-                                    [
-                                        { text: "ยกเลิก", style: "cancel" },
-                                        {
-                                            text: "ลบโพสต์",
-                                            onPress: async () => {
-                                                try {
-                                                    await axios.delete(`${BASE_URL}/api/v1/forum/deletePost/${postId}`);
-                                                    if (handlePostDeleted) handlePostDeleted();
-                                                    Alert.alert("ลบโพสต์สำเร็จ");
-                                                } catch (error) {
-                                                    Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถลบโพสต์ได้");
+                <View className="w-full">
+                    <View className="flex flex-row  items-center w-full">
+                        <Image 
+                            source={userimage}
+                            resizeMode="cover"
+                            onError={() => console.error("Error loading image:", userimage)}
+                            className="rounded-full w-11 h-10 mx-2" />
+                        <View className="w-fit ">
+                            <Text
+                                className="font-sans text-description w-full "
+                                numberOfLines={1}
+                                ellipsizeMode='tail'
+                                >
+                                    {userName}
+                            </Text>
+                            <Text className="font-sans text-tag">{formatPostTime(posttime)}</Text>
+                        </View>
+                        <View className=" absolute right-0 mr-2">
+                            <Pressable
+                                className=" w-8 h-8 items-center"
+                                onPress={() => {
+                                    if (state.user.username === userName) {
+                                        // ถ้าเป็นเจ้าของโพสต์ ให้แสดง Modal ลบโพสต์
+                                        Alert.alert(
+                                            "ยืนยันการลบโพสต์",
+                                            "คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?",
+                                            [
+                                                { text: "ยกเลิก", style: "cancel" },
+                                                {
+                                                    text: "ลบโพสต์",
+                                                    onPress: async () => {
+                                                        try {
+                                                            await axios.delete(`${BASE_URL}/api/v1/forum/deletePost/${postId}`);
+                                                            if (handlePostDeleted) handlePostDeleted();
+                                                            Alert.alert("ลบโพสต์สำเร็จ");
+                                                        } catch (error) {
+                                                            Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถลบโพสต์ได้");
+                                                        }
+                                                    },
+                                                    style: "destructive"
                                                 }
-                                            },
-                                            style: "destructive"
-                                        }
-                                    ]
-                                );
-                            } else {
-                                // ถ้าไม่ใช่เจ้าของโพสต์ ให้แสดง Modal รายงานโพสต์
-                                setModalVisible(true);
-                            }
-                        }}
-                    >
-                            <Image source={require("../../../../assets/Forum/option.png")} className="w-full h-full" />
-                        </Pressable>
+                                            ]
+                                        );
+                                    } else {
+                                        // ถ้าไม่ใช่เจ้าของโพสต์ ให้แสดง Modal รายงานโพสต์
+                                        setModalVisible(true);
+                                    }
+                                }}>
+                                <Image source={require("../../../../assets/Forum/option.png")} className="w-full h-full" />
+                            </Pressable>
+                        </View>
                     </View>
                 </View>
                 <View className="justify-start flex w-full mt-4">
@@ -244,10 +245,9 @@ export default function ForumCard({
                 </View>
                 {
                     imageContent ? (
-                        <View className="w-auto h-auto mt-6">
+                        <View className=" items-center w-full h-auto mt-6 px-4">
                             <Image
-                                className="rounded-2xl"
-                                style={{ width: 336, height: 336 }} // แก้ให้มีขนาดแน่นอน
+                                className="rounded-2xl w-full h-[300px]"
                                 source={
                                     typeof imageContent === "string"
                                         ? { uri: imageContent }

@@ -115,8 +115,8 @@ const NotificationCard = ({ notification, onPress }: notificationInterface) => {
               className="w-[2.625rem] h-[2.625rem] mr-7"
               source={iconMap(notification.notificationType)}
             />
-            <Text className="font-sans text-body text-secondary">
-              {getHeader(notification.title)} {/* Use the dynamic header here */}
+            <Text className="font-sans text-body text-secondary flex-shrink w-[80%]">
+              {getHeader(notification.title)}
             </Text>
           </View>
           <View className="justify-start">
