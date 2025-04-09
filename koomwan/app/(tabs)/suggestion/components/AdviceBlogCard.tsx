@@ -50,10 +50,10 @@ export default function AdviceBlogCard({ title, content, image, blogId }: Advice
   }, [image]);
 
   return (
-    <View className="bg-card shadow-m rounded-xl w-[280px] h-fit mx-2 mb-4 p-4 relative overflow-hidden flex flex-col">
+    <View className="bg-card shadow-m rounded-xl w-[280px] h-fit ml-4 mb-4 p-4 relative overflow-hidden flex flex-col">
       {/* Text Content */}
       <View className="flex-grow">
-        <Text className="text-body font-bold font-sans text-primary mb-2">{title}</Text>
+        <Text className="text-body font-bold font-sans text-primary mb-3" numberOfLines={2}>{title}</Text>
         
         <Image 
         source={imageUrl ? { uri: imageUrl } : defaultBlogImage} // ใช้ imageUrl ถ้ามีค่า มิฉะนั้นใช้ defaultBlogImage
@@ -61,7 +61,7 @@ export default function AdviceBlogCard({ title, content, image, blogId }: Advice
         resizeMode="cover"
       />
 
-        <Text className="text-description font-sans text-secondary mb-4">
+        <Text className="text-description font-sans text-secondary mb-4" numberOfLines={4}>
           {shortenText(removeHtmlTags(content))} {/* ลบแท็ก HTML ก่อนแสดง */}
         </Text>
       </View>
