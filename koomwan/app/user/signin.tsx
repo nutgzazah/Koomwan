@@ -50,7 +50,7 @@ export default function UserSignInScreen() {
   const [otp, setOtp] = useState("");
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(30);
-
+  
   // for Status Screen component
   const [showStatus, setShowStatus] = useState<"none" | "success" | "error">(
     "none"
@@ -131,34 +131,32 @@ export default function UserSignInScreen() {
   const handleSubmit = async () => {
     if (validateForm()) {
       try {
-        // เช็คว่ามีข้อมูลไรซ้ำไหม
         const response = await axios.post(
           `${BASE_URL}/api/v1/auth/checkDuplicate`,
           formData
         );
-        console.log(formData);
         if (response.status === 201) {
-          setShowOTP(true);
-          setResendDisabled(true);
+          // ส่ง OTP ไปยัง API
+          try {
+            const otpResponse = await axios.post(
+              `${BASE_URL}/api/v1/otp/send-otp`,
+              { phoneNumber: formData.phone }
+            );
+            if (otpResponse.status === 200) {
+              setShowOTP(true);
+              setResendDisabled(true);
+            } else {
+              console.error("Failed to send OTP", otpResponse.data);
+            }
+          } catch (otpError) {
+            console.error("OTP sending error:", otpError);
+          }
         } else {
           console.error("Registration failed:", response.data);
         }
       } catch (error) {
-        // ตรวจสอบว่าคือ AxiosError หรือไม่
-        if (axios.isAxiosError(error)) {
-          Toast.show({
-            type: "error",
-            text1: "Error",
-            text2: error.response?.data.message || "Unknown error occurred",
-          });
-        } else {
-          Toast.show({
-            type: "error",
-            text1: "Unexpected Error",
-            text2: "An unexpected error occurred",
-          });
-        }
-        console.error("Error submitting form:", error);
+        console.error("Error submitting form:", error.response?.data?.message);
+        alert(error.response?.data?.message)
       }
     }
   };
@@ -168,34 +166,29 @@ export default function UserSignInScreen() {
   };
 
   const handleVerifyOTP = async () => {
-    console.log("Verifying OTP:", otp);
-
-    if (otp === "123456") {
-      try {
-        // ส่งข้อมูลไปยัง backend หลังจาก OTP ยืนยันสำเร็จ
-        const response = await axios.post(
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/otp/verify-otp`,
+        { phoneNumber: formData.phone, otp }
+      );
+      
+      if (response.status === 200 && response.data.message === 'OTP verified successfully.') {
+        // ถ้ายืนยัน OTP สำเร็จ
+        const registerResponse = await axios.post(
           `${BASE_URL}/api/v1/auth/register`,
           formData
         );
-
-        if (response.status === 201) {
+        if (registerResponse.status === 201) {
           setShowOTP(false);
           setShowStatus("success");
         } else {
-          console.error("Registration failed:", response.data);
           setShowStatus("error");
         }
-      } catch (error) {
-        console.error("Error submitting form:", error);
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: "Failed to register. Please try again.",
-        });
+      } else {
         setShowStatus("error");
       }
-    } else {
-      setShowOTP(false);
+    } catch (error) {
+      console.error("Verify OTP error:", error);
       setShowStatus("error");
     }
   };
@@ -204,6 +197,16 @@ export default function UserSignInScreen() {
     if (!resendDisabled) {
       console.log("Resending OTP");
       setResendDisabled(true);
+      // ส่ง OTP ใหม่
+      axios.post(`${BASE_URL}/api/v1/otp/send-otp`, { phoneNumber: formData.phone })
+        .then(response => {
+          if (response.status === 200) {
+            setCountdown(30);
+          }
+        })
+        .catch(error => {
+          console.error("Error resending OTP", error);
+        });
     }
   };
 

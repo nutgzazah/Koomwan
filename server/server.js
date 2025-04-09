@@ -29,6 +29,7 @@ app.use("/api/v1/admin", require("./routes/adminRoutes"));
 app.use("/api/v1/storage", require("./routes/storageRoutes"));
 app.use("/api/v1/regular-pills", require("./routes/regularPillTrackingRoutes"));
 app.use("/api/v1/ai", require("./routes/aiRoutes"))
+app.use("/api/v1/otp", require("./routes/otpRoutes"))
 
 // ตั้งค่า cron jobs สำหรับงานประจำ
 const {

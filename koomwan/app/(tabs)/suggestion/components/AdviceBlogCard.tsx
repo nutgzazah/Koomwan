@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import BASE_URL from '../../../../config';
 import axios from 'axios';
-import HTML from 'react-native-render-html';
+import he from 'he';
 
 interface AdviceBlogCardProps {
   title: string;
@@ -15,8 +15,9 @@ interface AdviceBlogCardProps {
 const defaultBlogImage = require("../../../../assets/Avatars/koomwanAvatar04.png");
 
 // ฟังก์ชันลบแท็ก HTML
-const removeHtmlTags = (str: string) => {
-  return str.replace(/<\/?[^>]+(>|$)/g, "");  // ใช้ regex เพื่อลบแท็ก HTML ออก
+const cleanHtmlContent = (str: string) => {
+  const withoutTags = str.replace(/<\/?[^>]+(>|$)/g, "");
+  return he.decode(withoutTags); // ถอด HTML entities
 };
 
 export default function AdviceBlogCard({ title, content, image, blogId }: AdviceBlogCardProps) {
@@ -62,7 +63,7 @@ export default function AdviceBlogCard({ title, content, image, blogId }: Advice
       />
 
         <Text className="text-description font-sans text-secondary mb-4" numberOfLines={4}>
-          {shortenText(removeHtmlTags(content))} {/* ลบแท็ก HTML ก่อนแสดง */}
+          {shortenText(cleanHtmlContent(content))}
         </Text>
       </View>
 

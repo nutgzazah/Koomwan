@@ -244,7 +244,7 @@ const checkDuplicateController = async (req, res) => {
         if (existingUsernameUser || existingUsernameDoctor) {
             return res.status(400).send({
                 success: false,
-                message: 'Username is already taken'
+                message: 'บัญชีผู้ใช้ถูกใช้ไปแล้ว'
             });
         }
 
@@ -253,7 +253,7 @@ const checkDuplicateController = async (req, res) => {
         if (existingEmailInUser || existingEmailInDoctor) {
             return res.status(400).send({
                 success: false,
-                message: 'Email is already registered',
+                message: 'อีเมลถูกใช้ไปแล้ว',
             });
         }
 
@@ -262,7 +262,7 @@ const checkDuplicateController = async (req, res) => {
         if (existingPhoneInUser || existingPhoneInDoctor) {
             return res.status(400).send({
                 success: false,
-                message: 'Phone number is already registered',
+                message: 'เบอร์โทรศัพท์ถูกใช้ไปแล้ว',
             });
         }
 
@@ -290,7 +290,7 @@ const loginController = async (req,res) => {
         if (!username) {
           return res.status(500).send({
             success: false,
-            message: 'กรุณากรอกบัญชีผู้ใช่หริเบอร์โทรศัพท์',
+            message: 'กรุณากรอกบัญชีผู้ใช่หรือเบอร์โทรศัพท์',
           });
         }
         if (!password) {
@@ -307,6 +307,22 @@ const loginController = async (req,res) => {
             user = await userModel.findOne({ phone: username });
             if (!user) {
                 user = await doctorModel.findOne({ phone: username }); // Check in doctorModel if not found in userModel
+                if (user) {
+                    if (user.approval.status === 'pending') {
+                      return res.status(403).send({
+                        success: false,
+                        message: 'บัญชีของคุณอยู่ระหว่างการตรวจสอบข้อมูลการสมัคร',
+                      });
+                    }
+                  
+                    if (user.approval.status === 'disapprove') {
+                      return res.status(403).send({
+                        success: false,
+                        message: 'บัญชีของคุณถูกปฏิเสธการสมัคร',
+                        reason: user.approval.reason,
+                      });
+                    }
+                  }
             }
         } else {
             // If it's a regular username
@@ -400,6 +416,7 @@ const checkUserResetPasswordController = async (req, res) => {
             user = await userModel.findOne({ username });
             if (!user) {
                 user = await doctorModel.findOne({ username }); // Check in doctorModel if not found in userModel
+
             }
         }
     
@@ -412,6 +429,7 @@ const checkUserResetPasswordController = async (req, res) => {
         return res.status(200).send({
             success: true,
             message: 'Able to change password',
+            phone: user.phone
         });
     } catch (error) {
         console.log(error);

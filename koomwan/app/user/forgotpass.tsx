@@ -59,10 +59,12 @@ function ForgotPasswordScreen() {
   }, [resendDisabled, countdown]);
 
   const handleRequestOTP = async () => {
+    if (resendDisabled) return;
     
     try {
       // เช็คว่ามี username หรือ phone ไหม
       if (isUsernameValid) {
+        setResendDisabled(true);
         // ตรวจสอบว่า username คือเบอร์โทรศัพท์มีไหม
         let checkuserData = {};
   
@@ -75,17 +77,23 @@ function ForgotPasswordScreen() {
         }
   
         const response = await axios.post(`${BASE_URL}/api/v1/auth/checkUserResetPassword`, checkuserData);
+        const phone = response.data.phone
         if (response.status === 200) {
           setOtpSent(true);
+          await axios.post(`${BASE_URL}/api/v1/otp/send-otp`, {
+            phoneNumber: phone,
+          });
           setResendDisabled(true);
         } else {
           console.error("checking failed:");
+          setResendDisabled(false); // ✅ คืนค่าในกรณี error
         }
       }
       else {
         console.error("Username Invalid: ",username);
       }
     } catch (error) {
+      setResendDisabled(false); // ✅ คืนค่าในกรณี error
       // ตรวจสอบว่าคือ AxiosError หรือไม่
       if (axios.isAxiosError(error)) {
         Toast.show({
@@ -104,16 +112,108 @@ function ForgotPasswordScreen() {
     }
   };
 
-  const handleResendOTP = () => {
-    if (!resendDisabled) {
+  const handleResendOTP = async () => {
+    if (resendDisabled) return;
+  
+    try {
+      if (!isUsernameValid) {
+        Toast.show({
+          type: 'error',
+          text1: 'ข้อมูลไม่ถูกต้อง',
+          text2: 'กรุณากรอกชื่อผู้ใช้หรือเบอร์โทรศัพท์',
+        });
+        return;
+      }
+  
       setResendDisabled(true);
+  
+      const response = await axios.post(`${BASE_URL}/api/v1/auth/checkUserResetPassword`, { username });
+      const phone = response.data.phone;
+  
+      if (response.status === 200) {
+        await axios.post(`${BASE_URL}/api/v1/otp/send-otp`, {
+          phoneNumber: phone,
+        });
+  
+        Toast.show({
+          type: 'success',
+          text1: 'ส่ง OTP อีกครั้งแล้ว',
+          text2: 'กรุณาตรวจสอบเบอร์โทรศัพท์ของคุณ',
+        });
+  
+        setCountdown(30); // reset countdown
+      } else {
+        setResendDisabled(false);
+        Toast.show({
+          type: 'error',
+          text1: 'ไม่พบผู้ใช้งาน',
+        });
+      }
+    } catch (error) {
+      setResendDisabled(false);
+      if (axios.isAxiosError(error)) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.response?.data.message || "Unknown error occurred",
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Unexpected Error',
+          text2: 'An unexpected error occurred',
+        });
+      }
     }
   };
 
-  const handleVerifyOTP = () => {
-    if (isOtpValid) {
-      setOtpSent(false);
-      setIsSettingPassword(true);
+  const handleVerifyOTP = async () => {
+    if (!isOtpValid) {
+      Toast.show({
+        type: 'error',
+        text1: 'รหัส OTP ไม่ถูกต้อง',
+        text2: 'กรุณากรอก OTP ให้ครบ 6 หลัก',
+      });
+      return;
+    }
+  
+    try {
+      const response2 = await axios.post(`${BASE_URL}/api/v1/auth/checkUserResetPassword`, { username });
+      const phone = response2.data.phone;
+      const response = await axios.post(`${BASE_URL}/api/v1/otp/verify-otp`, {
+        phoneNumber: phone,
+        otp,
+      });
+  
+      if (response.status === 200) {
+        Toast.show({
+          type: 'success',
+          text1: 'ยืนยัน OTP สำเร็จ',
+          text2: 'ไปตั้งรหัสผ่านใหม่ได้เลย',
+        });
+        setOtpSent(false);
+        setIsSettingPassword(true);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'OTP ไม่ถูกต้อง',
+          text2: 'กรุณาลองใหม่อีกครั้ง',
+        });
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.response?.data.message || "Unknown error occurred",
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Unexpected Error',
+          text2: 'An unexpected error occurred',
+        });
+      }
     }
   };
   
@@ -339,7 +439,7 @@ function ForgotPasswordScreen() {
           disabled={!isUsernameValid}
         >
           <Text className="text-card text-center font-bold text-button">
-            ส่งรหัส OTP
+            {resendDisabled ? `กรุณารอ (${countdown})` : "ส่งรหัส OTP"}
           </Text>
         </TouchableOpacity>
 
