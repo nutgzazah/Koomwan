@@ -727,7 +727,9 @@ export default function MedicineCollectedScreen() {
                           />
                           {renderMedicineImage(medication)}
                           <Text className="text-description text-secondary font-regular ml-2">
-                            {medication.name || "ไม่ระบุชื่อยา"}
+                            {medication.name.length > 10
+                              ? `${medication.name.substring(0, 10)}...`
+                              : medication.name || "ไม่ระบุชื่อยา"}
                           </Text>
                         </View>
                         <TouchableOpacity
@@ -764,7 +766,9 @@ export default function MedicineCollectedScreen() {
                     {renderMedicineImage(medicine)}
                     <View className="ml-2 flex-1">
                       <Text className="font-sans text-description font-semibold">
-                        {String(medicine.name)}
+                        {medicine.name.length > 10
+                          ? `${medicine.name.substring(0, 10)}...`
+                          : String(medicine.name)}
                       </Text>
                       {medicine.type && (
                         <Text className="font-sans text-tag text-secondary">
