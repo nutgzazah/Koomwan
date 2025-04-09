@@ -10,6 +10,11 @@ const notificationSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    expiresAt: {
+        type: Date,
+        default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // ลบใน 7 วัน
+        index: { expires: 0 }, // TTL index, ลบทันทีที่เลยเวลา
+      },
     title: {
         type: String,
         required: true

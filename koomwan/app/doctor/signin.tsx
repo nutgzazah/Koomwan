@@ -126,33 +126,30 @@ export default function DoctorSignUpScreen() {
   const handleSubmit = async () => {
     if (validateForm()) {
       try {
-        // เช็คว่ามีข้อมูลไรซ้ำไหม
         const response = await axios.post(
           `${BASE_URL}/api/v1/auth/checkDuplicate`,
           formData
         );
-        console.log(formData);
         if (response.status === 201) {
-          setShowOTP(true);
-          setResendDisabled(true);
+          // ส่ง OTP ไปยัง API
+          try {
+            const otpResponse = await axios.post(
+              `${BASE_URL}/api/v1/otp/send-otp`,
+              { phoneNumber: formData.phone }
+            );
+            if (otpResponse.status === 200) {
+              setShowOTP(true);
+              setResendDisabled(true);
+            } else {
+              console.error("Failed to send OTP", otpResponse.data);
+            }
+          } catch (otpError) {
+            console.error("OTP sending error:", otpError);
+          }
         } else {
           console.error("Registration failed:", response.data);
         }
       } catch (error) {
-        // ตรวจสอบว่าคือ AxiosError หรือไม่
-        if (axios.isAxiosError(error)) {
-          Toast.show({
-            type: "error",
-            text1: "Error",
-            text2: error.response?.data.message || "Unknown error occurred",
-          });
-        } else {
-          Toast.show({
-            type: "error",
-            text1: "Unexpected Error",
-            text2: "An unexpected error occurred",
-          });
-        }
         console.error("Error submitting form:", error);
       }
     }
@@ -162,23 +159,41 @@ export default function DoctorSignUpScreen() {
     setOtp(text);
   };
 
-  const handleVerifyOTP = () => {
-    console.log("Verifying OTP:", otp);
-
-    if (otp === "123456") {
-      // สมมติว่าเช็ค OTP ถูกต้อง
-      setShowOTP(false);
-      setShowStatus("success");
-    } else {
+  const handleVerifyOTP = async () => {
+    try {
+      const response = await axios.post(`${BASE_URL}/api/v1/otp/verify-otp`, {
+        phoneNumber: formData.phone,
+        otp: otp,
+      });
+  
+      if (response.status === 200 && response.data.message === 'OTP verified successfully.') {
+        setShowOTP(false);
+        setShowStatus("success");
+      } else {
+        setShowOTP(false);
+        setShowStatus("error");
+      }
+    } catch (error) {
       setShowOTP(false);
       setShowStatus("error");
     }
   };
 
-  const handleResendOTP = () => {
+  const handleResendOTP = async () => {
     if (!resendDisabled) {
-      console.log("Resending OTP");
-      setResendDisabled(true);
+      try {
+        setResendDisabled(true);
+        await axios.post(`${BASE_URL}/api/v1/otp/send-otp`, {
+          phoneNumber: formData.phone,
+        });
+  
+      } catch (error) {
+        Toast.show({
+          type: "error",
+          text1: "ไม่สามารถส่ง OTP ได้",
+          text2: "กรุณาลองใหม่อีกครั้ง",
+        });
+      }
     }
   };
 
