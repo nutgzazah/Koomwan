@@ -226,7 +226,9 @@ export default function ForumScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View>
-          <BackButton title="ย้อนกลับ" />
+          <BackButton title="ย้อนกลับ" 
+          path="/forum"
+          />
           <ForumCard
               imageContent={postData.imageContent}  // รูปภาพของโพสต์
               like={postData.likes.count}  // จำนวนไลก์
