@@ -31,11 +31,24 @@ export default function PopupScreen({
     const [selectedChoice, setselectedChoice] = useState<string[]>([]);
 
     const toggleCategory = (category: string) => {
-        setselectedChoice(prevSelected =>
-            prevSelected.includes(category)
-                ? prevSelected.filter(item => item !== category)
-                : [...prevSelected, category]
-        );
+        setselectedChoice((prevSelected) => {
+            if (category === "ทั้งหมด") {
+                // If "ทั้งหมด" is selected, reset to just "ทั้งหมด"
+                return ["ทั้งหมด"];
+            } else {
+                // Otherwise, toggle the selected category
+                const updatedSelection = prevSelected.includes(category)
+                    ? prevSelected.filter((item) => item !== category)
+                    : [...prevSelected, category];
+
+                // If the selection now has categories other than "ทั้งหมด", remove "ทั้งหมด"
+                if (updatedSelection.includes(category) && updatedSelection.includes("ทั้งหมด")) {
+                    return updatedSelection.filter((item) => item !== "ทั้งหมด");
+                }
+
+                return updatedSelection;
+            }
+        });
     };
 
     const handleApplyFilters = () => {

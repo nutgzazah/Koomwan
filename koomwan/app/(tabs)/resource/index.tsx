@@ -38,6 +38,7 @@ export default function ResourceScreen() {
 
   function extractCategories(blogList: Blog[]): string[] {
     const categorySet = new Set<string>([
+      "ทั้งหมด",
       "ความรู้",
       "โภชนาการ",
       "โรค",
@@ -52,7 +53,10 @@ export default function ResourceScreen() {
     return blogsData.filter(blog =>
       blog.title.toLowerCase().includes(searchQuery.toLowerCase())
       && blog.content.toLowerCase().includes(searchQuery.toLowerCase())
-      && (selectedCategories.length === 0 || selectedCategories.some(category => blog.category.includes(category))) // ใช้เงื่อนไข OR ในการ Filter
+      && (selectedCategories.length === 0 
+        || selectedCategories.some(category => blog.category.includes(category))
+        || selectedCategories.includes("ทั้งหมด") // Include "ทั้งหมด" category
+      ) // ใช้เงื่อนไข OR ในการ Filter
     );
   }, [blogsData, searchQuery, selectedCategories]);
 
@@ -135,6 +139,17 @@ export default function ResourceScreen() {
       fetchData();
     }, [])
   );
+
+  const handleChoiceSelect = (choice: string) => {
+    if (choice === "ทั้งหมด") {
+      setSelectedCategories(["ทั้งหมด"]);
+    }
+    setSelectedCategories((prev) =>
+      prev.includes(choice)
+        ? prev.filter((c) => c !== choice)
+        : [...prev, choice]
+    );
+  };
 
   if (loading || !blogsData) {
     return <Loading />;
