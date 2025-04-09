@@ -187,6 +187,35 @@ const BloodSugarChart = ({ healthInfoId }: BloodSugarChartProps) => {
             new Date(b.recordtime).getTime() - new Date(a.recordtime).getTime()
         ); // Sort by date (newest first)
 
+      // Handle case where there is only 1 record
+      if (bloodSugarRecords.length === 1) {
+        const singleRecord = bloodSugarRecords[0];
+        setHasRecords(true);
+        setBloodSugarData([singleRecord]);
+
+        // Prepare chart data with a single point
+        setChartData({
+          labels: [
+            `${new Date(singleRecord.recordtime).getDate()}/${
+              new Date(singleRecord.recordtime).getMonth() + 1
+            }`,
+          ],
+          datasets: [
+            {
+              data: [singleRecord.bloodsugar],
+              color: (opacity = 1) => `rgba(57, 114, 240, ${opacity})`,
+              strokeWidth: 2,
+            },
+          ],
+        });
+
+        // Set the most recent record data
+        setLastRecordDate(formatThaiDate(singleRecord.recordtime));
+        setLastBloodSugarValue(singleRecord.bloodsugar);
+        setLoading(false);
+        return;
+      }
+
       // Get only the 5 most recent records
       const records = bloodSugarRecords.slice(0, 5);
 
