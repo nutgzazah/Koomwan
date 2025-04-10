@@ -26,10 +26,13 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ]
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.INTERNET"
+      ],
+      "package": "com.nutgzazah.koomwan"
     },
     "web": {
       "bundler": "metro",
@@ -63,6 +66,11 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "547bc5a1-52e0-4949-8da6-15cb51c808f7"
+      }
+    }
   }
 }
